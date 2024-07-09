@@ -17,7 +17,7 @@ func (t *testAgent) Message(m *messaging.Message) { fmt.Printf("test: testAgent.
 func (t *testAgent) Run()                         {}
 func (t *testAgent) Shutdown()                    {}
 
-func testLog(_ context.Context, agentId string, content any) *core.Status {
+func testLog2(_ context.Context, agentId string, content any) *core.Status {
 	fmt.Printf("test: activity1.Log() -> %v : %v : %v\n", fmt2.FmtRFC3339Millis(time.Now().UTC()), agentId, content)
 	return core.StatusOK()
 }

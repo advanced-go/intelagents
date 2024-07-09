@@ -15,7 +15,7 @@ type queryInferenceFunc func(ctx context.Context, origin core.Origin) ([]inferen
 type getGuidanceFunc func()
 type insertInferenceFunc func(ctx context.Context, h http.Header, e inference1.Entry) *core.Status
 
-// run - controller run function.
+// run - egress controller
 func run(c *controller, access queryAccessFunc, inference queryInferenceFunc, guidance getGuidanceFunc, insert insertInferenceFunc) {
 	if c == nil {
 		return

@@ -2,6 +2,7 @@ package ingress1
 
 import (
 	"fmt"
+	"github.com/advanced-go/intelagents/guidance"
 	"github.com/advanced-go/observation/access1"
 	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
@@ -16,7 +17,8 @@ const (
 type controller struct {
 	running  bool
 	uri      string
-	interval time.Duration // Needs to be configured dynamically during runtime, based on rps
+	interval time.Duration
+	ticker   *time.Ticker
 	ctrlC    chan *messaging.Message
 	handler  messaging.Agent
 	shutdown func()
@@ -31,9 +33,13 @@ func ControllerAgentUri(origin core.Origin) string {
 
 // NewControllerAgent - create a new controller agent
 func NewControllerAgent(origin core.Origin, handler messaging.Agent) messaging.Agent {
+	return newControllerAgent(origin, handler)
+}
+
+func newControllerAgent(origin core.Origin, handler messaging.Agent) *controller {
 	c := new(controller)
 	c.uri = ControllerAgentUri(origin)
-	c.interval = time.Second * 2
+	c.interval = guidance.IngressInterval()
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c
@@ -53,12 +59,6 @@ func (c *controller) Uri() string {
 func (c *controller) Message(m *messaging.Message) {
 	messaging.Mux(m, c.ctrlC, nil, nil)
 }
-
-// Add - add a shutdown function
-//func (c *controller) Add(f func()) {
-//	c.shutdown = messaging.AddShutdown(c.shutdown, f)
-//
-//}
 
 // Shutdown - shutdown the agent
 func (c *controller) Shutdown() {
@@ -80,5 +80,21 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, access1.EgressQuery, inference1.EgressQuery, nil, inference1.Insert)
+	go run(c, access1.IngressQuery, inference1.IngressQuery, nil, inference1.Insert)
+}
+
+func (c *controller) StartTicker(interval time.Duration) {
+	if interval <= 0 {
+		interval = c.interval
+	} else {
+		c.interval = interval
+	}
+	if c.ticker != nil {
+		c.ticker.Stop()
+	}
+	c.ticker = time.NewTicker(interval)
+}
+
+func (c *controller) StopTicker() {
+	c.ticker.Stop()
 }
