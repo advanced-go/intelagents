@@ -2,7 +2,6 @@ package ingress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/intelagents/guidance"
 	"github.com/advanced-go/observation/access1"
 	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
@@ -11,7 +10,8 @@ import (
 )
 
 const (
-	Class = "ingress-controller1"
+	Class           = "ingress-controller1"
+	defaultInterval = time.Second * 3
 )
 
 type controller struct {
@@ -41,7 +41,7 @@ func newControllerAgent(origin core.Origin, handler messaging.Agent) *controller
 	c := new(controller)
 	c.origin = origin
 	c.uri = ControllerAgentUri(origin)
-	c.interval = guidance.IngressInterval()
+	c.interval = defaultInterval
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c

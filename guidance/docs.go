@@ -1,5 +1,9 @@
 package guidance
 
+func init() {
+
+}
+
 func IngressProcessing() bool {
 	return true
 }

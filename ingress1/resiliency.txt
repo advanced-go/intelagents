@@ -1,0 +1,47 @@
+
+For ingress, the only metric that needs to be calculated is the Latency Percentile. This should be created
+by a scheduled job and update a database table, then read at controller agent initialization.
+
+Everything else, timeout and rate limiting can start with sensible defaults in the client envoy, and the
+controller agent can modify the rate limiting dynamically based on the Latency Percentile and result
+codes.
+
+There is no failover.
+
+type Thresholds struct {
+	Watch   int16 // Range 1 - 99
+	Percent int16 // Used for latency, traffic, status codes, counter, profile
+	Value   int16 // Used for latency, saturation duration or traffic
+	Minimum int16 // Used for status codes to attenuate underflow, applied to the window interval
+}
+
+
+
+Initial values for timeouts and rate limiting will be constants in the client envoy, and can optionally
+override the timeouts. Set hard values for rate limiting will cause a system outage.
+
+How to determine, based on an observation, when there is a problem or about to be a problem.
+1. Compare against a metric
+   a. Percentage of traffic.
+      - How to filter traffic
+      - How to compare metric against periods of low traffic
+   b. Latency Percentile
+
+2. How to determine the threshold?
+   a. Latency Percentile
+       - Can this be customer configured?
+          1. Works better as an SLO vs a controller. If this is a controller, then traffic will be rate limited
+             until the latency is under the threshold
+       - Can the latency and percentile be set dynamically?
+           1. Set the threshold and percentile on experience as below
+
+https://cacm.acm.org/practice/metrics-that-matter/
+In the ACM article Metrics That Matter, Benjamin Treynor Sloss writes the following:
+
+    "A good practical rule of thumb ... is that the 99th-percentile latency should be no more than three to five
+    times the median latency."
+   "We find the 50th-, 95th-, and 99th-percentile latency measures for a service are each individually valuable,
+    and we will ideally set SLOs around each of them."
+
+    Determine your latency thresholds based on historical percentiles, then measure how many requests fall into
+    each bucket. This approach is a good model to follow.
