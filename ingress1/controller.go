@@ -17,6 +17,7 @@ const (
 type controller struct {
 	running  bool
 	uri      string
+	origin   core.Origin
 	interval time.Duration
 	ticker   *time.Ticker
 	ctrlC    chan *messaging.Message
@@ -38,6 +39,7 @@ func NewControllerAgent(origin core.Origin, handler messaging.Agent) messaging.A
 
 func newControllerAgent(origin core.Origin, handler messaging.Agent) *controller {
 	c := new(controller)
+	c.origin = origin
 	c.uri = ControllerAgentUri(origin)
 	c.interval = guidance.IngressInterval()
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)

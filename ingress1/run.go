@@ -23,19 +23,28 @@ func run(c *controller, access queryAccessFunc, inference queryInferenceFunc, gu
 	if c == nil {
 		return
 	}
+	var prev []access1.Entry
 	c.StartTicker(0)
 
 	for {
 		select {
 		case <-c.ticker.C:
 			testLog(nil, c.uri, "tick")
+			curr, status := access(nil, c.origin)
 
-			status := processAssignment()
 			if !status.OK() && !status.NotFound() {
 				c.handler.Message(messaging.NewStatusMessage(c.handler.Uri(), c.uri, status))
+			} else {
+				status = processInference(curr, inference, guidance, insert)
+				if !status.OK() {
+					c.handler.Message(messaging.NewStatusMessage(c.handler.Uri(), c.uri, status))
+				}
+				prev = curr
 			}
 			// Update ticker based on changes in RPS
-			updateTicker(c)
+			if updateTicker(c, prev, curr) {
+				
+			}
 		case msg, open := <-c.ctrlC:
 			if !open {
 				c.StopTicker()
@@ -59,10 +68,18 @@ func testLog(_ context.Context, agentId string, content any) *core.Status {
 	return core.StatusOK()
 }
 
-func processAssignment() *core.Status {
+func processInference(curr []access1.Entry, inference queryInferenceFunc, guidance getGuidanceFunc, insert insertInferenceFunc) *core.Status {
+	e, status := infer(curr, inference, guidance)
+	if !status.OK() {
+		return status
+	}
+	status = insert(nil, nil, e)
+	if !status.OK() {
+		return status
+	}
 	return core.StatusOK()
 }
 
-func updateTicker(c *controller) {
-	
+func updateTicker(c *controller, prev, curr []access1.Entry) bool {
+	return false
 }
