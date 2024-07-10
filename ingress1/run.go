@@ -5,25 +5,15 @@ import (
 	"fmt"
 	"github.com/advanced-go/guidance/percentile1"
 	"github.com/advanced-go/observation/access1"
-	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	fmt2 "github.com/advanced-go/stdlib/fmt"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
 )
 
-type enabledFunc func(origin core.Origin, h core.ErrorHandler) bool
-type getPercentileFunc func(origin core.Origin, h core.ErrorHandler) percentile1.Entry
-
-type queryAccessFunc func(origin core.Origin) ([]access1.Entry, *core.Status)
-type queryInferenceFunc func(origin core.Origin) ([]inference1.Entry, *core.Status)
-
-type insertInferenceFunc func(e inference1.Entry) *core.Status
-type insertIntervalFunc func(e inference1.Entry) *core.Status
-
 // run - ingress controller
-func run(c *controller, enabled enabledFunc, percentile getPercentileFunc, access queryAccessFunc, inference queryInferenceFunc, insert insertInferenceFunc) {
-	if c == nil {
+func run(c *controller, guid *guidance, observe *observation) {
+	if c == nil || guid == nil || observe == nil {
 		return
 	}
 	var prev []access1.Entry
@@ -32,22 +22,21 @@ func run(c *controller, enabled enabledFunc, percentile getPercentileFunc, acces
 	for {
 		select {
 		case <-c.ticker.C:
-			if !enabled(c.origin, c.opsAgent) {
+			if !guid.shouldProcess(c.origin, c.opsAgent) {
 				continue
 			}
-			p := percentile(c.origin, c.opsAgent)
 			testLog(nil, c.uri, "tick")
-			curr, status := access(c.origin)
+			curr, status := observe.access(c.origin)
 			if !status.OK() && !status.NotFound() {
 				c.opsAgent.Handle(status, c.uri)
 				continue
 			}
-			status = processInference(curr, inference, p, insert)
+			status = processInference(curr, guid.percentile(c.origin, c.opsAgent), observe)
 			if !status.OK() {
 				c.opsAgent.Handle(status, c.uri)
 			}
 			prev = curr
-			updateTicker(c, prev, curr, insert)
+			updateTicker(c, prev, curr, observe)
 		case msg, open := <-c.ctrlC:
 			if !open {
 				c.stopTicker()
@@ -71,15 +60,15 @@ func testLog(_ context.Context, agentId string, content any) *core.Status {
 	return core.StatusOK()
 }
 
-func processInference(curr []access1.Entry, inference queryInferenceFunc, percentile percentile1.Entry, insert insertInferenceFunc) *core.Status {
-	e, status := infer(curr, inference, percentile)
+func processInference(curr []access1.Entry, percentile percentile1.Entry, observe *observation) *core.Status {
+	e, status := infer(curr, percentile, observe)
 	if !status.OK() {
 		return status
 	}
-	return insert(e)
+	return observe.addInference(e)
 }
 
-func updateTicker(c *controller, prev, curr []access1.Entry, insert insertInferenceFunc) *core.Status {
+func updateTicker(c *controller, prev, curr []access1.Entry, observe *observation) *core.Status {
 	// Need to insert another inference entry for changing the ticker based on RPS
 	return core.StatusOK()
 }

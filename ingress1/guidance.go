@@ -12,6 +12,15 @@ const (
 	scheduleDuration   = time.Second * 2
 )
 
+type guidance struct {
+	percentile    func(origin core.Origin, h core.ErrorHandler) percentile1.Entry
+	shouldProcess func(origin core.Origin, h core.ErrorHandler) bool
+}
+
+func newGuidance() *guidance {
+	return &guidance{percentile: getPercentile, shouldProcess: processing}
+}
+
 // getPercentile - resource GET
 func getPercentile(origin core.Origin, h core.ErrorHandler) percentile1.Entry {
 	ctx, cancel := context.WithTimeout(context.Background(), percentileDuration)

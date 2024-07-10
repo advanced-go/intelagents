@@ -7,6 +7,6 @@ import (
 	"github.com/advanced-go/stdlib/core"
 )
 
-func infer(entry []access1.Entry, inf queryInferenceFunc, percentile percentile1.Entry) (inference1.Entry, *core.Status) {
+func infer(entry []access1.Entry, percentile percentile1.Entry, observe *observation) (inference1.Entry, *core.Status) {
 	return inference1.Entry{}, core.StatusOK()
 }

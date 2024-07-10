@@ -80,7 +80,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, processing, getPercentile, accessQuery, inferenceQuery, inferenceInsert)
+	go run(c, newGuidance(), newObservation())
 }
 
 func (c *controller) startTicker(interval time.Duration) {
