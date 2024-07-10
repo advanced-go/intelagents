@@ -2,7 +2,8 @@ package ingress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/observation/access1"
+	"github.com/advanced-go/intelagents/guidance"
+	"github.com/advanced-go/intelagents/observation"
 	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
@@ -21,7 +22,7 @@ type controller struct {
 	interval time.Duration
 	ticker   *time.Ticker
 	ctrlC    chan *messaging.Message
-	handler  messaging.Agent
+	opsAgent messaging.OpsAgent
 	shutdown func()
 }
 
@@ -33,17 +34,17 @@ func ControllerAgentUri(origin core.Origin) string {
 }
 
 // NewControllerAgent - create a new controller agent
-func NewControllerAgent(origin core.Origin, handler messaging.Agent) messaging.Agent {
-	return newControllerAgent(origin, handler)
+func NewControllerAgent(origin core.Origin, opsAgent messaging.OpsAgent) messaging.Agent {
+	return newControllerAgent(origin, opsAgent)
 }
 
-func newControllerAgent(origin core.Origin, handler messaging.Agent) *controller {
+func newControllerAgent(origin core.Origin, opsAgent messaging.OpsAgent) *controller {
 	c := new(controller)
 	c.origin = origin
 	c.uri = ControllerAgentUri(origin)
 	c.interval = defaultInterval
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.handler = handler
+	c.opsAgent = opsAgent
 	return c
 }
 
@@ -82,10 +83,10 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, access1.IngressQuery, inference1.IngressQuery, nil, inference1.Insert)
+	go run(c, guidance.IngressProcessing, observation.AccessIngressQuery, observation.InferenceIngressQuery, inference1.Insert)
 }
 
-func (c *controller) StartTicker(interval time.Duration) {
+func (c *controller) startTicker(interval time.Duration) {
 	if interval <= 0 {
 		interval = c.interval
 	} else {
@@ -97,6 +98,6 @@ func (c *controller) StartTicker(interval time.Duration) {
 	c.ticker = time.NewTicker(interval)
 }
 
-func (c *controller) StopTicker() {
+func (c *controller) stopTicker() {
 	c.ticker.Stop()
 }

@@ -3,6 +3,8 @@ package ingress1
 import (
 	"context"
 	"fmt"
+	"github.com/advanced-go/guidance/percentile1"
+	"github.com/advanced-go/intelagents/guidance"
 	"github.com/advanced-go/observation/access1"
 	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
@@ -14,8 +16,8 @@ import (
 
 type enabledFunc func(origin core.Origin) bool
 
-type queryAccessFunc func(ctx context.Context, origin core.Origin) ([]access1.Entry, *core.Status)
-type queryInferenceFunc func(ctx context.Context, origin core.Origin) ([]inference1.Entry, *core.Status)
+type queryAccessFunc func(origin core.Origin) ([]access1.Entry, *core.Status)
+type queryInferenceFunc func(origin core.Origin) ([]inference1.Entry, *core.Status)
 
 type insertInferenceFunc func(ctx context.Context, h http.Header, e inference1.Entry) *core.Status
 type insertIntervalFunc func(ctx context.Context, h http.Header, e inference1.Entry) *core.Status
@@ -26,8 +28,7 @@ func run(c *controller, enabled enabledFunc, access queryAccessFunc, inference q
 		return
 	}
 	var prev []access1.Entry
-	c.StartTicker(0)
-	// TODO : query experience for appropriate latency percentile 99% 2000
+	c.startTicker(0)
 
 	for {
 		select {
@@ -35,27 +36,28 @@ func run(c *controller, enabled enabledFunc, access queryAccessFunc, inference q
 			if !enabled(c.origin) {
 				continue
 			}
+			percentile := guidance.GetPercentile(c.origin, c.opsAgent)
 			testLog(nil, c.uri, "tick")
-			curr, status := access(nil, c.origin)
+			curr, status := access(c.origin)
 			if !status.OK() && !status.NotFound() {
-				c.handler.Message(messaging.NewStatusMessage(c.handler.Uri(), c.uri, status))
-			} else {
-				status = processInference(curr, inference, nil, insert)
-				if !status.OK() {
-					c.handler.Message(messaging.NewStatusMessage(c.handler.Uri(), c.uri, status))
-				}
-				prev = curr
+				c.opsAgent.Handle(status, c.uri)
+				continue
 			}
+			status = processInference(curr, inference, percentile, insert)
+			if !status.OK() {
+				c.opsAgent.Handle(status, c.uri)
+			}
+			prev = curr
 			updateTicker(c, prev, curr, insert)
 		case msg, open := <-c.ctrlC:
 			if !open {
-				c.StopTicker()
+				c.stopTicker()
 				return
 			}
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				close(c.ctrlC)
-				c.StopTicker()
+				c.stopTicker()
 				testLog(nil, c.uri, messaging.ShutdownEvent)
 				return
 			default:
@@ -70,8 +72,8 @@ func testLog(_ context.Context, agentId string, content any) *core.Status {
 	return core.StatusOK()
 }
 
-func processInference(curr []access1.Entry, inference queryInferenceFunc, guidance func(), insert insertInferenceFunc) *core.Status {
-	e, status := infer(curr, inference, guidance)
+func processInference(curr []access1.Entry, inference queryInferenceFunc, percentile percentile1.Entry, insert insertInferenceFunc) *core.Status {
+	e, status := infer(curr, inference, percentile)
 	if !status.OK() {
 		return status
 	}
