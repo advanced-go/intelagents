@@ -2,9 +2,6 @@ package ingress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/intelagents/guidance"
-	"github.com/advanced-go/intelagents/observation"
-	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -83,7 +80,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, guidance.IngressProcessing, observation.AccessIngressQuery, observation.InferenceIngressQuery, inference1.Insert)
+	go run(c, processing, getPercentile, accessQuery, inferenceQuery, inferenceInsert)
 }
 
 func (c *controller) startTicker(interval time.Duration) {

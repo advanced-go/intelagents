@@ -4,26 +4,25 @@ import (
 	"context"
 	"fmt"
 	"github.com/advanced-go/guidance/percentile1"
-	"github.com/advanced-go/intelagents/guidance"
 	"github.com/advanced-go/observation/access1"
 	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	fmt2 "github.com/advanced-go/stdlib/fmt"
 	"github.com/advanced-go/stdlib/messaging"
-	"net/http"
 	"time"
 )
 
-type enabledFunc func(origin core.Origin) bool
+type enabledFunc func(origin core.Origin, h core.ErrorHandler) bool
+type getPercentileFunc func(origin core.Origin, h core.ErrorHandler) percentile1.Entry
 
 type queryAccessFunc func(origin core.Origin) ([]access1.Entry, *core.Status)
 type queryInferenceFunc func(origin core.Origin) ([]inference1.Entry, *core.Status)
 
-type insertInferenceFunc func(ctx context.Context, h http.Header, e inference1.Entry) *core.Status
-type insertIntervalFunc func(ctx context.Context, h http.Header, e inference1.Entry) *core.Status
+type insertInferenceFunc func(e inference1.Entry) *core.Status
+type insertIntervalFunc func(e inference1.Entry) *core.Status
 
 // run - ingress controller
-func run(c *controller, enabled enabledFunc, access queryAccessFunc, inference queryInferenceFunc, insert insertInferenceFunc) {
+func run(c *controller, enabled enabledFunc, percentile getPercentileFunc, access queryAccessFunc, inference queryInferenceFunc, insert insertInferenceFunc) {
 	if c == nil {
 		return
 	}
@@ -33,17 +32,17 @@ func run(c *controller, enabled enabledFunc, access queryAccessFunc, inference q
 	for {
 		select {
 		case <-c.ticker.C:
-			if !enabled(c.origin) {
+			if !enabled(c.origin, c.opsAgent) {
 				continue
 			}
-			percentile := guidance.GetPercentile(c.origin, c.opsAgent)
+			p := percentile(c.origin, c.opsAgent)
 			testLog(nil, c.uri, "tick")
 			curr, status := access(c.origin)
 			if !status.OK() && !status.NotFound() {
 				c.opsAgent.Handle(status, c.uri)
 				continue
 			}
-			status = processInference(curr, inference, percentile, insert)
+			status = processInference(curr, inference, p, insert)
 			if !status.OK() {
 				c.opsAgent.Handle(status, c.uri)
 			}
@@ -77,7 +76,7 @@ func processInference(curr []access1.Entry, inference queryInferenceFunc, percen
 	if !status.OK() {
 		return status
 	}
-	return insert(nil, nil, e)
+	return insert(e)
 }
 
 func updateTicker(c *controller, prev, curr []access1.Entry, insert insertInferenceFunc) *core.Status {
