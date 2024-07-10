@@ -18,9 +18,21 @@ type guidance struct {
 }
 
 func newGuidance() *guidance {
-	return &guidance{percentile: getPercentile, shouldProcess: processing}
+	return &guidance{
+		percentile: func(origin core.Origin, h core.ErrorHandler) percentile1.Entry {
+			ctx, cancel := context.WithTimeout(context.Background(), percentileDuration)
+			defer cancel()
+			entry, status := percentile1.Get(ctx, origin)
+			h.Handle(status, "")
+			return entry
+		},
+		shouldProcess: func(origin core.Origin, h core.ErrorHandler) bool {
+			return true
+		},
+	}
 }
 
+/*
 // getPercentile - resource GET
 func getPercentile(origin core.Origin, h core.ErrorHandler) percentile1.Entry {
 	ctx, cancel := context.WithTimeout(context.Background(), percentileDuration)
@@ -33,3 +45,6 @@ func getPercentile(origin core.Origin, h core.ErrorHandler) percentile1.Entry {
 func processing(origin core.Origin, h core.ErrorHandler) bool {
 	return true
 }
+
+
+*/
