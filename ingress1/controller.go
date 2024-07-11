@@ -2,6 +2,7 @@ package ingress1
 
 import (
 	"fmt"
+	"github.com/advanced-go/intelagents/guidance1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -9,17 +10,17 @@ import (
 
 const (
 	Class           = "ingress-controller1"
-	defaultInterval = time.Second * 3
+	defaultInterval = time.Minute * 2
 )
 
 type controller struct {
 	running  bool
 	uri      string
 	origin   core.Origin
-	interval time.Duration
-	ticker   *time.Ticker
+	ticker   *messaging.Ticker
+	poller   *messaging.Ticker
 	ctrlC    chan *messaging.Message
-	opsAgent messaging.OpsAgent
+	handler  messaging.OpsAgent
 	shutdown func()
 }
 
@@ -31,17 +32,18 @@ func ControllerAgentUri(origin core.Origin) string {
 }
 
 // NewControllerAgent - create a new controller agent
-func NewControllerAgent(origin core.Origin, opsAgent messaging.OpsAgent) messaging.Agent {
-	return newControllerAgent(origin, opsAgent)
+func NewControllerAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newControllerAgent(origin, handler)
 }
 
-func newControllerAgent(origin core.Origin, opsAgent messaging.OpsAgent) *controller {
+func newControllerAgent(origin core.Origin, handler messaging.OpsAgent) *controller {
 	c := new(controller)
 	c.origin = origin
 	c.uri = ControllerAgentUri(origin)
-	c.interval = defaultInterval
+	c.ticker = messaging.NewTicker(defaultInterval)
+	c.poller = messaging.NewTicker(guidance1.PercentilePollingDuration)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.opsAgent = opsAgent
+	c.handler = handler
 	return c
 }
 
@@ -83,12 +85,14 @@ func (c *controller) Run() {
 	go run(c, newGuidance(), newObservation())
 }
 
-func (c *controller) startTicker(interval time.Duration) {
-	if interval <= 0 {
-		interval = c.interval
-	} else {
-		c.interval = interval
-	}
+func (c *controller) stopTickers() {
+	c.ticker.Stop()
+	c.poller.Stop()
+}
+
+/*
+func (c *controller) startTicker(duration time.Duration) {
+	c.ticker.Start(duration)
 	if c.ticker != nil {
 		c.ticker.Stop()
 	}
@@ -98,3 +102,22 @@ func (c *controller) startTicker(interval time.Duration) {
 func (c *controller) stopTicker() {
 	c.ticker.Stop()
 }
+
+func (c *controller) startPoller(interval time.Duration) {
+	if interval <= 0 {
+		interval = c.tickInterval
+	} else {
+		c.tickInterval = interval
+	}
+	if c.ticker != nil {
+		c.ticker.Stop()
+	}
+	c.ticker = time.NewTicker(interval)
+}
+
+func (c *controller) stopPoller() {
+	c.ticker.Stop()
+}
+
+
+*/

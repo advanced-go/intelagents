@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/advanced-go/guidance/percentile1"
+	"github.com/advanced-go/intelagents/guidance1"
 	"github.com/advanced-go/observation/access1"
 	"github.com/advanced-go/stdlib/core"
 	fmt2 "github.com/advanced-go/stdlib/fmt"
@@ -11,41 +12,57 @@ import (
 	"time"
 )
 
+const (
+	percentileDuration = time.Second * 2
+)
+
+var (
+	defaultPercentile = percentile1.Entry{Percent: 99, Latency: 2000}
+)
+
 // run - ingress controller
-func run(c *controller, guid *guidance, observe *observation) {
-	if c == nil || guid == nil || observe == nil {
+func run(c *controller, guide *guidance, observe *observation) {
+	if c == nil || guide == nil || observe == nil {
 		return
 	}
 	var prev []access1.Entry
-	c.startTicker(0)
-
+	percentile, status := guide.percentile(percentileDuration, defaultPercentile, c.origin)
+	if !status.OK() {
+		c.handler.Handle(status, "")
+	}
+	c.ticker.Start(0)
+	c.poller.Start(0)
 	for {
 		select {
-		case <-c.ticker.C:
-			if !guid.shouldProcess(c.origin, c.opsAgent) {
+		case <-c.ticker.C():
+			if !guidance1.ShouldProcess() {
 				continue
 			}
 			testLog(nil, c.uri, "tick")
-			curr, status := observe.access(c.origin)
-			if !status.OK() && !status.NotFound() {
-				c.opsAgent.Handle(status, c.uri)
+			curr, status1 := observe.access(c.origin)
+			if !status1.OK() {
+				if !status1.NotFound() {
+					c.handler.Handle(status1, c.uri)
+				}
 				continue
 			}
-			status = processInference(curr, guid.percentile(c.origin, c.opsAgent), observe)
-			if !status.OK() {
-				c.opsAgent.Handle(status, c.uri)
+			status1 = processInference(curr, percentile, observe)
+			if !status1.OK() {
+				c.handler.Handle(status, c.uri)
+				continue
 			}
 			prev = curr
 			updateTicker(c, prev, curr, observe)
-		case msg, open := <-c.ctrlC:
-			if !open {
-				c.stopTicker()
-				return
+		case <-c.poller.C():
+			percentile, status = guide.percentile(percentileDuration, percentile, c.origin)
+			if !status.OK() {
+				c.handler.Handle(status, "")
 			}
+		case msg := <-c.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				close(c.ctrlC)
-				c.stopTicker()
+				c.stopTickers()
 				testLog(nil, c.uri, messaging.ShutdownEvent)
 				return
 			default:
