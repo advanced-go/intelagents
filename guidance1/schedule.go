@@ -8,93 +8,74 @@ import (
 )
 
 const (
-	Class           = "ingress-controller1"
+	Class           = "schedule1"
 	defaultInterval = time.Second * 3
 )
 
 type schedule struct {
 	running  bool
 	uri      string
-	origin   core.Origin
-	interval time.Duration
-	ticker   *time.Ticker
+	ticker   *messaging.Ticker
 	ctrlC    chan *messaging.Message
-	opsAgent messaging.OpsAgent
+	handler  messaging.OpsAgent
 	shutdown func()
 }
 
-func scheduleAgentUri(origin core.Origin) string {
+func ScheduleAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
 		return fmt.Sprintf("%v:%v.%v.%v", Class, origin.Region, origin.Zone, origin.Host)
 	}
 	return fmt.Sprintf("%v:%v.%v.%v.%v", Class, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewscheduleAgent - create a new schedule agent
-func NewscheduleAgent(origin core.Origin, opsAgent messaging.OpsAgent) messaging.Agent {
-	return newscheduleAgent(origin, opsAgent)
+// NewScheduleAgent - create a new schedule agent
+func NewScheduleAgent(handler messaging.OpsAgent) messaging.Agent {
+	return newScheduleAgent(handler)
 }
 
-func newscheduleAgent(origin core.Origin, opsAgent messaging.OpsAgent) *schedule {
+func newScheduleAgent(handler messaging.OpsAgent) *schedule {
 	c := new(schedule)
-	c.origin = origin
-	c.uri = scheduleAgentUri(origin)
-	c.interval = defaultInterval
+	c.uri = Class
+	c.ticker = messaging.NewTicker(defaultInterval)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.opsAgent = opsAgent
+	c.handler = handler
 	return c
 }
 
 // String - identity
-func (c *schedule) String() string {
-	return c.uri
+func (s *schedule) String() string {
+	return s.uri
 }
 
 // Uri - agent identifier
-func (c *schedule) Uri() string {
-	return c.uri
+func (s *schedule) Uri() string {
+	return s.uri
 }
 
 // Message - message the agent
-func (c *schedule) Message(m *messaging.Message) {
-	messaging.Mux(m, c.ctrlC, nil, nil)
+func (s *schedule) Message(m *messaging.Message) {
+	messaging.Mux(m, s.ctrlC, nil, nil)
 }
 
 // Shutdown - shutdown the agent
-func (c *schedule) Shutdown() {
-	if !c.running {
+func (s *schedule) Shutdown() {
+	if !s.running {
 		return
 	}
-	c.running = false
-	if c.shutdown != nil {
-		c.shutdown()
+	s.running = false
+	if s.shutdown != nil {
+		s.shutdown()
 	}
-	msg := messaging.NewControlMessage(c.uri, c.uri, messaging.ShutdownEvent)
-	if c.ctrlC != nil {
-		c.ctrlC <- msg
+	msg := messaging.NewControlMessage(s.uri, s.uri, messaging.ShutdownEvent)
+	if s.ctrlC != nil {
+		s.ctrlC <- msg
 	}
 }
 
 // Run - run the agent
-func (c *schedule) Run() {
-	if c.running {
+func (s *schedule) Run() {
+	if s.running {
 		return
 	}
-
-}
-
-func (c *schedule) startTicker(interval time.Duration) {
-	if interval <= 0 {
-		interval = c.interval
-	} else {
-		c.interval = interval
-	}
-	if c.ticker != nil {
-		c.ticker.Stop()
-	}
-	c.ticker = time.NewTicker(interval)
-}
-
-func (c *schedule) stopTicker() {
-	c.ticker.Stop()
+	go run(s)
 }

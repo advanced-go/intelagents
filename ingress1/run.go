@@ -35,7 +35,7 @@ func run(c *controller, guide *guidance, observe *observation) {
 	for {
 		select {
 		case <-c.ticker.C():
-			if !guidance1.ShouldProcess() {
+			if !guidance1.IsScheduled() {
 				continue
 			}
 			testLog(nil, c.uri, "tick")

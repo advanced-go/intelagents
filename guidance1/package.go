@@ -11,7 +11,7 @@ const (
 	PercentilePollingDuration = time.Hour * 12
 )
 
-func ShouldProcess() bool {
+func IsScheduled() bool {
 	return true
 }
 
