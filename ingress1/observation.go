@@ -14,6 +14,7 @@ const (
 	insertInferenceDuration = time.Second * 2
 )
 
+// A nod to Linus Torvalds and plain C
 type observation struct {
 	access       func(origin core.Origin) ([]access1.Entry, *core.Status)
 	inference    func(origin core.Origin) ([]inference1.Entry, *core.Status)
