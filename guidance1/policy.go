@@ -8,33 +8,35 @@ import (
 )
 
 const (
-	PolicyClass = "policy1"
+	PolicyMonitorClass = "policy-monitor1"
 )
 
 type policy struct {
 	running  bool
 	uri      string
+	origin   core.Origin
 	ticker   *messaging.Ticker
 	ctrlC    chan *messaging.Message
 	handler  messaging.OpsAgent
 	shutdown func()
 }
 
-func PolicyAgentUri(origin core.Origin) string {
+func PolicyMonitorAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", PolicyClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", PolicyMonitorClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", PolicyClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", PolicyMonitorClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewPolicyAgent - create a new schedule agent
-func NewPolicyAgent(interval time.Duration, handler messaging.OpsAgent) messaging.Agent {
-	return newPolicyAgent(interval, handler)
+// NewPolicyMonitorAgent - create a new schedule agent
+func NewPolicyMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newPolicyMonitorAgent(interval, origin, handler)
 }
 
-func newPolicyAgent(interval time.Duration, handler messaging.OpsAgent) *policy {
+func newPolicyMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) *policy {
 	c := new(policy)
-	c.uri = PolicyClass
+	c.uri = PolicyMonitorAgentUri(origin)
+	c.origin = origin
 	c.ticker = messaging.NewTicker(interval)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
