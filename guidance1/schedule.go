@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	Class = "schedule1"
+	ScheduleClass = "schedule1"
 )
 
 type schedule struct {
@@ -22,9 +22,9 @@ type schedule struct {
 
 func ScheduleAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", Class, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", ScheduleClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", Class, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", ScheduleClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
 // NewScheduleAgent - create a new schedule agent
@@ -34,7 +34,7 @@ func NewScheduleAgent(interval time.Duration, handler messaging.OpsAgent) messag
 
 func newScheduleAgent(interval time.Duration, handler messaging.OpsAgent) *schedule {
 	c := new(schedule)
-	c.uri = Class
+	c.uri = ScheduleClass
 	c.ticker = messaging.NewTicker(interval)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
