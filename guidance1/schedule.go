@@ -29,14 +29,14 @@ func ScheduleAgentUri(origin core.Origin) string {
 }
 
 // NewScheduleAgent - create a new schedule agent
-func NewScheduleAgent(handler messaging.OpsAgent) messaging.Agent {
-	return newScheduleAgent(handler)
+func NewScheduleAgent(interval time.Duration, handler messaging.OpsAgent) messaging.Agent {
+	return newScheduleAgent(interval, handler)
 }
 
-func newScheduleAgent(handler messaging.OpsAgent) *schedule {
+func newScheduleAgent(interval time.Duration, handler messaging.OpsAgent) *schedule {
 	c := new(schedule)
 	c.uri = Class
-	c.ticker = messaging.NewTicker(defaultInterval)
+	c.ticker = messaging.NewTicker(interval)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c
