@@ -11,23 +11,23 @@ import (
 )
 
 // run - schedule
-func run(c *schedule) {
-	if c == nil {
+func runSchedule(s *schedule) {
+	if s == nil {
 		return
 	}
-	c.ticker.Start(0)
+	s.ticker.Start(0)
 
 	for {
 		select {
-		case <-c.ticker.C():
+		case <-s.ticker.C():
 			// TODO : poll database for global calendar change
 
-		case msg := <-c.ctrlC:
+		case msg := <-s.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
-				close(c.ctrlC)
-				c.ticker.Stop()
-				testLog(nil, c.uri, messaging.ShutdownEvent)
+				close(s.ctrlC)
+				s.ticker.Stop()
+				testLog(nil, s.uri, messaging.ShutdownEvent)
 				return
 			default:
 			}

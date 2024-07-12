@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	Class           = "schedule1"
-	defaultInterval = time.Second * 3
+	Class = "schedule1"
 )
 
 type schedule struct {
@@ -77,5 +76,5 @@ func (s *schedule) Run() {
 	if s.running {
 		return
 	}
-	go run(s)
+	go runSchedule(s)
 }
