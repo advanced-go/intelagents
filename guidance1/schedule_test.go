@@ -12,5 +12,5 @@ func ExampleNewScheduleAgent() {
 
 	//Output:
 	//test: newScheduleAgent() -> schedule1
-	
+
 }
