@@ -3,9 +3,9 @@ package ingress1
 import (
 	"context"
 	"fmt"
-	"github.com/advanced-go/guidance/percentile1"
 	"github.com/advanced-go/intelagents/guidance1"
 	"github.com/advanced-go/observation/access1"
+	"github.com/advanced-go/observation/percentile1"
 	"github.com/advanced-go/stdlib/core"
 	fmt2 "github.com/advanced-go/stdlib/fmt"
 	"github.com/advanced-go/stdlib/messaging"
@@ -21,12 +21,12 @@ var (
 )
 
 // run - ingress controller
-func run(c *controller, guide *guidance, observe *observation) {
-	if c == nil || guide == nil || observe == nil {
+func run(c *controller, observe *observation) {
+	if c == nil || observe == nil {
 		return
 	}
 	var prev []access1.Entry
-	percentile, status := guide.percentile(percentileDuration, defaultPercentile, c.origin)
+	percentile, status := observe.percentile(percentileDuration, defaultPercentile, c.origin)
 	if !status.OK() {
 		c.handler.Handle(status, "")
 	}
@@ -54,7 +54,7 @@ func run(c *controller, guide *guidance, observe *observation) {
 			prev = curr
 			updateTicker(c, prev, curr, observe)
 		case <-c.poller.C():
-			percentile, status = guide.percentile(percentileDuration, percentile, c.origin)
+			percentile, status = observe.percentile(percentileDuration, percentile, c.origin)
 			if !status.OK() {
 				c.handler.Handle(status, "")
 			}

@@ -2,8 +2,8 @@ package guidance1
 
 import "github.com/advanced-go/stdlib/messaging"
 
-// run - policy change
-func runPolicy(p *policy) {
+// run - routing change monitor
+func runRouting(p *routing) {
 	if p == nil {
 		return
 	}
@@ -12,7 +12,7 @@ func runPolicy(p *policy) {
 	for {
 		select {
 		case <-p.ticker.C():
-			// TODO : poll database for controller policy changes
+			// TODO : poll database for controller routing changes
 
 		case msg := <-p.ctrlC:
 			switch msg.Event() {

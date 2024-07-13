@@ -82,7 +82,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, newGuidance(), newObservation())
+	go run(c, newObservation())
 }
 
 func (c *controller) stopTickers() {

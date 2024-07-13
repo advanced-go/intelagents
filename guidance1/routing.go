@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	PolicyMonitorClass = "policy-monitor1"
+	RoutingMonitorClass = "routing-monitor1"
 )
 
-type policy struct {
+type routing struct {
 	running  bool
 	uri      string
 	origin   core.Origin
@@ -21,21 +21,21 @@ type policy struct {
 	shutdown func()
 }
 
-func PolicyMonitorAgentUri(origin core.Origin) string {
+func RoutingMonitorAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", PolicyMonitorClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", RoutingMonitorClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", PolicyMonitorClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", RoutingMonitorClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewPolicyMonitorAgent - create a new schedule agent
-func NewPolicyMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
-	return newPolicyMonitorAgent(interval, origin, handler)
+// NewRoutingMonitorAgent - create a new routing monitor agent
+func NewRoutingMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newRoutingMonitorAgent(interval, origin, handler)
 }
 
-func newPolicyMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) *policy {
-	c := new(policy)
-	c.uri = PolicyMonitorAgentUri(origin)
+func newRoutingMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) *routing {
+	c := new(routing)
+	c.uri = RoutingMonitorAgentUri(origin)
 	c.origin = origin
 	c.ticker = messaging.NewTicker(interval)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
@@ -44,22 +44,22 @@ func newPolicyMonitorAgent(interval time.Duration, origin core.Origin, handler m
 }
 
 // String - identity
-func (p *policy) String() string {
+func (p *routing) String() string {
 	return p.uri
 }
 
 // Uri - agent identifier
-func (p *policy) Uri() string {
+func (p *routing) Uri() string {
 	return p.uri
 }
 
 // Message - message the agent
-func (p *policy) Message(m *messaging.Message) {
+func (p *routing) Message(m *messaging.Message) {
 	messaging.Mux(m, p.ctrlC, nil, nil)
 }
 
 // Shutdown - shutdown the agent
-func (p *policy) Shutdown() {
+func (p *routing) Shutdown() {
 	if !p.running {
 		return
 	}
@@ -74,9 +74,9 @@ func (p *policy) Shutdown() {
 }
 
 // Run - run the agent
-func (p *policy) Run() {
+func (p *routing) Run() {
 	if p.running {
 		return
 	}
-	go runPolicy(p)
+	go runRouting(p)
 }
