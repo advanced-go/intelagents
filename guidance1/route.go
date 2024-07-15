@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	RoutingMonitorClass = "routing-monitor1"
+	RouteMonitorClass = "route-monitor1"
 )
 
-type routing struct {
+type route struct {
 	running  bool
 	uri      string
 	origin   core.Origin
@@ -21,21 +21,21 @@ type routing struct {
 	shutdown func()
 }
 
-func RoutingMonitorAgentUri(origin core.Origin) string {
+func RouteMonitorAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", RoutingMonitorClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", RouteMonitorClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", RoutingMonitorClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", RouteMonitorClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewRoutingMonitorAgent - create a new routing monitor agent
-func NewRoutingMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
-	return newRoutingMonitorAgent(interval, origin, handler)
+// NewRouteMonitorAgent - create a new routing monitor agent
+func NewRouteMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newRouteMonitorAgent(interval, origin, handler)
 }
 
-func newRoutingMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) *routing {
-	c := new(routing)
-	c.uri = RoutingMonitorAgentUri(origin)
+func newRouteMonitorAgent(interval time.Duration, origin core.Origin, handler messaging.OpsAgent) *route {
+	c := new(route)
+	c.uri = RouteMonitorAgentUri(origin)
 	c.origin = origin
 	c.ticker = messaging.NewTicker(interval)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
@@ -44,22 +44,22 @@ func newRoutingMonitorAgent(interval time.Duration, origin core.Origin, handler 
 }
 
 // String - identity
-func (p *routing) String() string {
+func (p *route) String() string {
 	return p.uri
 }
 
 // Uri - agent identifier
-func (p *routing) Uri() string {
+func (p *route) Uri() string {
 	return p.uri
 }
 
 // Message - message the agent
-func (p *routing) Message(m *messaging.Message) {
+func (p *route) Message(m *messaging.Message) {
 	messaging.Mux(m, p.ctrlC, nil, nil)
 }
 
 // Shutdown - shutdown the agent
-func (p *routing) Shutdown() {
+func (p *route) Shutdown() {
 	if !p.running {
 		return
 	}
@@ -74,7 +74,7 @@ func (p *routing) Shutdown() {
 }
 
 // Run - run the agent
-func (p *routing) Run() {
+func (p *route) Run() {
 	if p.running {
 		return
 	}

@@ -3,7 +3,7 @@ package guidance1
 import "github.com/advanced-go/stdlib/messaging"
 
 // run - routing change monitor
-func runRouting(p *routing) {
+func runRouting(p *route) {
 	if p == nil {
 		return
 	}
