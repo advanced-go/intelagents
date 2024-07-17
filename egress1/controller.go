@@ -19,6 +19,7 @@ type controller struct {
 	interval time.Duration // Needs to be configured dynamically during runtime
 	ctrlC    chan *messaging.Message
 	handler  messaging.Agent
+	version  string // Current version of origin configuration, helps to stop duplicate updates of egress routes
 	shutdown func()
 }
 
