@@ -1,11 +1,11 @@
-package egress1
+package dependency1
 
 import (
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
 )
 
-func runOps(a *operations) {
+func run(a *dependency) {
 	if a == nil {
 		return
 	}

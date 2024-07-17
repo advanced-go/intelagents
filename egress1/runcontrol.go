@@ -16,7 +16,7 @@ type getGuidanceFunc func()
 type insertInferenceFunc func(ctx context.Context, h http.Header, e inference1.Entry) *core.Status
 
 // run - egress controller
-func runControl(a *controller, access queryAccessFunc, inference queryInferenceFunc, guidance getGuidanceFunc, insert insertInferenceFunc) {
+func runController(a *controller, access queryAccessFunc, inference queryInferenceFunc, guidance getGuidanceFunc, insert insertInferenceFunc) {
 	if a == nil {
 		return
 	}

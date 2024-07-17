@@ -91,5 +91,5 @@ func (a *controller) Run() {
 	if a.running {
 		return
 	}
-	go runControl(a, access1.EgressQuery, inference1.EgressQuery, nil, nil)
+	go runController(a, access1.EgressQuery, inference1.EgressQuery, nil, nil)
 }

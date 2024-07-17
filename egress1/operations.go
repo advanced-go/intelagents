@@ -2,6 +2,7 @@ package egress1
 
 import (
 	"fmt"
+	"github.com/advanced-go/intelagents/dependency1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -11,8 +12,17 @@ const (
 	OperationsClass = "egress-operations1"
 )
 
-// TODO : add support for control messages or restart, apply-changes, rollback-changes
-
+// Responsibilities:
+//  1. Startup + Restart Events
+//     a. Read all egress route configurations
+//     b. If authority routing is configured, read all host names
+//     c. Create all egress controller agents and a dependency agent if configured
+//  2. Changeset Apply Event
+//     a. Read new egress and dependency configurations, update controllers and dependency agent
+//  3. Changeset Rollback Event
+//     b. Read previous egress and dependency configurations, update controllers and dependency agent
+//
+// 4. Polling - What if an event is missed?? Need some way to save events in database.
 type operations struct {
 	running  bool
 	uri      string
@@ -21,6 +31,7 @@ type operations struct {
 	interval time.Duration // Needs to be configured dynamically during runtime
 	ctrlC    chan *messaging.Message
 	handler  messaging.OpsAgent
+	manager  messaging.Agent
 	shutdown func()
 }
 
@@ -39,6 +50,7 @@ func NewOperationsAgent(origin core.Origin, handler messaging.OpsAgent) messagin
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
+	c.manager = dependency1.NewDependencyAgent(origin, c)
 	return c
 }
 
