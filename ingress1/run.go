@@ -34,6 +34,7 @@ func run(c *controller, observe *observation) {
 	c.poller.Start(0)
 	for {
 		select {
+		// main : on tick -> observ access -> process inference with percentile -> create action
 		case <-c.ticker.C():
 			if !guidance1.IsScheduled() {
 				continue
@@ -53,11 +54,13 @@ func run(c *controller, observe *observation) {
 			}
 			prev = curr
 			updateTicker(c, prev, curr, observe)
+		// poll : update percentile
 		case <-c.poller.C():
 			percentile, status = observe.percentile(percentileDuration, percentile, c.origin)
 			if !status.OK() {
 				c.handler.Handle(status, "")
 			}
+		// control channel
 		case msg := <-c.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:

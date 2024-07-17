@@ -2,20 +2,18 @@ package egress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/observation/access1"
-	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
 )
 
 const (
-	ControllerClass = "egress-controller1"
+	OperationsClass = "egress-operations1"
 )
 
 // TODO : add support for control messages or restart, apply-changes, rollback-changes
 
-type controller struct {
+type operations struct {
 	running  bool
 	uri      string
 	origin   core.Origin
@@ -26,17 +24,17 @@ type controller struct {
 	shutdown func()
 }
 
-func ControllerAgentUri(origin core.Origin) string {
+func OperationsAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", ControllerClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", OperationsClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", ControllerClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", OperationsClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewControllerAgent - create a new controller agent
-func NewControllerAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
-	c := new(controller)
-	c.uri = ControllerAgentUri(origin)
+// NewOperationsAgent - create a new operations agent
+func NewOperationsAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
+	c := new(operations)
+	c.uri = OperationsAgentUri(origin)
 	c.origin = origin
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
@@ -45,34 +43,34 @@ func NewControllerAgent(origin core.Origin, handler messaging.OpsAgent) messagin
 }
 
 // String - identity
-func (a *controller) String() string {
+func (a *operations) String() string {
 	return a.uri
 }
 
 // Uri - agent identifier
-func (a *controller) Uri() string {
+func (a *operations) Uri() string {
 	return a.uri
 }
 
 // Message - message the agent
-func (a *controller) Message(m *messaging.Message) {
+func (a *operations) Message(m *messaging.Message) {
 	messaging.Mux(m, a.ctrlC, nil, nil)
 }
 
 // Handle - error handler
-func (a *controller) Handle(status *core.Status, requestId string) *core.Status {
-	// TODO : Any controller specific processint ??  If not then forward to handler
+func (a *operations) Handle(status *core.Status, requestId string) *core.Status {
+	// TODO : Any operations specific processing ??  If not then forward to handler
 	return a.handler.Handle(status, requestId)
 }
 
 // Add - add a shutdown function
-func (a *controller) Add(f func()) {
+func (a *operations) Add(f func()) {
 	a.shutdown = messaging.AddShutdown(a.shutdown, f)
 
 }
 
 // Shutdown - shutdown the agent
-func (a *controller) Shutdown() {
+func (a *operations) Shutdown() {
 	if !a.running {
 		return
 	}
@@ -87,9 +85,9 @@ func (a *controller) Shutdown() {
 }
 
 // Run - run the agent
-func (a *controller) Run() {
+func (a *operations) Run() {
 	if a.running {
 		return
 	}
-	go runControl(a, access1.EgressQuery, inference1.EgressQuery, nil, nil)
+	go runOps(a)
 }

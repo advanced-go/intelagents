@@ -16,23 +16,21 @@ type getGuidanceFunc func()
 type insertInferenceFunc func(ctx context.Context, h http.Header, e inference1.Entry) *core.Status
 
 // run - egress controller
-func run(c *controller, access queryAccessFunc, inference queryInferenceFunc, guidance getGuidanceFunc, insert insertInferenceFunc) {
-	if c == nil {
+func runControl(a *controller, access queryAccessFunc, inference queryInferenceFunc, guidance getGuidanceFunc, insert insertInferenceFunc) {
+	if a == nil {
 		return
 	}
-	tick := time.Tick(c.interval)
+	tick := time.Tick(a.interval)
 
 	for {
 		select {
 		case <-tick:
 			status := core.StatusOK()
 			if !status.OK() && !status.NotFound() {
-				c.handler.Message(messaging.NewStatusMessage(c.handler.Uri(), c.uri, status))
+				a.handler.Message(messaging.NewStatusMessage(a.handler.Uri(), a.uri, status))
 			}
-		case msg, open := <-c.ctrlC:
-			if !open {
-				return
-			}
+		// control channel
+		case msg := <-a.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				return
