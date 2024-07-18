@@ -1,0 +1,13 @@
+// I think this agent needs to be shared for updates to controllers and also events such as restart.
+// Anything affecting a specific agent, needs to be routed to the appropriate host via sharding
+// Sharding will improve data consistency and reduce latency
+// What does this agent need to work
+// 1. Observation data
+//    - Access Log
+//    - Experience
+//    - Inference
+//    - Action
+// 2. Guidance data
+//    - Global processing schedule
+//    - Percentile Threshold - needs to be updated based on a schedule in agent run.
+//

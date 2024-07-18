@@ -13,17 +13,6 @@ const (
 	defaultInterval = time.Minute * 2
 )
 
-// What does this agent need to work
-// 1. Observation data
-//    - Access Log
-//    - Experience
-//    - Inference
-//    - Action
-// 2. Guidance data
-//    - Global processing schedule
-//    - Percentile Threshold - needs to be updated based on a schedule in agent run.
-//
-
 type controller struct {
 	running  bool
 	uri      string
