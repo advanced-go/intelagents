@@ -16,10 +16,11 @@ const (
 // TODO : add support for control messages or restart, apply-changes, rollback-changes
 
 type controller struct {
-	running  bool
-	uri      string
-	origin   core.Origin
-	version  string        // Current version of origin configuration, helps to stop duplicate updates of egress routes
+	running bool
+	uri     string
+	origin  core.Origin
+	version string // Current version of origin configuration, helps to stop duplicate updates of egress routes
+	//
 	interval time.Duration // Needs to be configured dynamically during runtime
 	ctrlC    chan *messaging.Message
 	handler  messaging.OpsAgent

@@ -11,7 +11,7 @@ func runOps(a *operations) {
 	}
 	tick := time.Tick(a.interval)
 
-	// TODO: Read and update from configurations
+	// TODO: read/update from guidance
 	for {
 		select {
 		case <-tick:
@@ -22,10 +22,10 @@ func runOps(a *operations) {
 			case messaging.ShutdownEvent:
 				return
 			case messaging.RestartEvent:
-				// TODO : restart
+				// TODO : read/update from guidance
 			case messaging.ChangesetApplyEvent:
 			case messaging.ChangesetRollbackEvent:
-				// TODO : apply and rollback
+				// TODO : apply and rollback changeset
 			default:
 			}
 		default:

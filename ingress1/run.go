@@ -3,9 +3,9 @@ package ingress1
 import (
 	"context"
 	"fmt"
-	"github.com/advanced-go/intelagents/guidance1"
+	"github.com/advanced-go/guidance/percentile1"
+	"github.com/advanced-go/guidance/schedule1"
 	"github.com/advanced-go/observation/access1"
-	"github.com/advanced-go/observation/percentile1"
 	"github.com/advanced-go/stdlib/core"
 	fmt2 "github.com/advanced-go/stdlib/fmt"
 	"github.com/advanced-go/stdlib/messaging"
@@ -21,12 +21,12 @@ var (
 )
 
 // run - ingress controller
-func run(c *controller, observe *observation) {
-	if c == nil || observe == nil {
+func run(c *controller, observe *observation, guide *guidance) {
+	if c == nil || observe == nil || guide == nil {
 		return
 	}
 	var prev []access1.Entry
-	percentile, status := observe.percentile(percentileDuration, defaultPercentile, c.origin)
+	percentile, status := guide.percentile(percentileDuration, defaultPercentile, c.origin)
 	if !status.OK() {
 		c.handler.Handle(status, "")
 	}
@@ -36,7 +36,7 @@ func run(c *controller, observe *observation) {
 		select {
 		// main : on tick -> observe access -> process inference with percentile -> create action
 		case <-c.ticker.C():
-			if !guidance1.IsScheduled() {
+			if !schedule1.IsIngressControllerScheduled(c.origin) {
 				continue
 			}
 			testLog(nil, c.uri, "tick")
@@ -56,7 +56,7 @@ func run(c *controller, observe *observation) {
 			updateTicker(c, prev, curr, observe)
 		// poll : update percentile
 		case <-c.poller.C():
-			percentile, status = observe.percentile(percentileDuration, percentile, c.origin)
+			percentile, status = guide.percentile(percentileDuration, percentile, c.origin)
 			if !status.OK() {
 				c.handler.Handle(status, "")
 			}

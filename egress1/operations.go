@@ -24,14 +24,27 @@ const (
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
 type operations struct {
-	running  bool
-	uri      string
-	origin   core.Origin
-	version  string        // Current version of origin configuration, helps to stop duplicate updates of egress routes
-	interval time.Duration // Needs to be configured dynamically during runtime
+	running bool
+	uri     string
+
+	// Assignment
+	origin core.Origin
+
+	// Guidance/configuration
+	guideVersion         string // Version for authority and egress, helps to stop duplicate updates of egress routes
+	processingScheduleId string
+
+	// Dependency processing
+	dependencyUpdates    bool
+	dependencyScheduleId string
+	dependencyAgent      messaging.Agent
+
+	// Routing controllers
+	controllers *messaging.Exchange
+
+	interval time.Duration
 	ctrlC    chan *messaging.Message
 	handler  messaging.OpsAgent
-	manager  messaging.Agent
 	shutdown func()
 }
 
@@ -50,7 +63,8 @@ func NewOperationsAgent(origin core.Origin, handler messaging.OpsAgent) messagin
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
-	c.manager = dependency1.NewDependencyAgent(origin, c)
+	c.dependencyAgent = dependency1.NewDependencyAgent(origin, c)
+	c.controllers = messaging.NewExchange()
 	return c
 }
 

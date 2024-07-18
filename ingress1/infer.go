@@ -1,9 +1,9 @@
 package ingress1
 
 import (
+	"github.com/advanced-go/guidance/percentile1"
 	"github.com/advanced-go/observation/access1"
 	"github.com/advanced-go/observation/inference1"
-	"github.com/advanced-go/observation/percentile1"
 	"github.com/advanced-go/stdlib/core"
 )
 

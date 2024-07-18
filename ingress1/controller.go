@@ -21,7 +21,6 @@ type controller struct {
 	poller   *messaging.Ticker
 	ctrlC    chan *messaging.Message
 	handler  messaging.OpsAgent
-	version  string // Current version of origin configuration, helps to stop duplicate updates of ingress routes
 	shutdown func()
 }
 
@@ -83,7 +82,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, newObservation())
+	go run(c, newObservation(), newGuidance())
 }
 
 func (c *controller) stopTickers() {
