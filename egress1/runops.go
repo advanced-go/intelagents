@@ -23,6 +23,10 @@ func runOps(a *operations) {
 				return
 			case messaging.RestartEvent:
 				// TODO : read/update from guidance
+				//m := messaging.NewControlMessage(a.dependencyAgent.Uri(),a.uri,messaging.RestartEvent)
+				//a.dependencyAgent.Message(m)
+				//a.controllers.Broadcast(m)
+
 			case messaging.ChangesetApplyEvent:
 			case messaging.ChangesetRollbackEvent:
 				// TODO : apply and rollback changeset
