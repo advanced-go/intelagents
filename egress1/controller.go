@@ -13,6 +13,18 @@ const (
 	ControllerClass = "egress-controller1"
 )
 
+// What does this agent need to work
+// 1. Observation data
+//    - Access Log
+//    - Experience
+//    - Inference
+//    - Action
+// 2. Guidance data
+//    - Global processing schedule
+//    - Dependency processing schedule
+//    - Controller Configuration
+//
+
 // TODO : add support for control messages or restart, apply-changes, rollback-changes
 
 type controller struct {

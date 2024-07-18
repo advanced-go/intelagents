@@ -34,7 +34,7 @@ func run(c *controller, observe *observation) {
 	c.poller.Start(0)
 	for {
 		select {
-		// main : on tick -> observ access -> process inference with percentile -> create action
+		// main : on tick -> observe access -> process inference with percentile -> create action
 		case <-c.ticker.C():
 			if !guidance1.IsScheduled() {
 				continue
