@@ -115,5 +115,5 @@ func (a *operations) Run() {
 	if a.running {
 		return
 	}
-	go runOps(a)
+	go runOps(a, newObservation(), newGuidance())
 }

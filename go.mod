@@ -8,7 +8,7 @@ require (
 )
 
 require (
-	github.com/advanced-go/guidance v0.0.0-20240718132356-0aa83864f0d5 // indirect
+	github.com/advanced-go/guidance v0.0.0-20240718171205-9064643643df // indirect
 	github.com/advanced-go/postgresql v0.0.0-20240616075129-fc362725c643 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

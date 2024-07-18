@@ -1,23 +1,26 @@
 package egress1
 
-import "time"
+import (
+	"context"
+	"github.com/advanced-go/guidance/controller1"
+	"github.com/advanced-go/stdlib/core"
+	"time"
+)
 
 const (
-	logisticsDuration = time.Second * 2
-	officerDuration   = time.Second * 5
-	scheduleDuration  = time.Second * 5
+	queryControllerDuration = time.Second * 2
 )
 
 type guidance struct {
-	//logisticsInterval   func() time.Duration
-	//caseOfficerInterval func() time.Duration
-	scheduleInterval func() time.Duration
+	controller func(origin core.Origin) ([]controller1.Rowset, *core.Status)
 }
 
 func newGuidance() *guidance {
 	return &guidance{
-		//logisticsInterval:   func() time.Duration { return logisticsDuration },
-		//caseOfficerInterval: func() time.Duration { return officerDuration },
-		scheduleInterval: func() time.Duration { return scheduleDuration },
+		controller: func(origin core.Origin) ([]controller1.Rowset, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), queryControllerDuration)
+			defer cancel()
+			return controller1.Query(ctx, origin)
+		},
 	}
 }
