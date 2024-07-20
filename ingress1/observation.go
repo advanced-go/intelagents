@@ -23,27 +23,48 @@ type observation struct {
 	experience   func(origin core.Origin) ([]experience1.Entry, *core.Status)
 }
 
-func newObservation() *observation {
+func newObservation(handler func(status *core.Status, _ string) *core.Status) *observation {
+	if handler == nil {
+		handler = func(status *core.Status, _ string) *core.Status {
+			return status
+		}
+	}
 	return &observation{
 		access: func(origin core.Origin) ([]access1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryAccessDuration)
 			defer cancel()
-			return access1.IngressQuery(ctx, origin)
+			e, status := access1.IngressQuery(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				handler(status, "")
+			}
+			return e, status
 		},
 		inference: func(origin core.Origin) ([]inference1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryInferenceDuration)
 			defer cancel()
-			return inference1.IngressQuery(ctx, origin)
+			e, status := inference1.IngressQuery(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				handler(status, "")
+			}
+			return e, status
 		},
 		addInference: func(e inference1.Entry) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), insertInferenceDuration)
 			defer cancel()
-			return inference1.IngressInsert(ctx, nil, e)
+			status := inference1.IngressInsert(ctx, nil, e)
+			if !status.OK() && !status.NotFound() {
+				handler(status, "")
+			}
+			return status
 		},
 		experience: func(origin core.Origin) ([]experience1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryInferenceDuration)
 			defer cancel()
-			return experience1.IngressQuery(ctx, origin)
+			e, status := experience1.IngressQuery(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				handler(status, "")
+			}
+			return e, status
 		},
 	}
 }

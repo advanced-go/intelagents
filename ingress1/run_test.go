@@ -5,6 +5,11 @@ import (
 	"github.com/advanced-go/stdlib/core"
 )
 
+func testHandler(status *core.Status, _ string) *core.Status {
+	fmt.Printf("test: testHandler() -> [status:%v]\n", status)
+	return status
+}
+
 func ExampleRun_Nil() {
 	origin := core.Origin{
 		Region:     "us-central1",
@@ -15,7 +20,7 @@ func ExampleRun_Nil() {
 	}
 	//msg := messaging.NewControlMessage("to", "from", messaging.ShutdownEvent)
 	c := newControllerAgent(origin, newTestAgent())
-	go run(c, newObservation(), newGuidance())
+	go run(c, newObservation(testHandler), newGuidance(testHandler))
 
 	fmt.Printf("test: run(c,nil,nil) -> %v\n", "OK")
 	//time.Sleep(time.Second * 8)

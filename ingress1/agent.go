@@ -14,14 +14,14 @@ const (
 )
 
 type controller struct {
-	running  bool
-	uri      string
-	origin   core.Origin
-	ticker   *messaging.Ticker
-	poller   *messaging.Ticker
-	ctrlC    chan *messaging.Message
-	handler  messaging.OpsAgent
-	shutdown func()
+	running      bool
+	uri          string
+	origin       core.Origin
+	ticker       *messaging.Ticker
+	poller       *messaging.Ticker
+	ctrlC        chan *messaging.Message
+	handler      messaging.OpsAgent
+	shutdownFunc func()
 }
 
 func ControllerAgentUri(origin core.Origin) string {
@@ -68,8 +68,8 @@ func (c *controller) Shutdown() {
 		return
 	}
 	c.running = false
-	if c.shutdown != nil {
-		c.shutdown()
+	if c.shutdownFunc != nil {
+		c.shutdownFunc()
 	}
 	msg := messaging.NewControlMessage(c.uri, c.uri, messaging.ShutdownEvent)
 	if c.ctrlC != nil {
@@ -77,17 +77,27 @@ func (c *controller) Shutdown() {
 	}
 }
 
+// shutdown - close resources
+func (c *controller) shutdown() {
+	close(c.ctrlC)
+	c.stopTickers()
+}
+
 // Run - run the agent
 func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, newObservation(), newGuidance())
+	go run(c, newObservation(c.handler.Handle), newGuidance(c.handler.Handle), newInference(c.handler.Handle), newOperations(c.handler.Handle))
 }
 
 func (c *controller) stopTickers() {
 	c.ticker.Stop()
 	c.poller.Stop()
+}
+
+func (c *controller) updateTicker(observe *observation) {
+
 }
 
 /*
