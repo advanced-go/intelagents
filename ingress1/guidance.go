@@ -9,16 +9,19 @@ import (
 
 // A nod to Linus Torvalds and plain C
 type guidance struct {
-	percentile func(duration time.Duration, curr percentile1.Entry, origin core.Origin) (percentile1.Entry, *core.Status)
+	percentile func(duration time.Duration, curr percentile1.Entry, origin core.Origin, err core.ErrorHandler) (percentile1.Entry, *core.Status)
 }
 
 func newGuidance() *guidance {
 	return &guidance{
-		percentile: func(duration time.Duration, curr percentile1.Entry, origin core.Origin) (percentile1.Entry, *core.Status) {
+		percentile: func(duration time.Duration, curr percentile1.Entry, origin core.Origin, err core.ErrorHandler) (percentile1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), duration)
 			defer cancel()
 			e, status := percentile1.Get(ctx, origin)
 			if status.OK() {
+				if err != nil {
+					err.Handle(status, "")
+				}
 				return e, status
 			}
 			return curr, status

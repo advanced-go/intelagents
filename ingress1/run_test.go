@@ -15,7 +15,7 @@ func ExampleRun_Nil() {
 	}
 	//msg := messaging.NewControlMessage("to", "from", messaging.ShutdownEvent)
 	c := newControllerAgent(origin, newTestAgent())
-	go run(c, nil)
+	go run(c, newObservation(), newGuidance())
 
 	fmt.Printf("test: run(c,nil,nil) -> %v\n", "OK")
 	//time.Sleep(time.Second * 8)

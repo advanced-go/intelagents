@@ -12,12 +12,12 @@ const (
 )
 
 type guidance struct {
-	controller func(origin core.Origin) ([]controller1.Rowset, *core.Status)
+	controllers func(origin core.Origin) ([]controller1.Rowset, *core.Status)
 }
 
 func newGuidance() *guidance {
 	return &guidance{
-		controller: func(origin core.Origin) ([]controller1.Rowset, *core.Status) {
+		controllers: func(origin core.Origin) ([]controller1.Rowset, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryControllerDuration)
 			defer cancel()
 			return controller1.Query(ctx, origin)

@@ -26,10 +26,8 @@ func run(c *controller, observe *observation, guide *guidance) {
 		return
 	}
 	var prev []access1.Entry
-	percentile, status := guide.percentile(percentileDuration, defaultPercentile, c.origin)
-	if !status.OK() {
-		c.handler.Handle(status, "")
-	}
+
+	percentile, status := guide.percentile(percentileDuration, defaultPercentile, c.origin, c.handler)
 	c.ticker.Start(0)
 	c.poller.Start(0)
 	for {
@@ -56,7 +54,7 @@ func run(c *controller, observe *observation, guide *guidance) {
 			updateTicker(c, prev, curr, observe)
 		// poll : update percentile
 		case <-c.poller.C():
-			percentile, status = guide.percentile(percentileDuration, percentile, c.origin)
+			percentile, status = guide.percentile(percentileDuration, percentile, c.origin, c.handler)
 			if !status.OK() {
 				c.handler.Handle(status, "")
 			}

@@ -3,7 +3,6 @@ package guidance1
 import (
 	"context"
 	"fmt"
-	"github.com/advanced-go/guidance/schedule1"
 	"github.com/advanced-go/stdlib/core"
 	fmt2 "github.com/advanced-go/stdlib/fmt"
 	"github.com/advanced-go/stdlib/messaging"
@@ -42,9 +41,9 @@ func testLog(_ context.Context, agentId string, content any) *core.Status {
 }
 
 func proc(origin core.Origin, h core.ErrorHandler) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	_, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
-	_, status := schedule1.Get(ctx, origin)
-	h.Handle(status, "")
+	//_, status := schedule1.Get(ctx, origin)
+	//h.Handle(status, "")
 	return true
 }
