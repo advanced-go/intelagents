@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	OperationsClass = "egress-operations1"
+	LeadClass = "egress-lead1"
 )
 
 // Responsibilities:
@@ -23,7 +23,7 @@ const (
 //     b. Read previous egress and dependency configurations, update controllers and dependency agent
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
-type operations struct {
+type lead struct {
 	running bool
 	uri     string
 
@@ -42,23 +42,23 @@ type operations struct {
 	// Routing controllers
 	controllers *messaging.Exchange
 
-	interval time.Duration
-	ctrlC    chan *messaging.Message
-	handler  messaging.OpsAgent
-	shutdown func()
+	interval     time.Duration
+	ctrlC        chan *messaging.Message
+	handler      messaging.OpsAgent
+	shutdownFunc func()
 }
 
-func OperationsAgentUri(origin core.Origin) string {
+func LeadAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", OperationsClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", OperationsClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewOperationsAgent - create a new operations agent
-func NewOperationsAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
-	c := new(operations)
-	c.uri = OperationsAgentUri(origin)
+// NewLeadAgent - create a new lead agent
+func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
+	c := new(lead)
+	c.uri = LeadAgentUri(origin)
 	c.origin = origin
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
@@ -69,40 +69,46 @@ func NewOperationsAgent(origin core.Origin, handler messaging.OpsAgent) messagin
 }
 
 // String - identity
-func (a *operations) String() string {
+func (a *lead) String() string {
 	return a.uri
 }
 
 // Uri - agent identifier
-func (a *operations) Uri() string {
+func (a *lead) Uri() string {
 	return a.uri
 }
 
 // Message - message the agent
-func (a *operations) Message(m *messaging.Message) {
+func (a *lead) Message(m *messaging.Message) {
 	messaging.Mux(m, a.ctrlC, nil, nil)
 }
 
 // Handle - error handler
-func (a *operations) Handle(status *core.Status, requestId string) *core.Status {
+func (a *lead) Handle(status *core.Status, requestId string) *core.Status {
 	// TODO : Any operations specific processing ??  If not then forward to handler
 	return a.handler.Handle(status, requestId)
 }
 
+// AddActivity - add activity
+func (a *lead) AddActivity(agentId string, content any) {
+	// TODO : Any operations specific processing ??  If not then forward to handler
+	//return a.handler.Handle(status, requestId)
+}
+
 // Add - add a shutdown function
-func (a *operations) Add(f func()) {
-	a.shutdown = messaging.AddShutdown(a.shutdown, f)
+func (a *lead) Add(f func()) {
+	a.shutdownFunc = messaging.AddShutdown(a.shutdownFunc, f)
 
 }
 
 // Shutdown - shutdown the agent
-func (a *operations) Shutdown() {
+func (a *lead) Shutdown() {
 	if !a.running {
 		return
 	}
 	a.running = false
-	if a.shutdown != nil {
-		a.shutdown()
+	if a.shutdownFunc != nil {
+		a.shutdownFunc()
 	}
 	msg := messaging.NewControlMessage(a.uri, a.uri, messaging.ShutdownEvent)
 	if a.ctrlC != nil {
@@ -111,9 +117,9 @@ func (a *operations) Shutdown() {
 }
 
 // Run - run the agent
-func (a *operations) Run() {
+func (a *lead) Run() {
 	if a.running {
 		return
 	}
-	go runOps(a, newObservation(), newGuidance())
+	go runLead(a, newObservation(), newGuidance())
 }

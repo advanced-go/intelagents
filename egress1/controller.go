@@ -66,6 +66,12 @@ func (a *controller) Handle(status *core.Status, requestId string) *core.Status 
 	return a.handler.Handle(status, requestId)
 }
 
+// AddActivity - add activity
+func (a *controller) AddActivity(agentId string, content any) {
+	// TODO : Any operations specific processing ??  If not then forward to handler
+	//return a.handler.Handle(status, requestId)
+}
+
 // Add - add a shutdown function
 func (a *controller) Add(f func()) {
 	a.shutdown = messaging.AddShutdown(a.shutdown, f)

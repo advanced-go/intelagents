@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func runOps(a *operations, observe *observation, guide *guidance) {
+func runLead(a *lead, observe *observation, guide *guidance) {
 	if a == nil {
 		return
 	}
@@ -51,7 +51,7 @@ func runOps(a *operations, observe *observation, guide *guidance) {
 }
 
 // Need to read the routing information from the access log
-func startup(a *operations, msg *messaging.Message, observe *observation, guide *guidance) *core.Status {
+func startup(a *lead, msg *messaging.Message, observe *observation, guide *guidance) *core.Status {
 	entries, status := guide.controllers(a.origin)
 	if !status.OK() {
 		return status
@@ -67,11 +67,11 @@ func startup(a *operations, msg *messaging.Message, observe *observation, guide 
 	return startupControllers(a, msg, entries, routing)
 }
 
-func startupDependency(a *operations, msg *messaging.Message, entry controller1.Rowset) *core.Status {
+func startupDependency(a *lead, msg *messaging.Message, entry controller1.Rowset) *core.Status {
 	return core.StatusOK()
 }
 
-func startupControllers(a *operations, msg *messaging.Message, entries []controller1.Rowset, routing []access1.Routing) *core.Status {
+func startupControllers(a *lead, msg *messaging.Message, entries []controller1.Rowset, routing []access1.Routing) *core.Status {
 	return core.StatusOK()
 
 }
