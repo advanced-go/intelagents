@@ -12,14 +12,14 @@ const (
 )
 
 type dependency struct {
-	running  bool
-	uri      string
-	origin   core.Origin
-	version  string        // Current version of origin configuration, helps to stop duplicate updates of egress routes
-	interval time.Duration // Needs to be configured dynamically during runtime
-	ctrlC    chan *messaging.Message
-	handler  messaging.OpsAgent
-	shutdown func()
+	running      bool
+	uri          string
+	origin       core.Origin
+	version      string        // Current version of origin configuration, helps to stop duplicate updates of egress routes
+	interval     time.Duration // Needs to be configured dynamically during runtime
+	ctrlC        chan *messaging.Message
+	handler      messaging.OpsAgent
+	shutdownFunc func()
 }
 
 func DependencyAgentUri(origin core.Origin) string {
@@ -56,9 +56,13 @@ func (a *dependency) Message(m *messaging.Message) {
 }
 
 // Add - add a shutdown function
+/*
 func (a *dependency) Add(f func()) {
 	a.shutdown = messaging.AddShutdown(a.shutdown, f)
 }
+
+
+*/
 
 // Shutdown - shutdown the agent
 func (a *dependency) Shutdown() {
@@ -66,8 +70,8 @@ func (a *dependency) Shutdown() {
 		return
 	}
 	a.running = false
-	if a.shutdown != nil {
-		a.shutdown()
+	if a.shutdownFunc != nil {
+		a.shutdownFunc()
 	}
 	msg := messaging.NewControlMessage(a.uri, a.uri, messaging.ShutdownEvent)
 	if a.ctrlC != nil {

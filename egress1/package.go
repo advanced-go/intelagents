@@ -1,5 +1,5 @@
 package egress1
 
 const (
-	PkgPath = "github/advanced-go/agency/egress1"
+	PkgPath = "github/advanced-go/intelagents/egress1"
 )

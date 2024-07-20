@@ -4,8 +4,8 @@ github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784 h1:aCwgv80
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784/go.mod h1:LIAGTP/K0wlft3dYhHqn69QSFn9wlkcXA+c3hfh18HQ=
 github.com/advanced-go/postgresql v0.0.0-20240720114046-6e895f523ca7 h1:gV/02K4kwRgc7VvURXWoFxWXGiv/Uwff2KE81l46OnI=
 github.com/advanced-go/postgresql v0.0.0-20240720114046-6e895f523ca7/go.mod h1:3SiG2g3uvHzbVHR7YY3bLN+Zm3+lFgSSwh4Pnwgtx2I=
-github.com/advanced-go/stdlib v0.0.0-20240719142541-ba3757f2ff0b h1:+mJcFrKkATdLhyDIhRLnqYYzEAMlBi10ILbJzQRRoCg=
-github.com/advanced-go/stdlib v0.0.0-20240719142541-ba3757f2ff0b/go.mod h1:bvuWc7Tx57LArgrEvbPxKW4hvIYGS3pw7iG4P6xofoQ=
+github.com/advanced-go/stdlib v0.0.0-20240720143032-497f75062842 h1:EDnv461v8FnHJ/NiTzozp3Pm3Oo8pWrvCbKDuEHYkKc=
+github.com/advanced-go/stdlib v0.0.0-20240720143032-497f75062842/go.mod h1:bvuWc7Tx57LArgrEvbPxKW4hvIYGS3pw7iG4P6xofoQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

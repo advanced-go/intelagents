@@ -3,6 +3,7 @@ package ingress1
 import (
 	"fmt"
 	"github.com/advanced-go/stdlib/core"
+	test "github.com/advanced-go/stdlib/messaging/messagingtest"
 )
 
 func testHandler(status *core.Status, _ string) *core.Status {
@@ -19,8 +20,8 @@ func ExampleRun_Nil() {
 		InstanceId: "",
 	}
 	//msg := messaging.NewControlMessage("to", "from", messaging.ShutdownEvent)
-	c := newControllerAgent(origin, newTestAgent())
-	go run(c, newObservation(testHandler), newGuidance(testHandler))
+	c := newControllerAgent(origin, test.NewAgent())
+	go run(c, nil, nil, nil, nil)
 
 	fmt.Printf("test: run(c,nil,nil) -> %v\n", "OK")
 	//time.Sleep(time.Second * 8)

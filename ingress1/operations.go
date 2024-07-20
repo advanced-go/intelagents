@@ -1,31 +1,19 @@
 package ingress1
 
 import (
-	"fmt"
-	"github.com/advanced-go/stdlib/core"
+	"github.com/advanced-go/stdlib/messaging"
 )
 
 const ()
 
 type operations struct {
-	log func(uri string, content any)
+	addActivity func(uri string, content any)
 }
 
-func newOperations(handler func(status *core.Status, _ string) *core.Status) *operations {
-	if handler == nil {
-		handler = func(status *core.Status, _ string) *core.Status {
-			return status
-		}
-	}
+func newOperations(agent messaging.OpsAgent) *operations {
 	return &operations{
-		log: func(uri string, content any) {
-			//ctx, cancel := context.WithTimeout(context.Background(), logDuration)
-			//defer cancel()
-			status := core.StatusOK()
-			fmt.Printf("%v - %v", uri, content)
-			if !status.OK() {
-				handler(status, "")
-			}
+		addActivity: func(agentId string, content any) {
+			agent.AddActivity(agentId, content)
 		},
 	}
 }

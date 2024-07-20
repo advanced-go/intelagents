@@ -6,6 +6,7 @@ import (
 	"github.com/advanced-go/observation/experience1"
 	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
+	"github.com/advanced-go/stdlib/messaging"
 	"time"
 )
 
@@ -23,19 +24,14 @@ type observation struct {
 	experience   func(origin core.Origin) ([]experience1.Entry, *core.Status)
 }
 
-func newObservation(handler func(status *core.Status, _ string) *core.Status) *observation {
-	if handler == nil {
-		handler = func(status *core.Status, _ string) *core.Status {
-			return status
-		}
-	}
+func newObservation(agent messaging.OpsAgent) *observation {
 	return &observation{
 		access: func(origin core.Origin) ([]access1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryAccessDuration)
 			defer cancel()
 			e, status := access1.IngressQuery(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				handler(status, "")
+				agent.Handle(status, "")
 			}
 			return e, status
 		},
@@ -44,7 +40,7 @@ func newObservation(handler func(status *core.Status, _ string) *core.Status) *o
 			defer cancel()
 			e, status := inference1.IngressQuery(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				handler(status, "")
+				agent.Handle(status, "")
 			}
 			return e, status
 		},
@@ -53,7 +49,7 @@ func newObservation(handler func(status *core.Status, _ string) *core.Status) *o
 			defer cancel()
 			status := inference1.IngressInsert(ctx, nil, e)
 			if !status.OK() && !status.NotFound() {
-				handler(status, "")
+				agent.Handle(status, "")
 			}
 			return status
 		},
@@ -62,7 +58,7 @@ func newObservation(handler func(status *core.Status, _ string) *core.Status) *o
 			defer cancel()
 			e, status := experience1.IngressQuery(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				handler(status, "")
+				agent.Handle(status, "")
 			}
 			return e, status
 		},

@@ -5,6 +5,7 @@ import (
 	"github.com/advanced-go/guidance/percentile1"
 	"github.com/advanced-go/guidance/schedule1"
 	"github.com/advanced-go/stdlib/core"
+	"github.com/advanced-go/stdlib/messaging"
 	"time"
 )
 
@@ -14,12 +15,7 @@ type guidance struct {
 	percentile  func(duration time.Duration, curr percentile1.Entry, origin core.Origin) (percentile1.Entry, *core.Status)
 }
 
-func newGuidance(handler func(status *core.Status, _ string) *core.Status) *guidance {
-	if handler == nil {
-		handler = func(status *core.Status, _ string) *core.Status {
-			return status
-		}
-	}
+func newGuidance(agent messaging.OpsAgent) *guidance {
 	return &guidance{
 		isScheduled: func(origin core.Origin) bool {
 			return schedule1.IsIngressControllerScheduled(origin)
@@ -31,7 +27,7 @@ func newGuidance(handler func(status *core.Status, _ string) *core.Status) *guid
 			if status.OK() {
 				return e, status
 			}
-			handler(status, "")
+			agent.Handle(status, "")
 			return curr, status
 		},
 	}

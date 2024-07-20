@@ -29,7 +29,7 @@ func run(c *controller, observe *observation, guide *guidance, inf *inference, o
 			if !guide.isScheduled(c.origin) {
 				continue
 			}
-			ops.log(c.uri, "tick")
+			ops.addActivity(c.uri, "tick")
 			curr, status := observe.access(c.origin)
 			if !status.OK() {
 				continue
@@ -41,7 +41,7 @@ func run(c *controller, observe *observation, guide *guidance, inf *inference, o
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				c.shutdown()
-				ops.log(c.uri, messaging.ShutdownEvent)
+				ops.addActivity(c.uri, messaging.ShutdownEvent)
 				return
 			default:
 			}
