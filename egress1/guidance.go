@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/advanced-go/guidance/controller1"
 	"github.com/advanced-go/stdlib/core"
+	"github.com/advanced-go/stdlib/messaging"
 	"time"
 )
 
@@ -15,12 +16,16 @@ type guidance struct {
 	controllers func(origin core.Origin) ([]controller1.Rowset, *core.Status)
 }
 
-func newGuidance() *guidance {
+func newGuidance(agent messaging.OpsAgent) *guidance {
 	return &guidance{
 		controllers: func(origin core.Origin) ([]controller1.Rowset, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryControllerDuration)
 			defer cancel()
-			return controller1.Query(ctx, origin)
+			r, status := controller1.Query(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				agent.Handle(status, "")
+			}
+			return r, status
 		},
 	}
 }

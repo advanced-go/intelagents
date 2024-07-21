@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func runLead(a *lead, observe *observation, guide *guidance) {
-	if a == nil {
+func runLead(a *lead, observe *observation, guide *guidance, ops *operations) {
+	if a == nil || observe == nil || guide == nil || ops == nil {
 		return
 	}
 	tick := time.Tick(a.interval)
