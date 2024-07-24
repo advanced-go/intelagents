@@ -15,7 +15,7 @@ var (
 )
 
 // run - ingress controller
-func run(c *controller, observe *observation, guide *guidance, inf *inference, ops *operations) {
+func runControl(c *controller, observe *observation, guide *guidance, inf *inference, ops *operations) {
 	if c == nil || observe == nil || guide == nil || inf == nil || ops == nil {
 		return
 	}

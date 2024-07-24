@@ -2,7 +2,7 @@ package ingress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/intelagents/guidance1"
+	"github.com/advanced-go/guidance/percentile1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -41,7 +41,7 @@ func newControllerAgent(origin core.Origin, handler messaging.OpsAgent) *control
 	c.origin = origin
 	c.uri = ControllerAgentUri(origin)
 	c.ticker = messaging.NewTicker(defaultInterval)
-	c.poller = messaging.NewTicker(guidance1.PercentilePollingDuration)
+	c.poller = messaging.NewTicker(percentile1.PercentilePollingDuration)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c
@@ -88,7 +88,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go run(c, newObservation(c.handler), newGuidance(c.handler), newInference(c.handler), newOperations(c.handler))
+	go runControl(c, newObservation(c.handler), newGuidance(c.handler), newInference(c.handler), newOperations(c.handler))
 }
 
 func (c *controller) stopTickers() {

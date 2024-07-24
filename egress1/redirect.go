@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	LeadClass = "egress-lead1"
+	RedirectClass = "ingress-redirect1"
 )
 
 // Responsibilities:
@@ -22,7 +22,7 @@ const (
 //     b. Read previous egress and dependency configurations, update controllers and dependency agent
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
-type lead struct {
+type redirect struct {
 	running bool
 	uri     string
 
@@ -33,6 +33,11 @@ type lead struct {
 	guideVersion         string // Version for authority and egress, helps to stop duplicate updates of egress routes
 	processingScheduleId string
 
+	// Dependency processing
+	dependencyUpdates    bool
+	dependencyScheduleId string
+	dependencyAgent      messaging.Agent
+
 	// Routing controllers
 	controllers *messaging.Exchange
 
@@ -42,60 +47,61 @@ type lead struct {
 	shutdownFunc func()
 }
 
-func LeadAgentUri(origin core.Origin) string {
+func RedirectAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", RedirectClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", RedirectClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewLeadAgent - create a new lead agent
-func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
-	c := new(lead)
+// NewRedirectAgent - create a new lead agent
+func NewRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
+	c := new(redirect)
 	c.uri = LeadAgentUri(origin)
 	c.origin = origin
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
+	//c.dependencyAgent = dependency1.NewDependencyAgent(origin, c)
 	c.controllers = messaging.NewExchange()
 	return c
 }
 
 // String - identity
-func (a *lead) String() string {
+func (a *redirect) String() string {
 	return a.uri
 }
 
 // Uri - agent identifier
-func (a *lead) Uri() string {
+func (a *redirect) Uri() string {
 	return a.uri
 }
 
 // Message - message the agent
-func (a *lead) Message(m *messaging.Message) {
+func (a *redirect) Message(m *messaging.Message) {
 	messaging.Mux(m, a.ctrlC, nil, nil)
 }
 
 // Handle - error handler
-func (a *lead) Handle(status *core.Status, requestId string) *core.Status {
+func (a *redirect) Handle(status *core.Status, requestId string) *core.Status {
 	// TODO : Any operations specific processing ??  If not then forward to handler
 	return a.handler.Handle(status, requestId)
 }
 
 // AddActivity - add activity
-func (a *lead) AddActivity(agentId string, content any) {
+func (a *redirect) AddActivity(agentId string, content any) {
 	// TODO : Any operations specific processing ??  If not then forward to handler
 	//return a.handler.Handle(status, requestId)
 }
 
 // Add - add a shutdown function
-func (a *lead) Add(f func()) {
+func (a *redirect) Add(f func()) {
 	a.shutdownFunc = messaging.AddShutdown(a.shutdownFunc, f)
 
 }
 
 // Shutdown - shutdown the agent
-func (a *lead) Shutdown() {
+func (a *redirect) Shutdown() {
 	if !a.running {
 		return
 	}
@@ -110,9 +116,9 @@ func (a *lead) Shutdown() {
 }
 
 // Run - run the agent
-func (a *lead) Run() {
+func (a *redirect) Run() {
 	if a.running {
 		return
 	}
-	go runLead(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
+	go runRedirect(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
 }

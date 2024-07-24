@@ -1,4 +1,4 @@
-package egress1
+package ingress1
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	LeadClass = "egress-lead1"
+	LeadClass = "ingress-lead1"
 )
 
 // Responsibilities:
@@ -32,6 +32,11 @@ type lead struct {
 	// Guidance/configuration
 	guideVersion         string // Version for authority and egress, helps to stop duplicate updates of egress routes
 	processingScheduleId string
+
+	// Dependency processing
+	dependencyUpdates    bool
+	dependencyScheduleId string
+	dependencyAgent      messaging.Agent
 
 	// Routing controllers
 	controllers *messaging.Exchange
@@ -57,6 +62,7 @@ func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsA
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
+	//c.dependencyAgent = dependency1.NewDependencyAgent(origin, c)
 	c.controllers = messaging.NewExchange()
 	return c
 }
