@@ -2,6 +2,8 @@ github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5 h1:4+YNnTo/Oq
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5/go.mod h1:6GqdPnE0Fh6o34pehFuYf9No3NOHlW0NeXEqgp+xy3Y=
 github.com/advanced-go/guidance v0.0.0-20240724124403-97786ec4fee7 h1:FQH3WNH6p/KIkoqRxrSWxCyMxlvIJkZhmCJOKri7Ipo=
 github.com/advanced-go/guidance v0.0.0-20240724124403-97786ec4fee7/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
+github.com/advanced-go/guidance v0.0.0-20240724141138-14a7b455c06a h1:4gqg2LR1zXxr0OYMZ0hyZMVeuNDiTFkNBJpGkLSV0Hk=
+github.com/advanced-go/guidance v0.0.0-20240724141138-14a7b455c06a/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784 h1:aCwgv804Bm6JY6HRpnmRDZWmcgL+5s387nSi/bMlhvk=
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784/go.mod h1:LIAGTP/K0wlft3dYhHqn69QSFn9wlkcXA+c3hfh18HQ=
 github.com/advanced-go/postgresql v0.0.0-20240720114046-6e895f523ca7 h1:gV/02K4kwRgc7VvURXWoFxWXGiv/Uwff2KE81l46OnI=

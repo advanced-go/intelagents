@@ -21,7 +21,7 @@ func newGuidance(agent messaging.OpsAgent) *guidance {
 		controllers: func(origin core.Origin) ([]controller1.Rowset, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryControllerDuration)
 			defer cancel()
-			r, status := controller1.Query(ctx, origin)
+			r, status := controller1.EgressQuery(ctx, origin)
 			if !status.OK() && !status.NotFound() {
 				agent.Handle(status, "")
 			}
