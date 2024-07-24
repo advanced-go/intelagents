@@ -11,6 +11,8 @@ const (
 	DependencyClass = "egress-dependency1"
 )
 
+// Need collaboration for email,slack notifications
+
 type dependency struct {
 	running      bool
 	uri          string
