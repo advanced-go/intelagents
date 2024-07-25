@@ -19,6 +19,7 @@ func runRedirect(a *redirect, observe *observation, guide *guidance, ops *operat
 		case msg := <-a.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
+				a.shutdown()
 				return
 			// How to handle duplicate restart events as multiple pods will be sending restarts?
 			//

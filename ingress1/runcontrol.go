@@ -15,8 +15,8 @@ var (
 )
 
 // run - ingress controller
-func runControl(c *controller, observe *observation, guide *guidance, inf *inference, ops *operations) {
-	if c == nil || observe == nil || guide == nil || inf == nil || ops == nil {
+func runControl(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, ops *operations) {
+	if c == nil || observe == nil || exp == nil || guide == nil || infer == nil || ops == nil {
 		return
 	}
 	percentile, _ := guide.percentile(percentileDuration, defaultPercentile, c.origin)
@@ -34,7 +34,7 @@ func runControl(c *controller, observe *observation, guide *guidance, inf *infer
 			if !status.OK() {
 				continue
 			}
-			status = inf.process(curr, percentile, observe)
+			status = infer.process(curr, percentile, observe)
 		case <-c.poller.C():
 			percentile, _ = guide.percentile(percentileDuration, percentile, c.origin)
 		case msg := <-c.ctrlC:
@@ -46,7 +46,7 @@ func runControl(c *controller, observe *observation, guide *guidance, inf *infer
 			default:
 			}
 		default:
-			c.updateTicker(observe)
+			infer.updateTicker(c, exp)
 		}
 	}
 }

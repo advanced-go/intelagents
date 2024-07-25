@@ -122,3 +122,13 @@ func (a *redirect) Run() {
 	}
 	go runRedirect(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
 }
+
+// shutdown - close resources
+func (a *redirect) shutdown() {
+	close(a.ctrlC)
+	a.stopTickers()
+}
+
+func (a *redirect) stopTickers() {
+
+}

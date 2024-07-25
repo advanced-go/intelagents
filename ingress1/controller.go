@@ -88,7 +88,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go runControl(c, newObservation(c.handler), newGuidance(c.handler), newInference(c.handler), newOperations(c.handler))
+	go runControl(c, newObservation(c.handler), newExperience(c.handler), newGuidance(c.handler), newInference(c.handler), newOperations(c.handler))
 }
 
 func (c *controller) stopTickers() {
@@ -96,38 +96,6 @@ func (c *controller) stopTickers() {
 	c.poller.Stop()
 }
 
-func (c *controller) updateTicker(observe *observation) {
+func (c *controller) updateTicker(exp *experience) {
 
 }
-
-/*
-func (c *controller) startTicker(duration time.Duration) {
-	c.ticker.Start(duration)
-	if c.ticker != nil {
-		c.ticker.Stop()
-	}
-	c.ticker = time.NewTicker(interval)
-}
-
-func (c *controller) stopTicker() {
-	c.ticker.Stop()
-}
-
-func (c *controller) startPoller(interval time.Duration) {
-	if interval <= 0 {
-		interval = c.tickInterval
-	} else {
-		c.tickInterval = interval
-	}
-	if c.ticker != nil {
-		c.ticker.Stop()
-	}
-	c.ticker = time.NewTicker(interval)
-}
-
-func (c *controller) stopPoller() {
-	c.ticker.Stop()
-}
-
-
-*/

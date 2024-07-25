@@ -29,17 +29,9 @@ type lead struct {
 	// Assignment
 	origin core.Origin
 
-	// Guidance/configuration
-	guideVersion         string // Version for authority and egress, helps to stop duplicate updates of egress routes
-	processingScheduleId string
-
-	// Dependency processing
-	dependencyUpdates    bool
-	dependencyScheduleId string
-	dependencyAgent      messaging.Agent
-
-	// Routing controllers
-	controllers *messaging.Exchange
+	// Agents
+	controller messaging.Agent
+	redirect   messaging.Agent
 
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
@@ -62,8 +54,9 @@ func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsA
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
-	//c.dependencyAgent = dependency1.NewDependencyAgent(origin, c)
-	c.controllers = messaging.NewExchange()
+
+	c.controller = NewControllerAgent(origin, c)
+	c.redirect = NewRedirectAgent(origin, c)
 	return c
 }
 
@@ -109,10 +102,22 @@ func (a *lead) Shutdown() {
 	if a.shutdownFunc != nil {
 		a.shutdownFunc()
 	}
+	a.controller.Shutdown()
+	a.redirect.Shutdown()
 	msg := messaging.NewControlMessage(a.uri, a.uri, messaging.ShutdownEvent)
 	if a.ctrlC != nil {
 		a.ctrlC <- msg
 	}
+}
+
+// shutdown - close resources
+func (a *lead) shutdown() {
+	close(a.ctrlC)
+	a.stopTickers()
+}
+
+func (a *lead) stopTickers() {
+
 }
 
 // Run - run the agent

@@ -9,7 +9,8 @@ import (
 )
 
 type inference struct {
-	process func(e []access1.Entry, percentile percentile1.Entry, observe *observation) *core.Status
+	process      func(e []access1.Entry, percentile percentile1.Entry, observe *observation) *core.Status
+	updateTicker func(c *controller, exp *experience)
 }
 
 func newInference(agent messaging.OpsAgent) *inference {
@@ -21,6 +22,9 @@ func newInference(agent messaging.OpsAgent) *inference {
 				return status
 			}
 			return observe.addInference(i)
+		},
+		updateTicker: func(c *controller, exp *experience) {
+			c.updateTicker(exp)
 		},
 	}
 }
