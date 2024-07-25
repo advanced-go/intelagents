@@ -54,7 +54,7 @@ func newGuidance(agent messaging.OpsAgent) *guidance {
 		controllerVersion: func(origin core.Origin) (string, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), versionDuration)
 			defer cancel()
-			v, status := controller1.Version(ctx, origin)
+			_, v, status := controller1.Versions(ctx, origin)
 			if status.OK() || status.NotFound() {
 				return v, status
 			}
