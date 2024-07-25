@@ -24,7 +24,7 @@ type controller struct {
 	shutdownFunc func()
 }
 
-func ControllerAgentUri(origin core.Origin) string {
+func controllerAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
 		return fmt.Sprintf("%v:%v.%v.%v", Class, origin.Region, origin.Zone, origin.Host)
 	}
@@ -32,14 +32,14 @@ func ControllerAgentUri(origin core.Origin) string {
 }
 
 // NewControllerAgent - create a new controller agent
-func NewControllerAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+func newControllerAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
 	return newControllerAgent(origin, handler)
 }
 
-func newControllerAgent(origin core.Origin, handler messaging.OpsAgent) *controller {
+func newController(origin core.Origin, handler messaging.OpsAgent) *controller {
 	c := new(controller)
 	c.origin = origin
-	c.uri = ControllerAgentUri(origin)
+	c.uri = controllerAgentUri(origin)
 	c.ticker = messaging.NewTicker(defaultInterval)
 	c.poller = messaging.NewTicker(percentile1.PercentilePollingDuration)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)

@@ -20,7 +20,7 @@ func ExampleRun_Nil() {
 		InstanceId: "",
 	}
 	//msg := messaging.NewControlMessage("to", "from", messaging.ShutdownEvent)
-	c := newControllerAgent(origin, test.NewAgent())
+	c := newController(origin, test.NewAgent())
 	go runControl(c, nil, nil, nil, nil, nil)
 
 	fmt.Printf("test: run(c,nil,nil) -> %v\n", "OK")

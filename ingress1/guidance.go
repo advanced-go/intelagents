@@ -22,7 +22,7 @@ type guidance struct {
 	isScheduled       func(origin core.Origin) bool
 	percentile        func(duration time.Duration, curr percentile1.Entry, origin core.Origin) (percentile1.Entry, *core.Status)
 	controllers       func(origin core.Origin) ([]controller1.Ingress, *core.Status)
-	controllerVersion func(origin core.Origin) (string, *core.Status)
+	controllerVersion func(origin core.Origin) (controller1.Entry, *core.Status)
 	updateRedirect    func(origin core.Origin, status string) *core.Status
 }
 
@@ -51,15 +51,15 @@ func newGuidance(agent messaging.OpsAgent) *guidance {
 			agent.Handle(status, "")
 			return nil, status
 		},
-		controllerVersion: func(origin core.Origin) (string, *core.Status) {
+		controllerVersion: func(origin core.Origin) (controller1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), versionDuration)
 			defer cancel()
-			_, v, status := controller1.Versions(ctx, origin)
+			e, status := controller1.Version(ctx, origin)
 			if status.OK() || status.NotFound() {
-				return v, status
+				return e, status
 			}
 			agent.Handle(status, "")
-			return "", status
+			return controller1.Entry{}, status
 		},
 		updateRedirect: func(origin core.Origin, status string) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), updateDuration)

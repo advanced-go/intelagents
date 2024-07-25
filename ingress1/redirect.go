@@ -47,15 +47,19 @@ type redirect struct {
 	shutdownFunc func()
 }
 
-func RedirectAgentUri(origin core.Origin) string {
+func redirectAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
 		return fmt.Sprintf("%v:%v.%v.%v", RedirectClass, origin.Region, origin.Zone, origin.Host)
 	}
 	return fmt.Sprintf("%v:%v.%v.%v.%v", RedirectClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewRedirectAgent - create a new lead agent
-func NewRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
+// newRedirectAgent - create a new lead agent
+func newRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
+	return newRedirect(origin, handler)
+}
+
+func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
 	c := new(redirect)
 	c.uri = LeadAgentUri(origin)
 	c.origin = origin

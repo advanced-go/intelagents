@@ -35,13 +35,13 @@ func ExampleControllerAgentUri() {
 		Host:       "host",
 		InstanceId: "",
 	}
-	u := ControllerAgentUri(origin)
+	u := controllerAgentUri(origin)
 	fmt.Printf("test: AgentUri() -> [%v]\n", u)
 
 	origin.Region = "us-west1"
 	origin.Zone = "a"
 	origin.SubZone = ""
-	u = ControllerAgentUri(origin)
+	u = controllerAgentUri(origin)
 	fmt.Printf("test: AgentUri() -> [%v]\n", u)
 
 	//Output:

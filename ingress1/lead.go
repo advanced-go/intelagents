@@ -55,8 +55,8 @@ func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsA
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 
-	c.controller = NewControllerAgent(origin, c)
-	c.redirect = NewRedirectAgent(origin, c)
+	c.controller = newControllerAgent(origin, c)
+	c.redirect = newRedirectAgent(origin, c)
 	return c
 }
 
