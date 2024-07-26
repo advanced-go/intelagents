@@ -88,7 +88,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go runControl(c, newObservation(c.handler), newExperience(c.handler), newGuidance(c.handler), newInference(c.handler), newOperations(c.handler))
+	go runControl(c, newObservation(c.handler), newExperience(c.handler), newGuidance(c.handler), newInference(c.handler), newAction(c.handler), newOperations(c.handler))
 }
 
 func (c *controller) stopTickers() {

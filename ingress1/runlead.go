@@ -9,6 +9,8 @@ func runLead(a *lead, observe *observation, guide *guidance, ops *operations) {
 		return
 	}
 	entry, status := guide.controllers(a.origin)
+	if entry.EntryId != 0 || status != nil {
+	}
 	for {
 		select {
 		case msg := <-a.ctrlC:

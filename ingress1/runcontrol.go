@@ -27,8 +27,8 @@ func newControllerState() *controllerState {
 }
 
 // run - ingress controller
-func runControl(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, ops *operations) {
-	if c == nil || observe == nil || exp == nil || guide == nil || infer == nil || ops == nil {
+func runControl(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, act *action, ops *operations) {
+	if c == nil || observe == nil || exp == nil || guide == nil || infer == nil || act == nil || ops == nil {
 		return
 	}
 	percentile, _ := guide.percentile(percentileDuration, defaultPercentile, c.origin)
