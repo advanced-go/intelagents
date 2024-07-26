@@ -8,7 +8,7 @@ func runLead(a *lead, observe *observation, guide *guidance, ops *operations) {
 	if a == nil || observe == nil || guide == nil || ops == nil {
 		return
 	}
-	//entry, status := guide.controllerVersion(a.origin)
+	entry, status := guide.controllers(a.origin)
 	for {
 		select {
 		case msg := <-a.ctrlC:
@@ -16,7 +16,7 @@ func runLead(a *lead, observe *observation, guide *guidance, ops *operations) {
 			case messaging.ShutdownEvent:
 				a.shutdown()
 				return
-			case messaging.RestartEvent:
+			case messaging.HostStartupEvent:
 				//if
 				a.controller.Message(msg)
 			case messaging.ChangesetApplyEvent:
