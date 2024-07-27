@@ -3,6 +3,7 @@ package ingress1
 import (
 	"github.com/advanced-go/guidance/percentile1"
 	"github.com/advanced-go/observation/access1"
+	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -38,7 +39,10 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 			if !status.OK() {
 				continue
 			}
-			processInference(c, curr, percentile, exp, infer, act, ops)
+			i, status1 := processControlInference(c, curr, percentile, observe, exp, infer, ops)
+			if status1.OK() {
+				processControlAction(c, i, exp, act, ops)
+			}
 		case <-c.poller.C():
 			percentile, _ = guide.percentile(percentileDuration, percentile, c.origin)
 		case msg := <-c.ctrlC:
@@ -50,13 +54,26 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 			default:
 			}
 		default:
+			// TODO: should this be scheduled, and what data is needed?
 			infer.updateTicker(c, exp)
 		}
 	}
 }
 
-func processInference(c *controller, e []access1.Entry, percentile percentile1.Entry, exp *experience, inf *inference, act *action, ops *operations) *core.Status {
+func processControlInference(c *controller, e []access1.Entry, percentile percentile1.Entry, observe *observation, exp *experience, inf *inference, ops *operations) (inference1.Entry, *core.Status) {
 	i, status := inf.process(c, e, percentile, exp, ops)
+	if !status.OK() {
+		return inference1.Entry{}, status
+	}
+	status = observe.addInference(i)
+	return i, status
+}
 
-	return core.StatusOK()
+func processControlAction(c *controller, i inference1.Entry, exp *experience, act *action, ops *operations) *core.Status {
+	actions, status := act.process(i, ops)
+	if !status.OK() {
+		return status
+	}
+	status = act.insert(c.origin, actions)
+	return status
 }

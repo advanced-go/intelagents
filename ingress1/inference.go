@@ -24,6 +24,7 @@ func newInference(agent messaging.OpsAgent) *inference {
 	}
 }
 
+// return HTTP status no content if no inference generated
 func infer(c *controller, entry []access1.Entry, percentile percentile1.Entry, exp *experience, agent messaging.OpsAgent, ops *operations) (inference1.Entry, *core.Status) {
 	return inference1.Entry{}, core.StatusOK()
 }
