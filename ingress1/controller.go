@@ -13,10 +13,23 @@ const (
 	defaultInterval = time.Minute * 2
 )
 
+type controllerState struct {
+	rateLimit float64
+	rateBurst int
+}
+
+func newControllerState() *controllerState {
+	l := new(controllerState)
+	l.rateLimit = -1
+	l.rateBurst = -1
+	return l
+}
+
 type controller struct {
 	running      bool
 	uri          string
 	origin       core.Origin
+	state        *controllerState
 	ticker       *messaging.Ticker
 	poller       *messaging.Ticker
 	ctrlC        chan *messaging.Message
@@ -40,6 +53,7 @@ func newController(origin core.Origin, handler messaging.OpsAgent) *controller {
 	c := new(controller)
 	c.origin = origin
 	c.uri = controllerAgentUri(origin)
+	c.state = newControllerState()
 	c.ticker = messaging.NewTicker(defaultInterval)
 	c.poller = messaging.NewTicker(percentile1.PercentilePollingDuration)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)

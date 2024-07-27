@@ -9,19 +9,14 @@ import (
 )
 
 type inference struct {
-	process      func(e []access1.Entry, percentile percentile1.Entry, observe *observation) *core.Status
+	process      func(c *controller, e []access1.Entry, percentile percentile1.Entry, exp *experience, ops *operations) (inference1.Entry, *core.Status)
 	updateTicker func(c *controller, exp *experience)
 }
 
 func newInference(agent messaging.OpsAgent) *inference {
 	return &inference{
-		process: func(e []access1.Entry, percentile percentile1.Entry, observe *observation) *core.Status {
-			i, status := infer(e, percentile, observe)
-			if !status.OK() {
-				agent.Handle(status, "")
-				return status
-			}
-			return observe.addInference(i)
+		process: func(c *controller, entry []access1.Entry, percentile percentile1.Entry, exp *experience, ops *operations) (inference1.Entry, *core.Status) {
+			return infer(c, entry, percentile, exp, agent, ops)
 		},
 		updateTicker: func(c *controller, exp *experience) {
 			c.updateTicker(exp)
@@ -29,6 +24,18 @@ func newInference(agent messaging.OpsAgent) *inference {
 	}
 }
 
-func infer(entry []access1.Entry, percentile percentile1.Entry, observe *observation) (inference1.Entry, *core.Status) {
+func infer(c *controller, entry []access1.Entry, percentile percentile1.Entry, exp *experience, agent messaging.OpsAgent, ops *operations) (inference1.Entry, *core.Status) {
 	return inference1.Entry{}, core.StatusOK()
 }
+
+/*
+func(e []access1.Entry, exp *experience, percentile1.Entry, ) (inference1.Entry,*core.Status) {
+	i, status := infer(e, percentile, observe)
+	if !status.OK() {
+		agent.Handle(status, "")
+		return status
+	}
+	return observe.addInference(i)
+},
+
+*/
