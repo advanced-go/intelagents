@@ -9,17 +9,13 @@ import (
 )
 
 type inference struct {
-	process      func(c *controller, e []access1.Entry, percentile percentile1.Entry, exp *experience, ops *operations) (inference1.Entry, *core.Status)
-	updateTicker func(c *controller, exp *experience)
+	process func(c *controller, e []access1.Entry, percentile percentile1.Entry, exp *experience, ops *operations) (inference1.Entry, *core.Status)
 }
 
 func newInference(agent messaging.OpsAgent) *inference {
 	return &inference{
 		process: func(c *controller, entry []access1.Entry, percentile percentile1.Entry, exp *experience, ops *operations) (inference1.Entry, *core.Status) {
 			return infer(c, entry, percentile, exp, agent, ops)
-		},
-		updateTicker: func(c *controller, exp *experience) {
-			c.updateTicker(exp)
 		},
 	}
 }

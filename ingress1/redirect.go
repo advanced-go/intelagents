@@ -22,24 +22,19 @@ const (
 //     b. Read previous egress and dependency configurations, update controllers and dependency agent
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
+
+type redirectState struct {
+	Location string
+	Percent  string
+}
+
 type redirect struct {
 	running bool
 	uri     string
 
 	// Assignment
 	origin core.Origin
-
-	// Guidance/configuration
-	guideVersion         string // Version for authority and egress, helps to stop duplicate updates of egress routes
-	processingScheduleId string
-
-	// Dependency processing
-	dependencyUpdates    bool
-	dependencyScheduleId string
-	dependencyAgent      messaging.Agent
-
-	// Routing controllers
-	controllers *messaging.Exchange
+	state  *redirectState
 
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
@@ -61,13 +56,12 @@ func newRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.
 
 func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
 	c := new(redirect)
-	c.uri = LeadAgentUri(origin)
+	c.uri = redirectAgentUri(origin)
 	c.origin = origin
-
+	c.state = new(redirectState)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
-	//c.dependencyAgent = dependency1.NewDependencyAgent(origin, c)
-	c.controllers = messaging.NewExchange()
+
 	return c
 }
 
@@ -99,10 +93,10 @@ func (a *redirect) AddActivity(agentId string, content any) {
 }
 
 // Add - add a shutdown function
-func (a *redirect) Add(f func()) {
-	a.shutdownFunc = messaging.AddShutdown(a.shutdownFunc, f)
-
-}
+//func (a *redirect) Add(f func()) {
+//	a.shutdownFunc = messaging.AddShutdown(a.shutdownFunc, f)
+//
+//}
 
 // Shutdown - shutdown the agent
 func (a *redirect) Shutdown() {

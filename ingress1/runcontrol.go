@@ -55,7 +55,7 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 			}
 		default:
 			// TODO: should this be scheduled, and what data is needed?
-			infer.updateTicker(c, exp)
+			exp.updateTicker(c, ops)
 		}
 	}
 }
