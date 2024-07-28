@@ -61,69 +61,64 @@ func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsA
 }
 
 // String - identity
-func (a *lead) String() string {
-	return a.uri
+func (l *lead) String() string {
+	return l.uri
 }
 
 // Uri - agent identifier
-func (a *lead) Uri() string {
-	return a.uri
+func (l *lead) Uri() string {
+	return l.uri
 }
 
 // Message - message the agent
-func (a *lead) Message(m *messaging.Message) {
-	messaging.Mux(m, a.ctrlC, nil, nil)
+func (l *lead) Message(m *messaging.Message) {
+	messaging.Mux(m, l.ctrlC, nil, nil)
 }
 
 // Handle - error handler
-func (a *lead) Handle(status *core.Status, requestId string) *core.Status {
+func (l *lead) Handle(status *core.Status, requestId string) *core.Status {
 	// TODO : Any operations specific processing ??  If not then forward to handler
-	return a.handler.Handle(status, requestId)
+	return l.handler.Handle(status, requestId)
 }
 
 // AddActivity - add activity
-func (a *lead) AddActivity(agentId string, content any) {
+func (l *lead) AddActivity(agentId string, content any) {
 	// TODO : Any operations specific processing ??  If not then forward to handler
 	//return a.handler.Handle(status, requestId)
 }
 
 // Add - add a shutdown function
-func (a *lead) Add(f func()) {
-	a.shutdownFunc = messaging.AddShutdown(a.shutdownFunc, f)
-
+func (l *lead) Add(f func()) {
+	l.shutdownFunc = messaging.AddShutdown(l.shutdownFunc, f)
 }
 
 // Shutdown - shutdown the agent
-func (a *lead) Shutdown() {
-	if !a.running {
+func (l *lead) Shutdown() {
+	if !l.running {
 		return
 	}
-	a.running = false
-	if a.shutdownFunc != nil {
-		a.shutdownFunc()
+	l.running = false
+	if l.shutdownFunc != nil {
+		l.shutdownFunc()
 	}
-	a.controller.Shutdown()
-	a.redirect.Shutdown()
-	msg := messaging.NewControlMessage(a.uri, a.uri, messaging.ShutdownEvent)
-	if a.ctrlC != nil {
-		a.ctrlC <- msg
+	l.controller.Shutdown()
+	l.redirect.Shutdown()
+	msg := messaging.NewControlMessage(l.uri, l.uri, messaging.ShutdownEvent)
+	if l.ctrlC != nil {
+		l.ctrlC <- msg
 	}
-}
-
-// shutdown - close resources
-func (a *lead) shutdown() {
-	close(a.ctrlC)
-	a.stopTickers()
-}
-
-func (a *lead) stopTickers() {
-
 }
 
 // Run - run the agent
-func (a *lead) Run() {
-	if a.running {
+func (l *lead) Run() {
+	if l.running {
 		return
 	}
-	go runLead(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
+	go leadRun(l, newObservation(l.handler), newGuidance(l.handler), newOperations(l.handler))
+}
+
+// shutdown - close resources
+func (l *lead) shutdown() {
+	close(l.ctrlC)
+
 }

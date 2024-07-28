@@ -30,7 +30,7 @@ type redirectState struct {
 
 type redirect struct {
 	running bool
-	uri     string
+	agentId string
 
 	// Assignment
 	origin core.Origin
@@ -56,7 +56,7 @@ func newRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.
 
 func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
 	c := new(redirect)
-	c.uri = redirectAgentUri(origin)
+	c.agentId = redirectAgentUri(origin)
 	c.origin = origin
 	c.state = new(redirectState)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
@@ -67,12 +67,12 @@ func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
 
 // String - identity
 func (a *redirect) String() string {
-	return a.uri
+	return a.agentId
 }
 
 // Uri - agent identifier
 func (a *redirect) Uri() string {
-	return a.uri
+	return a.agentId
 }
 
 // Message - message the agent
@@ -107,7 +107,7 @@ func (a *redirect) Shutdown() {
 	if a.shutdownFunc != nil {
 		a.shutdownFunc()
 	}
-	msg := messaging.NewControlMessage(a.uri, a.uri, messaging.ShutdownEvent)
+	msg := messaging.NewControlMessage(a.agentId, a.agentId, messaging.ShutdownEvent)
 	if a.ctrlC != nil {
 		a.ctrlC <- msg
 	}

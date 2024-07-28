@@ -6,11 +6,6 @@ import (
 	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
-	"time"
-)
-
-const (
-	percentileDuration = time.Second * 2
 )
 
 var (
@@ -18,13 +13,13 @@ var (
 )
 
 // run - ingress controller
-func runControl(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, act *action, ops *operations) {
-	if c == nil || observe == nil || exp == nil || guide == nil || infer == nil || act == nil || ops == nil {
+func controllerRun(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, act *action, ops *operations) {
+	//|| observe == nil || exp == nil || guide == nil || infer == nil || act == nil || ops == nil {
+	if c == nil {
 		return
 	}
-	percentile, _ := guide.percentile(percentileDuration, defaultPercentile, c.origin)
-	c.ticker.Start(0)
-	c.poller.Start(0)
+	percentile, _ := guide.percentile(c.origin, defaultPercentile)
+	c.startup()
 
 	for {
 		// main agent processing
@@ -34,7 +29,7 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 			if !guide.isScheduled(c.origin) {
 				continue
 			}
-			ops.addActivity(c.uri, "tick")
+			ops.addActivity(c.agentId, "onTick")
 			curr, status := observe.access(c.origin)
 			if !status.OK() {
 				continue
@@ -48,14 +43,16 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 		// secondary processing
 		select {
 		case <-c.poller.C():
-			percentile, _ = guide.percentile(percentileDuration, percentile, c.origin)
+			ops.addActivity(c.agentId, "updatePercentile()")
+			percentile, _ = guide.percentile(c.origin, percentile)
 		case <-c.revise.C():
-			exp.reviseTicker(c, ops)
+			ops.addActivity(c.agentId, "reviseTicker()")
+			exp.reviseTicker(c.updateTicker, ops)
 		case msg := <-c.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				c.shutdown()
-				ops.addActivity(c.uri, messaging.ShutdownEvent)
+				ops.addActivity(c.agentId, messaging.ShutdownEvent)
 				return
 			default:
 			}

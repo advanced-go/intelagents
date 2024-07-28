@@ -15,12 +15,13 @@ const (
 	controllerDuration = time.Second * 2
 	versionDuration    = time.Second * 2
 	updateDuration     = time.Second * 2
+	percentileDuration = time.Second * 2
 )
 
 // A nod to Linus Torvalds and plain C
 type guidance struct {
 	isScheduled       func(origin core.Origin) bool
-	percentile        func(duration time.Duration, curr percentile1.Entry, origin core.Origin) (percentile1.Entry, *core.Status)
+	percentile        func(origin core.Origin, curr percentile1.Entry) (percentile1.Entry, *core.Status)
 	controllers       func(origin core.Origin) (controller1.Ingress, *core.Status)
 	controllerVersion func(origin core.Origin) (controller1.Entry, *core.Status)
 	updateRedirect    func(origin core.Origin, status string) *core.Status
@@ -31,8 +32,8 @@ func newGuidance(agent messaging.OpsAgent) *guidance {
 		isScheduled: func(origin core.Origin) bool {
 			return schedule1.IsIngressControllerScheduled(origin)
 		},
-		percentile: func(duration time.Duration, curr percentile1.Entry, origin core.Origin) (percentile1.Entry, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), duration)
+		percentile: func(origin core.Origin, curr percentile1.Entry) (percentile1.Entry, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), percentileDuration)
 			defer cancel()
 			e, status := percentile1.Get(ctx, origin)
 			if status.OK() {

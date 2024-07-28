@@ -28,7 +28,7 @@ func newControllerState() *controllerState {
 
 type controller struct {
 	running      bool
-	uri          string
+	agentId      string
 	origin       core.Origin
 	state        *controllerState
 	ticker       *messaging.Ticker
@@ -48,17 +48,17 @@ func controllerAgentUri(origin core.Origin) string {
 
 // NewControllerAgent - create a new controller agent
 func newControllerAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
-	return newControllerAgent(origin, handler)
+	return newController(origin, handler, controllerTickInterval, percentile1.PercentilePollingDuration, controllerReviseInterval)
 }
 
-func newController(origin core.Origin, handler messaging.OpsAgent) *controller {
+func newController(origin core.Origin, handler messaging.OpsAgent, tickerDur, pollerDur, reviseDur time.Duration) *controller {
 	c := new(controller)
 	c.origin = origin
-	c.uri = controllerAgentUri(origin)
+	c.agentId = controllerAgentUri(origin)
 	c.state = newControllerState()
-	c.ticker = messaging.NewTicker(controllerTickInterval)
-	c.poller = messaging.NewTicker(percentile1.PercentilePollingDuration)
-	c.revise = messaging.NewTicker(controllerReviseInterval)
+	c.ticker = messaging.NewTicker(tickerDur)
+	c.poller = messaging.NewTicker(pollerDur)
+	c.revise = messaging.NewTicker(reviseDur)
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
@@ -67,12 +67,12 @@ func newController(origin core.Origin, handler messaging.OpsAgent) *controller {
 
 // String - identity
 func (c *controller) String() string {
-	return c.uri
+	return c.agentId
 }
 
 // Uri - agent identifier
 func (c *controller) Uri() string {
-	return c.uri
+	return c.agentId
 }
 
 // Message - message the agent
@@ -89,16 +89,10 @@ func (c *controller) Shutdown() {
 	if c.shutdownFunc != nil {
 		c.shutdownFunc()
 	}
-	msg := messaging.NewControlMessage(c.uri, c.uri, messaging.ShutdownEvent)
+	msg := messaging.NewControlMessage(c.agentId, c.agentId, messaging.ShutdownEvent)
 	if c.ctrlC != nil {
 		c.ctrlC <- msg
 	}
-}
-
-// shutdown - close resources
-func (c *controller) shutdown() {
-	close(c.ctrlC)
-	c.stopTickers()
 }
 
 // Run - run the agent
@@ -106,11 +100,24 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go runControl(c, newObservation(c.handler), newExperience(c.handler), newGuidance(c.handler), newInference(c.handler), newAction(c.handler), newOperations(c.handler))
+	go controllerRun(c, newObservation(c.handler), newExperience(c.handler), newGuidance(c.handler), newInference(c.handler), newAction(c.handler), newOperations(c.handler))
 }
 
-func (c *controller) stopTickers() {
+// startup - start tickers
+func (c *controller) startup() {
+	c.ticker.Start(-1)
+	c.poller.Start(-1)
+	c.revise.Start(-1)
+}
+
+// shutdown - close resources
+func (c *controller) shutdown() {
+	close(c.ctrlC)
 	c.ticker.Stop()
 	c.poller.Stop()
 	c.revise.Stop()
+}
+
+func (c *controller) updateTicker(newDuration time.Duration) {
+	c.ticker.Start(newDuration)
 }

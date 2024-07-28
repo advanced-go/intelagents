@@ -4,27 +4,28 @@ import (
 	"github.com/advanced-go/stdlib/messaging"
 )
 
-func runLead(a *lead, observe *observation, guide *guidance, ops *operations) {
-	if a == nil || observe == nil || guide == nil || ops == nil {
+func leadRun(l *lead, observe *observation, guide *guidance, ops *operations) {
+	//} observe == nil || guide == nil || ops == nil {
+	if l == nil {
 		return
 	}
-	entry, status := guide.controllers(a.origin)
+	entry, status := guide.controllers(l.origin)
 	if entry.EntryId != 0 || status != nil {
 	}
 	for {
 		select {
-		case msg := <-a.ctrlC:
+		case msg := <-l.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
-				a.shutdown()
+				l.shutdown()
 				return
 			case messaging.HostStartupEvent:
 				//if
-				a.controller.Message(msg)
+				l.controller.Message(msg)
 			case messaging.ChangesetApplyEvent:
-				a.controller.Message(msg)
+				l.controller.Message(msg)
 			case messaging.ChangesetRollbackEvent:
-				a.controller.Message(msg)
+				l.controller.Message(msg)
 			default:
 			}
 		default:
