@@ -24,7 +24,7 @@ const (
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
 type lead struct {
 	running bool
-	uri     string
+	agentId string
 
 	// Assignment
 	origin core.Origin
@@ -49,7 +49,7 @@ func LeadAgentUri(origin core.Origin) string {
 // NewLeadAgent - create a new lead agent
 func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
 	c := new(lead)
-	c.uri = LeadAgentUri(origin)
+	c.agentId = LeadAgentUri(origin)
 	c.origin = origin
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
@@ -62,12 +62,12 @@ func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsA
 
 // String - identity
 func (l *lead) String() string {
-	return l.uri
+	return l.agentId
 }
 
 // Uri - agent identifier
 func (l *lead) Uri() string {
-	return l.uri
+	return l.agentId
 }
 
 // Message - message the agent
@@ -103,7 +103,7 @@ func (l *lead) Shutdown() {
 	}
 	l.controller.Shutdown()
 	l.redirect.Shutdown()
-	msg := messaging.NewControlMessage(l.uri, l.uri, messaging.ShutdownEvent)
+	msg := messaging.NewControlMessage(l.agentId, l.agentId, messaging.ShutdownEvent)
 	if l.ctrlC != nil {
 		l.ctrlC <- msg
 	}
