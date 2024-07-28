@@ -5,21 +5,22 @@ import (
 	"time"
 )
 
-func runRedirect(a *redirect, observe *observation, guide *guidance, ops *operations) {
-	if a == nil || observe == nil || guide == nil || ops == nil {
+func runRedirect(r *redirect, observe *observation, guide *guidance, ops *operations) {
+	//observe == nil || guide == nil || ops == nil {
+	if r == nil {
 		return
 	}
-	tick := time.Tick(a.interval)
+	tick := time.Tick(r.interval)
 
 	for {
 		select {
 		case <-tick:
 
 		// control channel
-		case msg := <-a.ctrlC:
+		case msg := <-r.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
-				a.shutdown()
+				r.shutdown()
 				return
 			// How to handle duplicate restart events as multiple pods will be sending restarts?
 			//

@@ -66,28 +66,28 @@ func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
 }
 
 // String - identity
-func (a *redirect) String() string {
-	return a.agentId
+func (r *redirect) String() string {
+	return r.agentId
 }
 
 // Uri - agent identifier
-func (a *redirect) Uri() string {
-	return a.agentId
+func (r *redirect) Uri() string {
+	return r.agentId
 }
 
 // Message - message the agent
-func (a *redirect) Message(m *messaging.Message) {
-	messaging.Mux(m, a.ctrlC, nil, nil)
+func (r *redirect) Message(m *messaging.Message) {
+	messaging.Mux(m, r.ctrlC, nil, nil)
 }
 
 // Handle - error handler
-func (a *redirect) Handle(status *core.Status, requestId string) *core.Status {
+func (r *redirect) Handle(status *core.Status, requestId string) *core.Status {
 	// TODO : Any operations specific processing ??  If not then forward to handler
-	return a.handler.Handle(status, requestId)
+	return r.handler.Handle(status, requestId)
 }
 
 // AddActivity - add activity
-func (a *redirect) AddActivity(agentId string, content any) {
+func (r *redirect) AddActivity(agentId string, content any) {
 	// TODO : Any operations specific processing ??  If not then forward to handler
 	//return a.handler.Handle(status, requestId)
 }
@@ -99,34 +99,34 @@ func (a *redirect) AddActivity(agentId string, content any) {
 //}
 
 // Shutdown - shutdown the agent
-func (a *redirect) Shutdown() {
-	if !a.running {
+func (r *redirect) Shutdown() {
+	if !r.running {
 		return
 	}
-	a.running = false
-	if a.shutdownFunc != nil {
-		a.shutdownFunc()
+	r.running = false
+	if r.shutdownFunc != nil {
+		r.shutdownFunc()
 	}
-	msg := messaging.NewControlMessage(a.agentId, a.agentId, messaging.ShutdownEvent)
-	if a.ctrlC != nil {
-		a.ctrlC <- msg
+	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
+	if r.ctrlC != nil {
+		r.ctrlC <- msg
 	}
 }
 
 // Run - run the agent
-func (a *redirect) Run() {
-	if a.running {
+func (r *redirect) Run() {
+	if r.running {
 		return
 	}
-	go runRedirect(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
+	go runRedirect(r, newObservation(r.handler), newGuidance(r.handler), newOperations(r.handler))
 }
 
 // shutdown - close resources
-func (a *redirect) shutdown() {
-	close(a.ctrlC)
-	a.stopTickers()
+func (r *redirect) shutdown() {
+	close(r.ctrlC)
+	r.stopTickers()
 }
 
-func (a *redirect) stopTickers() {
+func (r *redirect) stopTickers() {
 
 }
