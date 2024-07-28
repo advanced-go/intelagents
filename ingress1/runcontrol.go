@@ -23,11 +23,11 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 		return
 	}
 	percentile, _ := guide.percentile(percentileDuration, defaultPercentile, c.origin)
-
 	c.ticker.Start(0)
 	c.poller.Start(0)
 
 	for {
+		// main agent processing
 		select {
 		case <-c.ticker.C():
 			// main : on tick -> observe access -> process inference with percentile -> create action
@@ -43,6 +43,10 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 			if status1.OK() {
 				processControlAction(c, i, exp, act, ops)
 			}
+		default:
+		}
+		// secondary processing
+		select {
 		case <-c.poller.C():
 			percentile, _ = guide.percentile(percentileDuration, percentile, c.origin)
 		case msg := <-c.ctrlC:
@@ -55,7 +59,7 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 			}
 		default:
 			// TODO: should this be scheduled, and what data is needed?
-			exp.updateTicker(c, ops)
+			//exp.updateTicker(c, ops)
 		}
 	}
 }

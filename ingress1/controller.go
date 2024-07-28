@@ -32,6 +32,7 @@ type controller struct {
 	state        *controllerState
 	ticker       *messaging.Ticker
 	poller       *messaging.Ticker
+	pcent        *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
 	shutdownFunc func()
@@ -56,6 +57,8 @@ func newController(origin core.Origin, handler messaging.OpsAgent) *controller {
 	c.state = newControllerState()
 	c.ticker = messaging.NewTicker(defaultInterval)
 	c.poller = messaging.NewTicker(percentile1.PercentilePollingDuration)
+	c.pcent = messaging.NewTicker(percentile1.PercentilePollingDuration)
+
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c
