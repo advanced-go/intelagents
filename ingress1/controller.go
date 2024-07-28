@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	Class           = "ingress-controller1"
-	defaultInterval = time.Minute * 2
+	Class                    = "ingress-controller1"
+	controllerTickInterval   = time.Minute * 2
+	controllerReviseInterval = time.Hour * 1
 )
 
 type controllerState struct {
@@ -32,7 +33,7 @@ type controller struct {
 	state        *controllerState
 	ticker       *messaging.Ticker
 	poller       *messaging.Ticker
-	pcent        *messaging.Ticker
+	revise       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
 	shutdownFunc func()
@@ -55,9 +56,9 @@ func newController(origin core.Origin, handler messaging.OpsAgent) *controller {
 	c.origin = origin
 	c.uri = controllerAgentUri(origin)
 	c.state = newControllerState()
-	c.ticker = messaging.NewTicker(defaultInterval)
+	c.ticker = messaging.NewTicker(controllerTickInterval)
 	c.poller = messaging.NewTicker(percentile1.PercentilePollingDuration)
-	c.pcent = messaging.NewTicker(percentile1.PercentilePollingDuration)
+	c.revise = messaging.NewTicker(controllerReviseInterval)
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
@@ -111,8 +112,5 @@ func (c *controller) Run() {
 func (c *controller) stopTickers() {
 	c.ticker.Stop()
 	c.poller.Stop()
-}
-
-func (c *controller) updateTicker(exp *experience) {
-
+	c.revise.Stop()
 }

@@ -49,6 +49,8 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 		select {
 		case <-c.poller.C():
 			percentile, _ = guide.percentile(percentileDuration, percentile, c.origin)
+		case <-c.revise.C():
+			exp.reviseTicker(c, ops)
 		case msg := <-c.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
@@ -58,8 +60,6 @@ func runControl(c *controller, observe *observation, exp *experience, guide *gui
 			default:
 			}
 		default:
-			// TODO: should this be scheduled, and what data is needed?
-			//exp.updateTicker(c, ops)
 		}
 	}
 }
