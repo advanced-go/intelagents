@@ -121,3 +121,48 @@ func (c *controller) shutdown() {
 func (c *controller) updateTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
+
+// run - ingress controller
+func controllerRun(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, act *action, ops *operations) {
+	//|| observe == nil || exp == nil || guide == nil || infer == nil || act == nil || ops == nil {
+	if c == nil {
+		return
+	}
+	percentile, _ := guide.percentile(c.origin, defaultPercentile)
+	c.startup()
+
+	for {
+		// main agent processing
+		select {
+		case <-c.ticker.C():
+			// main : on tick -> observe access -> process inference with percentile -> create action
+			if !guide.isScheduled(c.origin) {
+				continue
+			}
+			c.handler.AddActivity(c.agentId, "onTick")
+			entry, status := controllerFunc(c, percentile, observe, exp, act)
+			if status.OK() && len(entry) > 0 {
+				// TODO :need to track recent history RPS for ticker revision
+			}
+		default:
+		}
+		// secondary processing
+		select {
+		case <-c.poller.C():
+			c.handler.AddActivity(c.agentId, "onPoll")
+			percentile, _ = guide.percentile(c.origin, percentile)
+		case <-c.revise.C():
+			c.handler.AddActivity(c.agentId, "onRevise")
+			exp.reviseTicker(c.updateTicker, ops)
+		case msg := <-c.ctrlC:
+			switch msg.Event() {
+			case messaging.ShutdownEvent:
+				c.shutdown()
+				c.handler.AddActivity(c.agentId, messaging.ShutdownEvent)
+				return
+			default:
+			}
+		default:
+		}
+	}
+}

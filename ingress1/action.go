@@ -35,8 +35,3 @@ func newAction(agent messaging.OpsAgent) *action {
 		},
 	}
 }
-
-// return HTTP status no content if no inference generated
-func act(entry inference1.Entry, agent messaging.OpsAgent, ops *operations) ([]action1.Entry, *core.Status) {
-	return []action1.Entry{}, core.StatusOK()
-}

@@ -13,7 +13,7 @@ var (
 )
 
 // run - ingress controller
-func controllerRun(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, act *action, ops *operations) {
+func controllerRun1(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, act *action, ops *operations) {
 	//|| observe == nil || exp == nil || guide == nil || infer == nil || act == nil || ops == nil {
 	if c == nil {
 		return
@@ -43,10 +43,10 @@ func controllerRun(c *controller, observe *observation, exp *experience, guide *
 		// secondary processing
 		select {
 		case <-c.poller.C():
-			ops.addActivity(c.agentId, "updatePercentile()")
+			ops.addActivity(c.agentId, "onPoll")
 			percentile, _ = guide.percentile(c.origin, percentile)
 		case <-c.revise.C():
-			ops.addActivity(c.agentId, "reviseTicker()")
+			ops.addActivity(c.agentId, "onRevise")
 			exp.reviseTicker(c.updateTicker, ops)
 		case msg := <-c.ctrlC:
 			switch msg.Event() {
@@ -61,7 +61,7 @@ func controllerRun(c *controller, observe *observation, exp *experience, guide *
 	}
 }
 
-func processControlInference(c *controller, e []access1.Entry, percentile percentile1.Entry, observe *observation, exp *experience, inf *inference, ops *operations) (inference1.Entry, *core.Status) {
+func processControlInference1(c *controller, e []access1.Entry, percentile percentile1.Entry, observe *observation, exp *experience, inf *inference, ops *operations) (inference1.Entry, *core.Status) {
 	i, status := inf.process(c, e, percentile, exp, ops)
 	if !status.OK() {
 		return inference1.Entry{}, status
@@ -70,7 +70,7 @@ func processControlInference(c *controller, e []access1.Entry, percentile percen
 	return i, status
 }
 
-func processControlAction(c *controller, i inference1.Entry, exp *experience, act *action, ops *operations) *core.Status {
+func processControlAction2(c *controller, i inference1.Entry, exp *experience, act *action, ops *operations) *core.Status {
 	actions, status := act.process(i, ops)
 	if !status.OK() {
 		return status
