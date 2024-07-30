@@ -3,6 +3,7 @@ package ingress1
 import (
 	"fmt"
 	"github.com/advanced-go/guidance/percentile1"
+	"github.com/advanced-go/observation/access1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -12,6 +13,10 @@ const (
 	Class                    = "ingress-controller1"
 	controllerTickInterval   = time.Minute * 2
 	controllerReviseInterval = time.Hour * 1
+)
+
+var (
+	defaultPercentile = percentile1.Entry{Percent: 99, Latency: 2000}
 )
 
 type controllerState struct {
@@ -100,7 +105,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go controllerRun(c, newObservation(c.handler), newExperience(c.handler), newGuidance(c.handler), newInference(c.handler), newAction(c.handler), newOperations(c.handler))
+	go controllerRun(c, controllerFunc, observe, exp, guide)
 }
 
 // startup - start tickers
@@ -122,27 +127,27 @@ func (c *controller) updateTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
 
+func (c *controller) addEntry(entry []access1.Entry) {
+}
+
+type controllerFn func(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]access1.Entry, *core.Status)
+
 // run - ingress controller
-func controllerRun(c *controller, observe *observation, exp *experience, guide *guidance, infer *inference, act *action, ops *operations) {
-	//|| observe == nil || exp == nil || guide == nil || infer == nil || act == nil || ops == nil {
+func controllerRun(c *controller, fn controllerFn, observe *observation, exp *experience, guide *guidance) {
 	if c == nil {
 		return
 	}
-	percentile, _ := guide.percentile(c.origin, defaultPercentile)
+	percentile, _ := guide.percentile(c.handler, c.origin, defaultPercentile)
 	c.startup()
-
 	for {
 		// main agent processing
 		select {
 		case <-c.ticker.C():
 			// main : on tick -> observe access -> process inference with percentile -> create action
-			if !guide.isScheduled(c.origin) {
-				continue
-			}
 			c.handler.AddActivity(c.agentId, "onTick")
-			entry, status := controllerFunc(c, percentile, observe, exp, act)
-			if status.OK() && len(entry) > 0 {
-				// TODO :need to track recent history RPS for ticker revision
+			entry, status := fn(c, percentile, observe, exp)
+			if status.OK() {
+				c.addEntry(entry)
 			}
 		default:
 		}
@@ -150,10 +155,10 @@ func controllerRun(c *controller, observe *observation, exp *experience, guide *
 		select {
 		case <-c.poller.C():
 			c.handler.AddActivity(c.agentId, "onPoll")
-			percentile, _ = guide.percentile(c.origin, percentile)
+			percentile, _ = guide.percentile(c.handler, c.origin, percentile)
 		case <-c.revise.C():
 			c.handler.AddActivity(c.agentId, "onRevise")
-			exp.reviseTicker(c.updateTicker, ops)
+			exp.reviseTicker(c)
 		case msg := <-c.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:

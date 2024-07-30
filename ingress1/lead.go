@@ -114,11 +114,39 @@ func (l *lead) Run() {
 	if l.running {
 		return
 	}
-	go leadRun(l, newObservation(l.handler), newGuidance(l.handler), newOperations(l.handler))
+	go leadRun(l, guide)
 }
 
 // shutdown - close resources
 func (l *lead) shutdown() {
 	close(l.ctrlC)
 
+}
+
+func leadRun(l *lead, guide *guidance) {
+	if l == nil {
+		return
+	}
+	entry, status := guide.controllers(l.handler, l.origin)
+	if entry.EntryId != 0 || status != nil {
+	}
+	for {
+		select {
+		case msg := <-l.ctrlC:
+			switch msg.Event() {
+			case messaging.ShutdownEvent:
+				l.shutdown()
+				return
+			case messaging.HostStartupEvent:
+				//if
+				l.controller.Message(msg)
+			case messaging.ChangesetApplyEvent:
+				l.controller.Message(msg)
+			case messaging.ChangesetRollbackEvent:
+				l.controller.Message(msg)
+			default:
+			}
+		default:
+		}
+	}
 }

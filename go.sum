@@ -1,3 +1,5 @@
+github.com/advanced-go/experience v0.0.0-20240730062915-06ddc87c0672 h1:gRtbHQfc/zWx73PvBzBQxQvfgL82ji8QwYNLj2xasBo=
+github.com/advanced-go/experience v0.0.0-20240730062915-06ddc87c0672/go.mod h1:rjylV4tL3ttAOVvoRvCLxxICo79JKygCTZQEspfFvEM=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5 h1:4+YNnTo/OqtrE4jwYJ5ZeEaex1xFYEFabIHfwaQzZ4U=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5/go.mod h1:6GqdPnE0Fh6o34pehFuYf9No3NOHlW0NeXEqgp+xy3Y=
 github.com/advanced-go/guidance v0.0.0-20240724124403-97786ec4fee7 h1:FQH3WNH6p/KIkoqRxrSWxCyMxlvIJkZhmCJOKri7Ipo=
@@ -18,6 +20,8 @@ github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784 h1:aCwgv80
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784/go.mod h1:LIAGTP/K0wlft3dYhHqn69QSFn9wlkcXA+c3hfh18HQ=
 github.com/advanced-go/observation v0.0.0-20240726165650-9302f1cc6c99 h1:7r1+XDvOp8QCYeu8Kn0JvVqSKB39lCF06PHlzneUGtc=
 github.com/advanced-go/observation v0.0.0-20240726165650-9302f1cc6c99/go.mod h1:LIAGTP/K0wlft3dYhHqn69QSFn9wlkcXA+c3hfh18HQ=
+github.com/advanced-go/observation v0.0.0-20240730065533-3f105f9af1e7 h1:WfQe4PpL8dMYxNV5EjEc2hZRPjaXveqOHQIaY//980A=
+github.com/advanced-go/observation v0.0.0-20240730065533-3f105f9af1e7/go.mod h1:LIAGTP/K0wlft3dYhHqn69QSFn9wlkcXA+c3hfh18HQ=
 github.com/advanced-go/postgresql v0.0.0-20240720114046-6e895f523ca7 h1:gV/02K4kwRgc7VvURXWoFxWXGiv/Uwff2KE81l46OnI=
 github.com/advanced-go/postgresql v0.0.0-20240720114046-6e895f523ca7/go.mod h1:3SiG2g3uvHzbVHR7YY3bLN+Zm3+lFgSSwh4Pnwgtx2I=
 github.com/advanced-go/stdlib v0.0.0-20240720143032-497f75062842 h1:EDnv461v8FnHJ/NiTzozp3Pm3Oo8pWrvCbKDuEHYkKc=
