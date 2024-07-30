@@ -141,11 +141,7 @@ func controllerRun(c *controller, fn controllerFn, observe *observation, exp *ex
 	}
 	// initialize percentile and rate limiting
 	percentile, _ := guide.percentile(c.handler, c.origin, defaultPercentile)
-	entry0, status0 := observe.rateLimiting(c.handler, c.origin)
-	if status0.OK() {
-		c.state.rateLimit = entry0[0].RateLimit
-		c.state.rateBurst = int(entry0[0].RateBurst)
-	}
+	controllerInitRateLimiting(c, observe)
 	c.startup()
 	for {
 		// main agent processing
