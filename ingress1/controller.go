@@ -41,6 +41,7 @@ type controller struct {
 	revise       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
+	entries      []access1.Entry
 	shutdownFunc func()
 }
 
@@ -127,7 +128,8 @@ func (c *controller) updateTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
 
-func (c *controller) addEntry(entry []access1.Entry) {
+func (c *controller) addEntry(entries []access1.Entry) {
+	c.entries = append(c.entries, entries...)
 }
 
 type controllerFn func(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]access1.Entry, *core.Status)
