@@ -4,12 +4,12 @@ import (
 	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/experience/inference1"
 	"github.com/advanced-go/guidance/percentile1"
-	"github.com/advanced-go/observation/access1"
+	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
 )
 
 // return HTTP status no content if no inference generated
-func controllerInference(c *controller, entry []access1.Entry, percentile percentile1.Entry) (inference1.Entry, *core.Status) {
+func controllerInference(c *controller, entry []timeseries1.Entry, percentile percentile1.Entry) (inference1.Entry, *core.Status) {
 
 	return inference1.Entry{}, core.StatusOK()
 }

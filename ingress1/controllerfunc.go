@@ -2,13 +2,13 @@ package ingress1
 
 import (
 	"github.com/advanced-go/guidance/percentile1"
-	"github.com/advanced-go/observation/access1"
+	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
 )
 
-func controllerFunc(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]access1.Entry, *core.Status) {
+func controllerFunc(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status) {
 	c.handler.AddActivity(c.agentId, "onTick")
-	curr, status1 := observe.access(c.handler, c.origin)
+	curr, status1 := observe.timeseries(c.handler, c.origin)
 	if !status1.OK() || status1.NotFound() {
 		return curr, status1
 	}

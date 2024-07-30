@@ -5,7 +5,7 @@ import (
 	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/experience/inference1"
 	"github.com/advanced-go/guidance/percentile1"
-	"github.com/advanced-go/observation/access1"
+	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
 	"time"
 )
@@ -19,7 +19,7 @@ const (
 // A nod to Linus Torvalds and plain C
 type experience struct {
 	addInference     func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) *core.Status
-	processInference func(c *controller, entry []access1.Entry, percentile percentile1.Entry) (inference1.Entry, *core.Status)
+	processInference func(c *controller, entry []timeseries1.Entry, percentile percentile1.Entry) (inference1.Entry, *core.Status)
 
 	addAction     func(h core.ErrorHandler, origin core.Origin, entry []action1.Entry) *core.Status
 	processAction func(c *controller, entry inference1.Entry) ([]action1.Entry, *core.Status)

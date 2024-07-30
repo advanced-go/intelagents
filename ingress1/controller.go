@@ -3,7 +3,7 @@ package ingress1
 import (
 	"fmt"
 	"github.com/advanced-go/guidance/percentile1"
-	"github.com/advanced-go/observation/access1"
+	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -41,7 +41,7 @@ type controller struct {
 	revise       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
-	entries      []access1.Entry
+	entries      []timeseries1.Entry
 	shutdownFunc func()
 }
 
@@ -128,18 +128,24 @@ func (c *controller) updateTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
 
-func (c *controller) addEntry(entries []access1.Entry) {
+func (c *controller) addEntry(entries []timeseries1.Entry) {
 	c.entries = append(c.entries, entries...)
 }
 
-type controllerFn func(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]access1.Entry, *core.Status)
+type controllerFn func(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
 
 // run - ingress controller
 func controllerRun(c *controller, fn controllerFn, observe *observation, exp *experience, guide *guidance) {
 	if c == nil {
 		return
 	}
+	// initialize percentile and rate limiting
 	percentile, _ := guide.percentile(c.handler, c.origin, defaultPercentile)
+	entry0, status0 := observe.rateLimiting(c.handler, c.origin)
+	if status0.OK() {
+		c.state.rateLimit = entry0[0].RateLimit
+		c.state.rateBurst = int(entry0[0].RateBurst)
+	}
 	c.startup()
 	for {
 		// main agent processing
