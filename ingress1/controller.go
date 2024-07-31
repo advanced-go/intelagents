@@ -106,7 +106,7 @@ func (c *controller) Run() {
 	if c.running {
 		return
 	}
-	go controllerRun(c, controllerFunc, observe, exp, guide)
+	go controllerRun(c, controllerFunc, controllerInitFunc, observe, exp, guide)
 }
 
 // startup - start tickers
@@ -133,15 +133,16 @@ func (c *controller) addEntry(entries []timeseries1.Entry) {
 }
 
 type controllerFn func(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
+type controllerInitFn func(c *controller, observe *observation) *core.Status
 
 // run - ingress controller
-func controllerRun(c *controller, fn controllerFn, observe *observation, exp *experience, guide *guidance) {
+func controllerRun(c *controller, ctrlFn controllerFn, initFn controllerInitFn, observe *observation, exp *experience, guide *guidance) {
 	if c == nil {
 		return
 	}
-	// initialize percentile and rate limiting
+	// initialize percentile and rate limiting state
 	percentile, _ := guide.percentile(c.handler, c.origin, defaultPercentile)
-	controllerInitRateLimiting(c, observe)
+	initFn(c, observe)
 	c.startup()
 	for {
 		// main agent processing
@@ -149,7 +150,7 @@ func controllerRun(c *controller, fn controllerFn, observe *observation, exp *ex
 		case <-c.ticker.C():
 			// main : on tick -> observe access -> process inference with percentile -> create action
 			c.handler.AddActivity(c.agentId, "onTick")
-			entry, status := fn(c, percentile, observe, exp)
+			entry, status := ctrlFn(c, percentile, observe, exp)
 			if status.OK() {
 				c.addEntry(entry)
 			}

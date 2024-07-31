@@ -23,16 +23,3 @@ func controllerAction(c *controller, entry inference1.Entry) ([]action1.Entry, *
 func controllerReviseTicker(c *controller) {
 	//return []action1.Entry{}, core.StatusOK()
 }
-
-func controllerInitRateLimiting(c *controller, observe *observation) *core.Status {
-	entry, status := observe.rateLimiting(c.handler, c.origin)
-	if status.OK() {
-		c.state.rateLimit = entry[0].RateLimit
-		c.state.rateBurst = int(entry[0].RateBurst)
-		return status
-	}
-	if !status.NotFound() {
-		c.handler.Handle(status, "")
-	}
-	return status
-}
