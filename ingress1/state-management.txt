@@ -1,0 +1,28 @@
+State Management
+----------------
+What is state?
+ 1. All data in external data stores.
+ 2. Application constants for durations, exclusive of context timeouts
+
+
+
+We are really talking all agent state, which includes data stored in an external data store, but
+durations used for observation activation
+
+
+How to manage interaction with a backing data store over the following priorities:
+  1. Cost
+     a. Database calls - explicit monetary cost
+     b. Stale data
+
+Data retrieval strategies:
+  1. Continuous polling.
+     a. Data consistency - high
+     b. Data cost - high
+  2. Scheduled update.
+     a. Data consistency - low
+     b. Data cost - low
+
+How do we define and achieve the appropriate level of data consistency?
+  1. Rate of change - can this be managed, system generated or customer generated
+  2. Time of change - can this be reasonably constrained?

@@ -72,19 +72,16 @@ func newController(origin core.Origin, handler messaging.OpsAgent, tickerDur, po
 }
 
 // String - identity
-func (c *controller) String() string {
-	return c.agentId
-}
+func (c *controller) String() string { return c.agentId }
 
 // Uri - agent identifier
-func (c *controller) Uri() string {
-	return c.agentId
-}
+func (c *controller) Uri() string { return c.agentId }
 
 // Message - message the agent
-func (c *controller) Message(m *messaging.Message) {
-	messaging.Mux(m, c.ctrlC, nil, nil)
-}
+func (c *controller) Message(m *messaging.Message) { messaging.Mux(m, c.ctrlC, nil, nil) }
+
+// Add - add a shutdown function
+func (c *controller) Add(f func()) { c.shutdownFunc = messaging.AddShutdown(c.shutdownFunc, f) }
 
 // Shutdown - shutdown the agent
 func (c *controller) Shutdown() {

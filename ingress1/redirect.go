@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	RedirectClass = "ingress-redirect1"
+	RedirectClass    = "ingress-redirect1"
+	redirectDuration = time.Second * 60
 )
 
 // Responsibilities:
@@ -24,8 +25,9 @@ const (
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
 
 type redirectState struct {
-	Location string
-	Percent  string
+	host     string
+	location string
+	percent  int
 }
 
 type redirect struct {
@@ -33,9 +35,9 @@ type redirect struct {
 	agentId string
 
 	// Assignment
-	origin core.Origin
-	state  *redirectState
-
+	origin       core.Origin
+	state        *redirectState
+	ticker       *messaging.Ticker
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -50,15 +52,16 @@ func redirectAgentUri(origin core.Origin) string {
 }
 
 // newRedirectAgent - create a new lead agent
-func newRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
-	return newRedirect(origin, handler)
+func newRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newRedirect(origin, handler, redirectDuration)
 }
 
-func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
+func newRedirect(origin core.Origin, handler messaging.OpsAgent, tickerDur time.Duration) *redirect {
 	c := new(redirect)
 	c.agentId = redirectAgentUri(origin)
 	c.origin = origin
 	c.state = new(redirectState)
+	c.ticker = messaging.NewTicker(tickerDur)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 
@@ -66,37 +69,16 @@ func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
 }
 
 // String - identity
-func (r *redirect) String() string {
-	return r.agentId
-}
+func (r *redirect) String() string { return r.agentId }
 
 // Uri - agent identifier
-func (r *redirect) Uri() string {
-	return r.agentId
-}
+func (r *redirect) Uri() string { return r.agentId }
 
 // Message - message the agent
-func (r *redirect) Message(m *messaging.Message) {
-	messaging.Mux(m, r.ctrlC, nil, nil)
-}
-
-// Handle - error handler
-func (r *redirect) Handle(status *core.Status, requestId string) *core.Status {
-	// TODO : Any operations specific processing ??  If not then forward to handler
-	return r.handler.Handle(status, requestId)
-}
-
-// AddActivity - add activity
-func (r *redirect) AddActivity(agentId string, content any) {
-	// TODO : Any operations specific processing ??  If not then forward to handler
-	//return a.handler.Handle(status, requestId)
-}
+func (r *redirect) Message(m *messaging.Message) { messaging.Mux(m, r.ctrlC, nil, nil) }
 
 // Add - add a shutdown function
-//func (a *redirect) Add(f func()) {
-//	a.shutdownFunc = messaging.AddShutdown(a.shutdownFunc, f)
-//
-//}
+func (r *redirect) Add(f func()) { r.shutdownFunc = messaging.AddShutdown(r.shutdownFunc, f) }
 
 // Shutdown - shutdown the agent
 func (r *redirect) Shutdown() {
@@ -121,36 +103,36 @@ func (r *redirect) Run() {
 	go runRedirect(r, observe, guide)
 }
 
+// startup - start tickers
+func (r *redirect) startup() {
+	r.ticker.Start(-1)
+}
+
 // shutdown - close resources
 func (r *redirect) shutdown() {
 	close(r.ctrlC)
-	r.stopTickers()
-}
-
-func (r *redirect) stopTickers() {
-
+	r.ticker.Stop()
 }
 
 func runRedirect(r *redirect, observe *observation, guide *guidance) {
-	//observe == nil || guide == nil || ops == nil {
 	if r == nil {
 		return
 	}
-	tick := time.Tick(r.interval)
+	r.startup()
 
 	for {
 		select {
-		case <-tick:
+		case <-r.ticker.C():
 
 		// control channel
 		case msg := <-r.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				r.shutdown()
+				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
-			// How to handle duplicate restart events as multiple pods will be sending restarts?
-			//
 			case messaging.RestartEvent:
+				// How to handle duplicate restart events as multiple pods will be sending restarts?
 				// TODO : read/update from guidance
 				//m := messaging.NewControlMessage(a.dependencyAgent.Uri(),a.uri,messaging.RestartEvent)
 				//a.dependencyAgent.Message(m)
