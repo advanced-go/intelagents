@@ -1,8 +1,56 @@
 State Management
 ----------------
 What is state?
- 1. All data in external data stores.
- 2. Application constants for durations, exclusive of context timeouts
+ 1. Data in external data stores - configuration.
+    a. How to do something
+    b. What threshold to use
+ 2. Ticker durations.
+    a. Processing - policy based on timeseries profile.
+    b. Polling
+ 3. Client state set via actuation.  Processing status.
+    a. Rate Limiting
+       - Rate Limit
+       - Rate Burst
+    b. Routing
+       - Route To  (Primary/Secondary)
+       - Route Percent
+       - Routing Code  (FO/RD)
+
+
+ Deeper into state
+ A. External data store.
+     1. Observation
+        a. timeseries - not really state as it is not used to determine agent behavior - ephemeral
+        b. access log - state initialization/reinitialization
+           - rate limiting
+           - redirect
+           - failover
+     2. Operations
+        a. assignments
+        b. partitions
+     3. Guidance
+        a. egress controller
+           - failover
+           - redirect
+        b. ingress controller
+           - redirect
+           - percentile
+        c. system scheduler clock??
+
+ B. Tickers
+
+ Need to create a synchronization or true up policy to ensure consistency of in memory state
+   1. Need to determine read and write access.
+      a. Need to manage costs of reads
+         - constrain polling to off-peak hours for state that is slow changing, or has a scheduled change window,
+           keeping required data consistency
+         - reduce the number of agents who are polling. Can 1 agent poll and broadcast message to other
+           agents
+   2. How to handle state changes where constant polling is needed.
+      a. High degree of data consistency, changes to state -> changes to agent behavior
+      b. State change to an external data store must be immediately reflected in agent state
+      c. Egress and ingress controllers
+
 
 
 
