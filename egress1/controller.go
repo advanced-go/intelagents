@@ -2,8 +2,6 @@ package egress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/observation/access1"
-	"github.com/advanced-go/observation/inference1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -98,5 +96,5 @@ func (a *controller) Run() {
 	if a.running {
 		return
 	}
-	go runController(a, access1.EgressQuery, inference1.EgressQuery, nil, nil)
+	//go runController(a, access1.EgressQuery, inference1.EgressQuery, nil, nil)
 }

@@ -114,5 +114,5 @@ func (a *lead) Run() {
 	if a.running {
 		return
 	}
-	go runLead(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
+	//go runLead(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
 }

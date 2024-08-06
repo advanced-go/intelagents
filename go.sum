@@ -1,5 +1,7 @@
 github.com/advanced-go/experience v0.0.0-20240730062915-06ddc87c0672 h1:gRtbHQfc/zWx73PvBzBQxQvfgL82ji8QwYNLj2xasBo=
 github.com/advanced-go/experience v0.0.0-20240730062915-06ddc87c0672/go.mod h1:rjylV4tL3ttAOVvoRvCLxxICo79JKygCTZQEspfFvEM=
+github.com/advanced-go/experience v0.0.0-20240730133437-a234da7ee48c h1:WTWzuuWTMw3yv3ev4qDfsXIJ7xUfCYAW+IoLSkowOow=
+github.com/advanced-go/experience v0.0.0-20240730133437-a234da7ee48c/go.mod h1:rjylV4tL3ttAOVvoRvCLxxICo79JKygCTZQEspfFvEM=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5 h1:4+YNnTo/OqtrE4jwYJ5ZeEaex1xFYEFabIHfwaQzZ4U=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5/go.mod h1:6GqdPnE0Fh6o34pehFuYf9No3NOHlW0NeXEqgp+xy3Y=
 github.com/advanced-go/guidance v0.0.0-20240724124403-97786ec4fee7 h1:FQH3WNH6p/KIkoqRxrSWxCyMxlvIJkZhmCJOKri7Ipo=
