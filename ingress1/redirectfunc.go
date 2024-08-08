@@ -33,7 +33,7 @@ func redirectInitFunc(r *redirect, observe *observation) *core.Status {
 	entry, status := observe.redirect(r.handler, r.origin)
 	if status.OK() {
 		r.state.host = r.origin.Host
-		r.state.location = entry[0].From
+		r.state.location = entry.From
 		r.state.percent = 0
 		return status
 	}

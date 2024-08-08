@@ -31,8 +31,8 @@ func controllerFunc(c *controller, percentile percentile1.Entry, observe *observ
 func controllerInitFunc(c *controller, observe *observation) *core.Status {
 	entry, status := observe.rateLimiting(c.handler, c.origin)
 	if status.OK() {
-		c.state.rateLimit = entry[0].RateLimit
-		c.state.rateBurst = int(entry[0].RateBurst)
+		c.state.rateLimit = entry.RateLimit
+		c.state.rateBurst = int(entry.RateBurst)
 		return status
 	}
 	if !status.NotFound() {
