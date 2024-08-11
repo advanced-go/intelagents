@@ -21,10 +21,14 @@ type experience struct {
 	addInference     func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) *core.Status
 	processInference func(c *controller, entry []timeseries1.Entry, percentile percentile1.Entry) (inference1.Entry, *core.Status)
 
-	addAction     func(h core.ErrorHandler, origin core.Origin, entry []action1.Entry) *core.Status
-	processAction func(c *controller, entry inference1.Entry) ([]action1.Entry, *core.Status)
+	addRateLimitingAction   func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status
+	addRoutingAction        func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status
+	addRedirectAction       func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
+	processControllerAction func(c *controller, entry inference1.Entry) (action1.RateLimiting, *core.Status)
+	processRoutingAction    func(c *controller, entry inference1.Entry) (action1.Routing, *core.Status)
+	//processRedirectAction   func(c *controller, entry inference1.Entry) (action1.Redirect, *core.Status)
 
-	reviseTicker func(c *controller)
+	//reviseTicker func(c *controller)
 }
 
 var exp = func() *experience {
@@ -39,16 +43,16 @@ var exp = func() *experience {
 			return status
 		},
 		processInference: controllerInference,
-		addAction: func(h core.ErrorHandler, origin core.Origin, entry []action1.Entry) *core.Status {
+		addRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), insertActionDuration)
 			defer cancel()
-			status := action1.InsertIngress(ctx, origin, entry)
+			status := action1.AddRateLimiting(ctx, origin, action)
 			if !status.OK() && !status.NotFound() {
 				h.Handle(status, "")
 			}
 			return status
 		},
-		processAction: controllerAction,
-		reviseTicker:  controllerReviseTicker,
+		//processControllerAction: controllerAction,
+		//reviseTicker:  controllerReviseTicker,
 	}
 }()

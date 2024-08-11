@@ -3,13 +3,13 @@ module github.com/advanced-go/intelagents
 go 1.21.4
 
 require (
-	github.com/advanced-go/guidance v0.0.0-20240726160118-299946960c87
+	github.com/advanced-go/guidance v0.0.0-20240811121928-d8b5c403604e
 	github.com/advanced-go/observation v0.0.0-20240731141632-364bb4f7a108
 	github.com/advanced-go/stdlib v0.0.0-20240731141410-549a004bb5f4
 )
 
 require (
-	github.com/advanced-go/experience v0.0.0-20240730133437-a234da7ee48c // indirect
+	github.com/advanced-go/experience v0.0.0-20240811123632-6ab820068151 // indirect
 	github.com/advanced-go/postgresql v0.0.0-20240720114046-6e895f523ca7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
