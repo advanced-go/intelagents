@@ -3,6 +3,7 @@ package ingress1
 import (
 	"fmt"
 	"github.com/advanced-go/guidance/percentile1"
+	core2 "github.com/advanced-go/intelagents/core"
 	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
@@ -32,14 +33,15 @@ func newControllerState() *controllerState {
 }
 
 type controller struct {
-	running      bool
-	agentId      string
-	origin       core.Origin
-	state        *controllerState
-	ticker       *messaging.Ticker
-	poller       *messaging.Ticker
-	revise       *messaging.Ticker
+	running bool
+	agentId string
+	origin  core.Origin
+	state   *controllerState
+	ticker  *messaging.Ticker
+	poller  *messaging.Ticker
+	//revise       *messaging.Ticker
 	ctrlC        chan *messaging.Message
+	dataC        chan *messaging.Message
 	handler      messaging.OpsAgent
 	entries      []timeseries1.Entry
 	shutdownFunc func()
@@ -64,9 +66,10 @@ func newController(origin core.Origin, handler messaging.OpsAgent, tickerDur, po
 	c.state = newControllerState()
 	c.ticker = messaging.NewTicker(tickerDur)
 	c.poller = messaging.NewTicker(pollerDur)
-	c.revise = messaging.NewTicker(reviseDur)
+	//c.revise = messaging.NewTicker(reviseDur)
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	c.dataC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c
 }
@@ -110,7 +113,7 @@ func (c *controller) Run() {
 func (c *controller) startup() {
 	c.ticker.Start(-1)
 	c.poller.Start(-1)
-	c.revise.Start(-1)
+	//c.revise.Start(-1)
 }
 
 // shutdown - close resources
@@ -118,7 +121,7 @@ func (c *controller) shutdown() {
 	close(c.ctrlC)
 	c.ticker.Stop()
 	c.poller.Stop()
-	c.revise.Stop()
+	//c.revise.Stop()
 }
 
 func (c *controller) updateTicker(newDuration time.Duration) {
@@ -158,15 +161,22 @@ func controllerRun(c *controller, ctrlFn controllerFn, initFn controllerInitFn, 
 		case <-c.poller.C():
 			c.handler.AddActivity(c.agentId, "onPoll")
 			percentile, _ = guide.percentile(c.handler, c.origin, percentile)
-		case <-c.revise.C():
-			c.handler.AddActivity(c.agentId, "onRevise")
-			exp.reviseTicker(c)
 		case msg := <-c.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				c.shutdown()
 				c.handler.AddActivity(c.agentId, messaging.ShutdownEvent)
 				return
+			default:
+			}
+		case msg := <-c.dataC:
+			switch msg.Event() {
+			case messaging.DataChangeEvent:
+				if msg.Header.Get("Content-Type") == core2.ContentTypeProfile {
+					c.handler.AddActivity(c.agentId, "onRevise")
+					// Process revising the ticker based on the profile.
+				}
+
 			default:
 			}
 		default:

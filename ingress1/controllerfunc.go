@@ -20,11 +20,14 @@ func controllerFunc(c *controller, percentile percentile1.Entry, observe *observ
 	if !status.OK() {
 		return ts, status
 	}
-	actions, status2 := exp.processAction(c, i)
-	if !status2.OK() {
-		return ts, status2
-	}
-	status = exp.addAction(c.handler, c.origin, actions)
+	/*
+		actions, status2 := exp.processAction(c, i)
+		if !status2.OK() {
+			return ts, status2
+		}
+		status = exp.addAction(c.handler, c.origin, actions)
+
+	*/
 	return ts, status
 }
 
