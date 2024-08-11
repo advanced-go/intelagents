@@ -172,9 +172,14 @@ func controllerRun(c *controller, ctrlFn controllerFn, initFn controllerInitFn, 
 		case msg := <-c.dataC:
 			switch msg.Event() {
 			case messaging.DataChangeEvent:
-				if msg.Header.Get("Content-Type") == core2.ContentTypeProfile {
-					c.handler.AddActivity(c.agentId, "onRevise")
+				if msg.IsContentType(core2.ContentTypeProfile) {
+					c.handler.AddActivity(c.agentId, "onDataChange() - profile")
 					// Process revising the ticker based on the profile.
+				} else {
+					if msg.IsContentType(core2.ContentTypePercentile) {
+						c.handler.AddActivity(c.agentId, "onDataChange() - percentile")
+						// Process revising the ticker based on the profile.
+					}
 				}
 
 			default:
