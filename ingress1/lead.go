@@ -55,7 +55,7 @@ func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsA
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 
-	c.controller = newControllerAgent(origin, c)
+	c.controller = newResiliencyAgent(origin, c)
 	c.redirect = newRedirectAgent(origin, c)
 	return c
 }
@@ -127,9 +127,9 @@ func leadRun(l *lead, guide *guidance) {
 	if l == nil {
 		return
 	}
-	entry, status := guide.controllers(l.handler, l.origin)
-	if entry.EntryId != 0 || status != nil {
-	}
+	//entry, status := guide.controllers(l.handler, l.origin)
+	//if entry.EntryId != 0 || status != nil {
+	//}
 	for {
 		select {
 		case msg := <-l.ctrlC:

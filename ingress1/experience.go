@@ -28,7 +28,7 @@ type experience struct {
 	addRedirectAction     func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
 }
 
-func exp() *experience {
+var exp = func() *experience {
 	return &experience{
 		addInference: func(h core.ErrorHandler, origin core.Origin, e inference1.Entry) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addInferenceDuration)
@@ -87,4 +87,4 @@ func exp() *experience {
 		//processControllerAction: controllerAction,
 		//reviseTicker:  controllerReviseTicker,
 	}
-}
+}()

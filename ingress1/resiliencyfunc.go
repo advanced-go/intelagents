@@ -9,15 +9,15 @@ import (
 )
 
 // A nod to Linus Torvalds and plain C
-type resiliencyWorkflow struct {
+type resiliencyFunc struct {
 	init      func(r *resiliency, exp *experience) *core.Status
 	process   func(r *resiliency, percentile resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
 	inference func(r *resiliency, entry []timeseries1.Entry, percentile resiliency1.Percentile) (inference1.Entry, *core.Status)
 	action    func(r *resiliency, entry inference1.Entry) (action1.RateLimiting, *core.Status)
 }
 
-func resilience() *resiliencyWorkflow {
-	return &resiliencyWorkflow{
+var resilience = func() *resiliencyFunc {
+	return &resiliencyFunc{
 		init: func(r *resiliency, exp *experience) *core.Status {
 			e, status := exp.getRateLimitingAction(r.handler, r.origin)
 			if status.OK() {
@@ -54,7 +54,7 @@ func resilience() *resiliencyWorkflow {
 		inference: resiliencyInference,
 		action:    resiliencyAction,
 	}
-}
+}()
 
 func resiliencyInference(c *resiliency, entry []timeseries1.Entry, percentile resiliency1.Percentile) (inference1.Entry, *core.Status) {
 

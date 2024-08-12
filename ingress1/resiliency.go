@@ -32,16 +32,13 @@ func newResiliencyState() *resiliencyState {
 }
 
 type resiliency struct {
-	running bool
-	agentId string
-	origin  core.Origin
-	state   *resiliencyState
-	ticker  *messaging.Ticker
-	//poller  *messaging.Ticker
-	//revise       *messaging.Ticker
-	ctrlC   chan *messaging.Message
-	handler messaging.OpsAgent
-	//entries      []timeseries1.Entry
+	running      bool
+	agentId      string
+	origin       core.Origin
+	state        *resiliencyState
+	ticker       *messaging.Ticker
+	ctrlC        chan *messaging.Message
+	handler      messaging.OpsAgent
 	shutdownFunc func()
 }
 
@@ -53,19 +50,16 @@ func resiliencyAgentUri(origin core.Origin) string {
 }
 
 // NewResiliencyAgent - create a new resiliency agent
-func newResiliency(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
-	return newController(origin, handler, resiliencyTickInterval, time.Minute*2, resiliencyReviseInterval)
+func newResiliencyAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newResiliency(origin, handler, resiliencyTickInterval, time.Minute*2, resiliencyReviseInterval)
 }
 
-func newController(origin core.Origin, handler messaging.OpsAgent, tickerDur, pollerDur, reviseDur time.Duration) *resiliency {
+func newResiliency(origin core.Origin, handler messaging.OpsAgent, tickerDur, pollerDur, reviseDur time.Duration) *resiliency {
 	c := new(resiliency)
 	c.origin = origin
 	c.agentId = resiliencyAgentUri(origin)
 	c.state = newResiliencyState()
 	c.ticker = messaging.NewTicker(tickerDur)
-	//c.poller = messaging.NewTicker(pollerDur)
-	//c.revise = messaging.NewTicker(reviseDur)
-
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c
@@ -103,22 +97,18 @@ func (c *resiliency) Run() {
 	if c.running {
 		return
 	}
-	go resiliencyRun(c, resilience(), observe(), exp(), guide())
+	go resiliencyRun(c, resilience, observe, exp, guide)
 }
 
 // startup - start tickers
 func (c *resiliency) startup() {
 	c.ticker.Start(-1)
-	//c.poller.Start(-1)
-	//c.revise.Start(-1)
 }
 
 // shutdown - close resources
 func (c *resiliency) shutdown() {
 	close(c.ctrlC)
 	c.ticker.Stop()
-	//c.poller.Stop()
-	//c.revise.Stop()
 }
 
 func (c *resiliency) updateTicker(newDuration time.Duration) {
@@ -126,38 +116,38 @@ func (c *resiliency) updateTicker(newDuration time.Duration) {
 }
 
 // run - ingress resiliency
-func resiliencyRun(c *resiliency, w *resiliencyWorkflow, observe *observation, exp *experience, guide *guidance) {
-	if c == nil {
+func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp *experience, guide *guidance) {
+	if r == nil {
 		return
 	}
 	// initialize percentile and rate limiting state
-	percentile, _ := guide.percentile(c.handler, c.origin, defaultPercentile)
-	w.init(c, exp)
-	c.startup()
+	percentile, _ := guide.percentile(r.handler, r.origin, defaultPercentile)
+	fn.init(r, exp)
+	r.startup()
 	for {
 		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
 		select {
-		case <-c.ticker.C():
-			c.handler.AddActivity(c.agentId, "onTick")
-			w.process(c, percentile, observe, exp)
+		case <-r.ticker.C():
+			r.handler.AddActivity(r.agentId, "onTick")
+			fn.process(r, percentile, observe, exp)
 		default:
 		}
 		// control channel processing
 		select {
-		case msg := <-c.ctrlC:
+		case msg := <-r.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
-				c.shutdown()
-				c.handler.AddActivity(c.agentId, messaging.ShutdownEvent)
+				r.shutdown()
+				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
 			case messaging.DataChangeEvent:
 				if msg.IsContentType(core2.ContentTypeProfile) {
-					c.handler.AddActivity(c.agentId, "onDataChange() - profile")
+					r.handler.AddActivity(r.agentId, "onDataChange() - profile")
 					// Process revising the ticker based on the profile.
 				} else {
 					if msg.IsContentType(core2.ContentTypePercentile) {
-						c.handler.AddActivity(c.agentId, "onDataChange() - percentile")
-						percentile, _ = guide.percentile(c.handler, c.origin, percentile)
+						r.handler.AddActivity(r.agentId, "onDataChange() - percentile")
+						percentile, _ = guide.percentile(r.handler, r.origin, percentile)
 					}
 				}
 			default:

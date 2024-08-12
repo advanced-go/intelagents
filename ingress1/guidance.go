@@ -19,7 +19,7 @@ type guidance struct {
 	addRedirectStatus func(h core.ErrorHandler, origin core.Origin, status string) *core.Status
 }
 
-func guide() *guidance {
+var guide = func() *guidance {
 	return &guidance{
 		percentile: func(h core.ErrorHandler, origin core.Origin, curr resiliency1.Percentile) (resiliency1.Percentile, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
@@ -53,4 +53,4 @@ func guide() *guidance {
 			return status1
 		},
 	}
-}
+}()

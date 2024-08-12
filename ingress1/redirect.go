@@ -100,7 +100,7 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, observe, guide)
+	go runRedirect(r, redirection, observe, exp, guide)
 }
 
 // startup - start tickers
@@ -114,12 +114,12 @@ func (r *redirect) shutdown() {
 	r.ticker.Stop()
 }
 
-func runRedirect(r *redirect, observe *observation, guide *guidance) {
+func runRedirect(r *redirect, fn *redirectFunc, observe *observation, exp *experience, guide *guidance) {
 	if r == nil {
 		return
 	}
 	r.startup()
-
+	fn.init(r, exp)
 	for {
 		select {
 		case <-r.ticker.C():
