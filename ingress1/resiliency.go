@@ -103,7 +103,7 @@ func (c *resiliency) Run() {
 	if c.running {
 		return
 	}
-	go resiliencyRun(c, resilience, observe, exp, guide)
+	go resiliencyRun(c, resilience(), observe(), exp(), guide())
 }
 
 // startup - start tickers
@@ -126,21 +126,20 @@ func (c *resiliency) updateTicker(newDuration time.Duration) {
 }
 
 // run - ingress resiliency
-func resiliencyRun(c *resiliency, workflow *resiliencyWorkflow, observe *observation, exp *experience, guide *guidance) {
+func resiliencyRun(c *resiliency, w *resiliencyWorkflow, observe *observation, exp *experience, guide *guidance) {
 	if c == nil {
 		return
 	}
 	// initialize percentile and rate limiting state
 	percentile, _ := guide.percentile(c.handler, c.origin, defaultPercentile)
-	workflow.init(c, observe)
+	w.init(c, exp)
 	c.startup()
 	for {
-		// main agent processing
+		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
 		select {
 		case <-c.ticker.C():
-			// main : on tick -> observe access -> process inference with percentile -> create action
 			c.handler.AddActivity(c.agentId, "onTick")
-			workflow.process(c, percentile, observe, exp)
+			w.process(c, percentile, observe, exp)
 		default:
 		}
 		// control channel processing

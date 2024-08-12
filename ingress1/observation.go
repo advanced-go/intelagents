@@ -19,7 +19,7 @@ type observation struct {
 	//rateLimiting func(h core.ErrorHandler, origin core.Origin) (access1.Entry, *core.Status)
 }
 
-var observe = func() *observation {
+func observe() *observation {
 	return &observation{
 		timeseries: func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeseriesDuration)
@@ -52,4 +52,4 @@ var observe = func() *observation {
 
 		*/
 	}
-}()
+}
