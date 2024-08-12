@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/advanced-go/guidance/resiliency1"
 	core2 "github.com/advanced-go/intelagents/core"
-	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -38,11 +37,11 @@ type resiliency struct {
 	origin  core.Origin
 	state   *resiliencyState
 	ticker  *messaging.Ticker
-	poller  *messaging.Ticker
+	//poller  *messaging.Ticker
 	//revise       *messaging.Ticker
-	ctrlC        chan *messaging.Message
-	handler      messaging.OpsAgent
-	entries      []timeseries1.Entry
+	ctrlC   chan *messaging.Message
+	handler messaging.OpsAgent
+	//entries      []timeseries1.Entry
 	shutdownFunc func()
 }
 
@@ -64,7 +63,7 @@ func newController(origin core.Origin, handler messaging.OpsAgent, tickerDur, po
 	c.agentId = resiliencyAgentUri(origin)
 	c.state = newResiliencyState()
 	c.ticker = messaging.NewTicker(tickerDur)
-	c.poller = messaging.NewTicker(pollerDur)
+	//c.poller = messaging.NewTicker(pollerDur)
 	//c.revise = messaging.NewTicker(reviseDur)
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
@@ -104,13 +103,13 @@ func (c *resiliency) Run() {
 	if c.running {
 		return
 	}
-	go resiliencyRun(c, resiliencyFunc, resiliencyInitFunc, observe, exp, guide)
+	go resiliencyRun(c, resilience, observe, exp, guide)
 }
 
 // startup - start tickers
 func (c *resiliency) startup() {
 	c.ticker.Start(-1)
-	c.poller.Start(-1)
+	//c.poller.Start(-1)
 	//c.revise.Start(-1)
 }
 
@@ -118,7 +117,7 @@ func (c *resiliency) startup() {
 func (c *resiliency) shutdown() {
 	close(c.ctrlC)
 	c.ticker.Stop()
-	c.poller.Stop()
+	//c.poller.Stop()
 	//c.revise.Stop()
 }
 
@@ -126,21 +125,14 @@ func (c *resiliency) updateTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
 
-func (c *resiliency) addEntry(entries []timeseries1.Entry) {
-	c.entries = append(c.entries, entries...)
-}
-
-type resiliencyFn func(c *resiliency, percentile resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
-type resiliencyInitFn func(c *resiliency, observe *observation) *core.Status
-
 // run - ingress resiliency
-func resiliencyRun(c *resiliency, ctrlFn resiliencyFn, initFn resiliencyInitFn, observe *observation, exp *experience, guide *guidance) {
+func resiliencyRun(c *resiliency, workflow *resiliencyWorkflow, observe *observation, exp *experience, guide *guidance) {
 	if c == nil {
 		return
 	}
 	// initialize percentile and rate limiting state
 	percentile, _ := guide.percentile(c.handler, c.origin, defaultPercentile)
-	initFn(c, observe)
+	workflow.init(c, observe)
 	c.startup()
 	for {
 		// main agent processing
@@ -148,17 +140,11 @@ func resiliencyRun(c *resiliency, ctrlFn resiliencyFn, initFn resiliencyInitFn, 
 		case <-c.ticker.C():
 			// main : on tick -> observe access -> process inference with percentile -> create action
 			c.handler.AddActivity(c.agentId, "onTick")
-			entry, status := ctrlFn(c, percentile, observe, exp)
-			if status.OK() {
-				c.addEntry(entry)
-			}
+			workflow.process(c, percentile, observe, exp)
 		default:
 		}
-		// secondary processing
+		// control channel processing
 		select {
-		case <-c.poller.C():
-			c.handler.AddActivity(c.agentId, "onPoll")
-			percentile, _ = guide.percentile(c.handler, c.origin, percentile)
 		case msg := <-c.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:

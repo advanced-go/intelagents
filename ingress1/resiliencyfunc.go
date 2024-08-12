@@ -38,17 +38,6 @@ func resiliencyFunc(r *resiliency, percentile resiliency1.Percentile, observe *o
 }
 
 func resiliencyInitFunc(r *resiliency, observe *observation) *core.Status {
-	/*
-		entry, status := observe.rateLimiting(c.handler, c.origin)
-		if status.OK() {
-			c.state.rateLimit = entry.RateLimit
-			c.state.rateBurst = int(entry.RateBurst)
-			return status
-		}
-		if !status.NotFound() {
-			c.handler.Handle(status, "")
-		}
 
-	*/
 	return core.StatusOK()
 }
