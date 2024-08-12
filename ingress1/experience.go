@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/experience/inference1"
-	"github.com/advanced-go/guidance/percentile1"
-	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
 	"time"
 )
@@ -20,8 +18,8 @@ const (
 
 // A nod to Linus Torvalds and plain C
 type experience struct {
-	addInference     func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) *core.Status
-	processInference func(c *controller, entry []timeseries1.Entry, percentile percentile1.Entry) (inference1.Entry, *core.Status)
+	addInference func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) *core.Status
+	//processInference func(c *resiliency, entry []timeseries1.Entry, percentile resiliency1.Percentile) (inference1.Entry, *core.Status)
 
 	getRateLimitingAction func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status)
 	getRoutingAction      func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status)
@@ -30,11 +28,11 @@ type experience struct {
 	addRoutingAction      func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status
 	addRedirectAction     func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
 
-	processControllerAction func(c *controller, entry inference1.Entry) (action1.RateLimiting, *core.Status)
-	processRoutingAction    func(c *controller, entry inference1.Entry) (action1.Routing, *core.Status)
-	//processRedirectAction   func(c *controller, entry inference1.Entry) (action1.Redirect, *core.Status)
+	//processControllerAction func(c *resiliency, entry inference1.Entry) (action1.RateLimiting, *core.Status)
+	//processRoutingAction    func(c *resiliency, entry inference1.Entry) (action1.Routing, *core.Status)
+	//processRedirectAction   func(c *resiliency, entry inference1.Entry) (action1.Redirect, *core.Status)
 
-	//reviseTicker func(c *controller)
+	//reviseTicker func(c *resiliency)
 }
 
 var exp = func() *experience {
@@ -48,7 +46,7 @@ var exp = func() *experience {
 			}
 			return status
 		},
-		processInference: controllerInference,
+		//processInference: controllerInference,
 		getRateLimitingAction: func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)
 			defer cancel()

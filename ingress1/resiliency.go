@@ -2,7 +2,7 @@ package ingress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/guidance/percentile1"
+	"github.com/advanced-go/guidance/resiliency1"
 	core2 "github.com/advanced-go/intelagents/core"
 	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
@@ -11,83 +11,81 @@ import (
 )
 
 const (
-	Class                    = "ingress-controller1"
-	controllerTickInterval   = time.Minute * 2
-	controllerReviseInterval = time.Hour * 1
+	Class                    = "ingress-resiliency1"
+	resiliencyTickInterval   = time.Minute * 2
+	resiliencyReviseInterval = time.Hour * 1
 )
 
 var (
-	defaultPercentile = percentile1.Entry{Percent: 99, Latency: 2000}
+	defaultPercentile = resiliency1.Percentile{Percent: 99, Latency: 2000}
 )
 
-type controllerState struct {
+type resiliencyState struct {
 	rateLimit float64
 	rateBurst int
 }
 
-func newControllerState() *controllerState {
-	l := new(controllerState)
+func newResiliencyState() *resiliencyState {
+	l := new(resiliencyState)
 	l.rateLimit = -1
 	l.rateBurst = -1
 	return l
 }
 
-type controller struct {
+type resiliency struct {
 	running bool
 	agentId string
 	origin  core.Origin
-	state   *controllerState
+	state   *resiliencyState
 	ticker  *messaging.Ticker
 	poller  *messaging.Ticker
 	//revise       *messaging.Ticker
 	ctrlC        chan *messaging.Message
-	dataC        chan *messaging.Message
 	handler      messaging.OpsAgent
 	entries      []timeseries1.Entry
 	shutdownFunc func()
 }
 
-func controllerAgentUri(origin core.Origin) string {
+func resiliencyAgentUri(origin core.Origin) string {
 	if origin.SubZone == "" {
 		return fmt.Sprintf("%v:%v.%v.%v", Class, origin.Region, origin.Zone, origin.Host)
 	}
 	return fmt.Sprintf("%v:%v.%v.%v.%v", Class, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewControllerAgent - create a new controller agent
-func newControllerAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
-	return newController(origin, handler, controllerTickInterval, percentile1.PercentilePollingDuration, controllerReviseInterval)
+// NewResiliencyAgent - create a new resiliency agent
+func newResiliency(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newController(origin, handler, resiliencyTickInterval, time.Minute*2, resiliencyReviseInterval)
 }
 
-func newController(origin core.Origin, handler messaging.OpsAgent, tickerDur, pollerDur, reviseDur time.Duration) *controller {
-	c := new(controller)
+func newController(origin core.Origin, handler messaging.OpsAgent, tickerDur, pollerDur, reviseDur time.Duration) *resiliency {
+	c := new(resiliency)
 	c.origin = origin
-	c.agentId = controllerAgentUri(origin)
-	c.state = newControllerState()
+	c.agentId = resiliencyAgentUri(origin)
+	c.state = newResiliencyState()
 	c.ticker = messaging.NewTicker(tickerDur)
 	c.poller = messaging.NewTicker(pollerDur)
 	//c.revise = messaging.NewTicker(reviseDur)
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.dataC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	return c
 }
 
 // String - identity
-func (c *controller) String() string { return c.agentId }
+func (c *resiliency) String() string { return c.agentId }
 
 // Uri - agent identifier
-func (c *controller) Uri() string { return c.agentId }
+func (c *resiliency) Uri() string { return c.agentId }
 
 // Message - message the agent
-func (c *controller) Message(m *messaging.Message) { messaging.Mux(m, c.ctrlC, nil, nil) }
+func (c *resiliency) Message(m *messaging.Message) { messaging.Mux(m, c.ctrlC, nil, nil) }
 
 // Add - add a shutdown function
-func (c *controller) Add(f func()) { c.shutdownFunc = messaging.AddShutdown(c.shutdownFunc, f) }
+func (c *resiliency) Add(f func()) { c.shutdownFunc = messaging.AddShutdown(c.shutdownFunc, f) }
 
 // Shutdown - shutdown the agent
-func (c *controller) Shutdown() {
+func (c *resiliency) Shutdown() {
 	if !c.running {
 		return
 	}
@@ -102,41 +100,41 @@ func (c *controller) Shutdown() {
 }
 
 // Run - run the agent
-func (c *controller) Run() {
+func (c *resiliency) Run() {
 	if c.running {
 		return
 	}
-	go controllerRun(c, controllerFunc, controllerInitFunc, observe, exp, guide)
+	go resiliencyRun(c, resiliencyFunc, resiliencyInitFunc, observe, exp, guide)
 }
 
 // startup - start tickers
-func (c *controller) startup() {
+func (c *resiliency) startup() {
 	c.ticker.Start(-1)
 	c.poller.Start(-1)
 	//c.revise.Start(-1)
 }
 
 // shutdown - close resources
-func (c *controller) shutdown() {
+func (c *resiliency) shutdown() {
 	close(c.ctrlC)
 	c.ticker.Stop()
 	c.poller.Stop()
 	//c.revise.Stop()
 }
 
-func (c *controller) updateTicker(newDuration time.Duration) {
+func (c *resiliency) updateTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
 
-func (c *controller) addEntry(entries []timeseries1.Entry) {
+func (c *resiliency) addEntry(entries []timeseries1.Entry) {
 	c.entries = append(c.entries, entries...)
 }
 
-type controllerFn func(c *controller, percentile percentile1.Entry, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
-type controllerInitFn func(c *controller, observe *observation) *core.Status
+type resiliencyFn func(c *resiliency, percentile resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
+type resiliencyInitFn func(c *resiliency, observe *observation) *core.Status
 
-// run - ingress controller
-func controllerRun(c *controller, ctrlFn controllerFn, initFn controllerInitFn, observe *observation, exp *experience, guide *guidance) {
+// run - ingress resiliency
+func resiliencyRun(c *resiliency, ctrlFn resiliencyFn, initFn resiliencyInitFn, observe *observation, exp *experience, guide *guidance) {
 	if c == nil {
 		return
 	}
@@ -167,10 +165,6 @@ func controllerRun(c *controller, ctrlFn controllerFn, initFn controllerInitFn, 
 				c.shutdown()
 				c.handler.AddActivity(c.agentId, messaging.ShutdownEvent)
 				return
-			default:
-			}
-		case msg := <-c.dataC:
-			switch msg.Event() {
 			case messaging.DataChangeEvent:
 				if msg.IsContentType(core2.ContentTypeProfile) {
 					c.handler.AddActivity(c.agentId, "onDataChange() - profile")
@@ -178,10 +172,9 @@ func controllerRun(c *controller, ctrlFn controllerFn, initFn controllerInitFn, 
 				} else {
 					if msg.IsContentType(core2.ContentTypePercentile) {
 						c.handler.AddActivity(c.agentId, "onDataChange() - percentile")
-						// Process revising the ticker based on the profile.
+						percentile, _ = guide.percentile(c.handler, c.origin, percentile)
 					}
 				}
-
 			default:
 			}
 		default:
