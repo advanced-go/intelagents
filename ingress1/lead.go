@@ -2,6 +2,8 @@ package ingress1
 
 import (
 	"fmt"
+	"github.com/advanced-go/guidance/resiliency1"
+	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -23,16 +25,13 @@ const (
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
 type lead struct {
-	running bool
-	agentId string
-
-	// Assignment
-	origin core.Origin
-
-	// Agents
-	controller messaging.Agent
-	redirect   messaging.Agent
-
+	running      bool
+	agentId      string
+	origin       core.Origin
+	profile      *common.Profile
+	percentile   *resiliency1.Percentile
+	resiliency   messaging.Agent
+	redirect     messaging.Agent
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -47,17 +46,19 @@ func LeadAgentUri(origin core.Origin) string {
 }
 
 // NewLeadAgent - create a new lead agent
-func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
-	c := new(lead)
-	c.agentId = LeadAgentUri(origin)
-	c.origin = origin
+func NewLeadAgent(origin core.Origin, profile *common.Profile, percentile *resiliency1.Percentile, handler messaging.OpsAgent) messaging.OpsAgent {
+	l := new(lead)
+	l.agentId = LeadAgentUri(origin)
+	l.origin = origin
+	l.profile = profile
+	l.percentile = percentile
 
-	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.handler = handler
+	l.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	l.handler = handler
 
-	c.controller = newResiliencyAgent(origin, c)
-	c.redirect = newRedirectAgent(origin, c)
-	return c
+	l.resiliency = newResiliencyAgent(origin, profile, percentile, l)
+	l.redirect = newRedirectAgent(origin, l)
+	return l
 }
 
 // String - identity
@@ -101,7 +102,7 @@ func (l *lead) Shutdown() {
 	if l.shutdownFunc != nil {
 		l.shutdownFunc()
 	}
-	l.controller.Shutdown()
+	l.resiliency.Shutdown()
 	l.redirect.Shutdown()
 	msg := messaging.NewControlMessage(l.agentId, l.agentId, messaging.ShutdownEvent)
 	if l.ctrlC != nil {
@@ -135,15 +136,17 @@ func leadRun(l *lead, guide *guidance) {
 		case msg := <-l.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
+				l.resiliency.Shutdown()
+				l.redirect.Shutdown()
 				l.shutdown()
 				return
 			case messaging.HostStartupEvent:
 				//if
-				l.controller.Message(msg)
+				//l.controller.Message(msg)
 			case messaging.ChangesetApplyEvent:
-				l.controller.Message(msg)
+				//l.controller.Message(msg)
 			case messaging.ChangesetRollbackEvent:
-				l.controller.Message(msg)
+				//l.controller.Message(msg)
 			default:
 			}
 		default:

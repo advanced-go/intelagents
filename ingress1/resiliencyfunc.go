@@ -10,27 +10,28 @@ import (
 
 // A nod to Linus Torvalds and plain C
 type resiliencyFunc struct {
-	init      func(r *resiliency, exp *experience) *core.Status
-	process   func(r *resiliency, percentile resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
-	inference func(r *resiliency, entry []timeseries1.Entry, percentile resiliency1.Percentile) (inference1.Entry, *core.Status)
+	startup   func(r *resiliency, exp *experience) (*resiliency1.Percentile, *core.Status)
+	process   func(r *resiliency, percentile *resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
+	inference func(r *resiliency, entry []timeseries1.Entry, percentile *resiliency1.Percentile) (inference1.Entry, *core.Status)
 	action    func(r *resiliency, entry inference1.Entry) (action1.RateLimiting, *core.Status)
 }
 
 var resilience = func() *resiliencyFunc {
 	return &resiliencyFunc{
-		init: func(r *resiliency, exp *experience) *core.Status {
+		startup: func(r *resiliency, exp *experience) (*resiliency1.Percentile, *core.Status) {
+			// rate limiting state
 			e, status := exp.getRateLimitingAction(r.handler, r.origin)
 			if status.OK() {
 				r.state.rateLimit = e.Limit
 				r.state.rateBurst = e.Burst
-				return status
-			}
-			if !status.NotFound() {
+			} else {
 				r.handler.Handle(status, "")
 			}
-			return status
+			// start ticker
+			r.startup()
+			return r.percentile, status
 		},
-		process: func(r *resiliency, percentile resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status) {
+		process: func(r *resiliency, percentile *resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status) {
 			r.handler.AddActivity(r.agentId, "onTick")
 			ts, status1 := observe.timeseries(r.handler, r.origin)
 			if !status1.OK() || status1.NotFound() {
@@ -56,7 +57,7 @@ var resilience = func() *resiliencyFunc {
 	}
 }()
 
-func resiliencyInference(c *resiliency, entry []timeseries1.Entry, percentile resiliency1.Percentile) (inference1.Entry, *core.Status) {
+func resiliencyInference(c *resiliency, entry []timeseries1.Entry, percentile *resiliency1.Percentile) (inference1.Entry, *core.Status) {
 
 	return inference1.Entry{}, core.StatusOK()
 }

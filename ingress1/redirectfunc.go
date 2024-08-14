@@ -10,8 +10,8 @@ import (
 type redirectFunc struct {
 	init    func(r *redirect, exp *experience) *core.Status
 	process func(r *redirect, percentile resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
-	//inference func(r *redirect, entry []timeseries1.Entry, percentile resiliency1.Percentile) (inference1.Entry, *core.Status)
-	//action    func(r *resiliency, entry inference1.Entry) (action1.RateLimiting, *core.Status)
+	//inference func(r *redirect, entry []timeseries1.Entry, percentile resiliency1.Percentile) (inference1.Entry, *common.Status)
+	//action    func(r *resiliency, entry inference1.Entry) (action1.RateLimiting, *common.Status)
 }
 
 var redirection = func() *redirectFunc {

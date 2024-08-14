@@ -15,8 +15,8 @@ const (
 // A nod to Linus Torvalds and plain C
 type observation struct {
 	timeseries func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
-	//redirect     func(h core.ErrorHandler, origin core.Origin) (access1.Entry, *core.Status)
-	//rateLimiting func(h core.ErrorHandler, origin core.Origin) (access1.Entry, *core.Status)
+	//redirect     func(h common.ErrorHandler, origin common.Origin) (access1.Entry, *common.Status)
+	//rateLimiting func(h common.ErrorHandler, origin common.Origin) (access1.Entry, *common.Status)
 }
 
 var observe = func() *observation {
@@ -31,7 +31,7 @@ var observe = func() *observation {
 			return e, status
 		},
 		/*
-			redirect: func(h core.ErrorHandler, origin core.Origin) (access1.Entry, *core.Status) {
+			redirect: func(h common.ErrorHandler, origin common.Origin) (access1.Entry, *common.Status) {
 				ctx, cancel := context.WithTimeout(context.Background(), queryAccessDuration)
 				defer cancel()
 				e, status := access1.IngressRedirectQuery(ctx, origin)
@@ -40,7 +40,7 @@ var observe = func() *observation {
 				}
 				return e, status
 			},
-			rateLimiting: func(h core.ErrorHandler, origin core.Origin) (access1.Entry, *core.Status) {
+			rateLimiting: func(h common.ErrorHandler, origin common.Origin) (access1.Entry, *common.Status) {
 				ctx, cancel := context.WithTimeout(context.Background(), queryAccessDuration)
 				defer cancel()
 				e, status := access1.IngressRateLimitingQuery(ctx, origin)

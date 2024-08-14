@@ -3,16 +3,14 @@ package ingress1
 import (
 	"fmt"
 	"github.com/advanced-go/guidance/resiliency1"
-	core2 "github.com/advanced-go/intelagents/core"
+	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
 )
 
 const (
-	Class                    = "ingress-resiliency1"
-	resiliencyTickInterval   = time.Minute * 2
-	resiliencyReviseInterval = time.Hour * 1
+	Class = "ingress-resiliency1"
 )
 
 var (
@@ -36,6 +34,8 @@ type resiliency struct {
 	agentId      string
 	origin       core.Origin
 	state        *resiliencyState
+	profile      *common.Profile
+	percentile   *resiliency1.Percentile
 	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -50,80 +50,75 @@ func resiliencyAgentUri(origin core.Origin) string {
 }
 
 // NewResiliencyAgent - create a new resiliency agent
-func newResiliencyAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
-	return newResiliency(origin, handler, resiliencyTickInterval, time.Minute*2, resiliencyReviseInterval)
+func newResiliencyAgent(origin core.Origin, profile *common.Profile, percentile *resiliency1.Percentile, handler messaging.OpsAgent) messaging.Agent {
+	return newResiliency(origin, profile, percentile, handler)
 }
 
-func newResiliency(origin core.Origin, handler messaging.OpsAgent, tickerDur, pollerDur, reviseDur time.Duration) *resiliency {
-	c := new(resiliency)
-	c.origin = origin
-	c.agentId = resiliencyAgentUri(origin)
-	c.state = newResiliencyState()
-	c.ticker = messaging.NewTicker(tickerDur)
-	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.handler = handler
-	return c
+func newResiliency(origin core.Origin, profile *common.Profile, percentile *resiliency1.Percentile, handler messaging.OpsAgent) *resiliency {
+	r := new(resiliency)
+	r.origin = origin
+	r.agentId = resiliencyAgentUri(origin)
+	r.state = newResiliencyState()
+	r.profile = profile
+	r.percentile = percentile
+	r.ticker = messaging.NewTicker(profile.ResiliencyDuration(-1))
+	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	r.handler = handler
+	return r
 }
 
 // String - identity
-func (c *resiliency) String() string { return c.agentId }
+func (r *resiliency) String() string { return r.Uri() }
 
 // Uri - agent identifier
-func (c *resiliency) Uri() string { return c.agentId }
+func (r *resiliency) Uri() string { return r.agentId }
 
 // Message - message the agent
-func (c *resiliency) Message(m *messaging.Message) { messaging.Mux(m, c.ctrlC, nil, nil) }
+func (r *resiliency) Message(m *messaging.Message) { messaging.Mux(m, r.ctrlC, nil, nil) }
 
 // Add - add a shutdown function
-func (c *resiliency) Add(f func()) { c.shutdownFunc = messaging.AddShutdown(c.shutdownFunc, f) }
-
-// Shutdown - shutdown the agent
-func (c *resiliency) Shutdown() {
-	if !c.running {
-		return
-	}
-	c.running = false
-	if c.shutdownFunc != nil {
-		c.shutdownFunc()
-	}
-	msg := messaging.NewControlMessage(c.agentId, c.agentId, messaging.ShutdownEvent)
-	if c.ctrlC != nil {
-		c.ctrlC <- msg
-	}
-}
+func (r *resiliency) Add(f func()) { r.shutdownFunc = messaging.AddShutdown(r.shutdownFunc, f) }
 
 // Run - run the agent
-func (c *resiliency) Run() {
-	if c.running {
+func (r *resiliency) Run() {
+	if r.running {
 		return
 	}
-	go resiliencyRun(c, resilience, observe, exp, guide)
+	go resiliencyRun(r, resilience, observe, exp)
 }
 
-// startup - start tickers
-func (c *resiliency) startup() {
-	c.ticker.Start(-1)
+// Shutdown - shutdown the agent
+func (r *resiliency) Shutdown() {
+	if !r.running {
+		return
+	}
+	r.running = false
+	if r.shutdownFunc != nil {
+		r.shutdownFunc()
+	}
+	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
+	if r.ctrlC != nil {
+		r.ctrlC <- msg
+	}
 }
 
-// shutdown - close resources
-func (c *resiliency) shutdown() {
-	close(c.ctrlC)
-	c.ticker.Stop()
+func (r *resiliency) startup() {
+	r.ticker.Start(-1)
 }
 
-func (c *resiliency) updateTicker(newDuration time.Duration) {
-	c.ticker.Start(newDuration)
+func (r *resiliency) shutdown() {
+	close(r.ctrlC)
+	r.ticker.Stop()
+}
+
+func (r *resiliency) reviseTicker(newDuration time.Duration) {
+	r.ticker.Start(newDuration)
 }
 
 // run - ingress resiliency
-func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp *experience, guide *guidance) {
-	if r == nil {
-		return
-	}
-	// initialize percentile and rate limiting state
-	percentile, _ := guide.percentile(r.handler, r.origin, defaultPercentile)
-	fn.init(r, exp)
-	r.startup()
+func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp *experience) {
+	percentile, _ := fn.startup(r, exp)
+
 	for {
 		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
 		select {
@@ -141,13 +136,21 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp 
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
 			case messaging.DataChangeEvent:
-				if msg.IsContentType(core2.ContentTypeProfile) {
+				if msg.IsContentType(common.ContentTypeProfile) {
 					r.handler.AddActivity(r.agentId, "onDataChange() - profile")
-					// Process revising the ticker based on the profile.
+					if p, ok := msg.Body.(*common.Profile); ok {
+						r.reviseTicker(p.ResiliencyDuration(-1))
+					} else {
+						r.handler.Handle(common.ProfileTypeErrorStatus(msg.Body), "")
+					}
 				} else {
-					if msg.IsContentType(core2.ContentTypePercentile) {
+					if msg.IsContentType(common.ContentTypePercentile) {
 						r.handler.AddActivity(r.agentId, "onDataChange() - percentile")
-						percentile, _ = guide.percentile(r.handler, r.origin, percentile)
+						if p, ok := msg.Body.(*resiliency1.Percentile); ok {
+							percentile = p
+						} else {
+							r.handler.Handle(common.PercentileTypeErrorStatus(msg.Body), "")
+						}
 					}
 				}
 			default:

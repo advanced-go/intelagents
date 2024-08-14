@@ -1,4 +1,4 @@
-package core
+package common
 
 const (
 	ContentTypeProfile    = "application/profile"
