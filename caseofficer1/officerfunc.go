@@ -1,27 +1,25 @@
 package caseofficer1
 
 import (
-	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/stdlib/core"
 )
 
 // A nod to Linus Torvalds and plain C
 type caseOfficerFunc struct {
-	startup func(r *caseOfficer, curr *resiliency1.Percentile, guide *guidance) (*resiliency1.Percentile, *core.Status)
-	//process   func(r *caseOfficer, percentile *resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status)
+	startup func(r *caseOfficer, guide *guidance) *core.Status
+	//percentile func(r *caseOfficer, curr *resiliency1.Percentile, guide *guidance) (*resiliency1.Percentile, *core.Status)
 	//inference func(r *caseOfficer, entry []timeseries1.Entry, percentile *resiliency1.Percentile) (inference1.Entry, *core.Status)
 	//action    func(r *caseOfficer, entry inference1.Entry) (action1.RateLimiting, *core.Status)
+	//percentile
 }
 
 var officer = func() *caseOfficerFunc {
 	return &caseOfficerFunc{
-		startup: func(c *caseOfficer, curr *resiliency1.Percentile, guide *guidance) (*resiliency1.Percentile, *core.Status) {
-			percentile, status := guide.percentile(c, c.origin, curr)
-			if !status.OK() && !status.NotFound() {
-				c.Handle(status, "")
-			}
-			return percentile, status
+		startup: func(c *caseOfficer, guide *guidance) *core.Status {
+
+			return core.StatusOK()
 		},
+
 		/*
 			process: func(r *resiliency, percentile *resiliency1.Percentile, observe *observation, exp *experience) ([]timeseries1.Entry, *core.Status) {
 				r.handler.AddActivity(r.agentId, "onTick")

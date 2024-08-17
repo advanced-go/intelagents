@@ -2,7 +2,6 @@ package ingress1
 
 import (
 	"fmt"
-	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
@@ -24,12 +23,10 @@ const (
 //     b. Read previous egress and dependency configurations, update controllers and dependency agent
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
-type lead struct {
+type fieldOperative struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
-	profile      *common.Profile
-	percentile   *resiliency1.Percentile
 	resiliency   messaging.Agent
 	redirect     messaging.Agent
 	interval     time.Duration
@@ -38,93 +35,81 @@ type lead struct {
 	shutdownFunc func()
 }
 
-func LeadAgentUri(origin core.Origin) string {
+func FieldOperativeUri(origin core.Origin) string {
 	if origin.SubZone == "" {
 		return fmt.Sprintf("%v:%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.Host)
 	}
 	return fmt.Sprintf("%v:%v.%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewLeadAgent - create a new lead agent
-func NewLeadAgent(origin core.Origin, profile *common.Profile, percentile *resiliency1.Percentile, handler messaging.OpsAgent) messaging.OpsAgent {
-	l := new(lead)
-	l.agentId = LeadAgentUri(origin)
-	l.origin = origin
-	l.profile = profile
-	l.percentile = percentile
-
-	l.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	l.handler = handler
-
-	l.resiliency = newResiliencyAgent(origin, profile, percentile, l)
-	l.redirect = newRedirectAgent(origin, l)
-	return l
+// NewFieldOperative - create a new lead agent
+func NewFieldOperative(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
+	f := new(fieldOperative)
+	f.agentId = FieldOperativeUri(origin)
+	f.origin = origin
+	f.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	f.handler = handler
+	f.resiliency = newResiliencyAgent(origin, profile, f)
+	f.redirect = newRedirectAgent(origin, profile, f)
+	return f
 }
 
 // String - identity
-func (l *lead) String() string {
-	return l.agentId
-}
+func (f *fieldOperative) String() string { return f.Uri() }
 
 // Uri - agent identifier
-func (l *lead) Uri() string {
-	return l.agentId
-}
+func (f *fieldOperative) Uri() string { return f.agentId }
 
 // Message - message the agent
-func (l *lead) Message(m *messaging.Message) {
-	messaging.Mux(m, l.ctrlC, nil, nil)
-}
+func (f *fieldOperative) Message(m *messaging.Message) { messaging.Mux(m, f.ctrlC, nil, nil) }
 
 // Handle - error handler
-func (l *lead) Handle(status *core.Status, requestId string) *core.Status {
+func (f *fieldOperative) Handle(status *core.Status, requestId string) *core.Status {
 	// TODO : Any operations specific processing ??  If not then forward to handler
-	return l.handler.Handle(status, requestId)
+	return f.handler.Handle(status, requestId)
 }
 
 // AddActivity - add activity
-func (l *lead) AddActivity(agentId string, content any) {
+func (f *fieldOperative) AddActivity(agentId string, content any) {
 	// TODO : Any operations specific processing ??  If not then forward to handler
 	//return a.handler.Handle(status, requestId)
 }
 
 // Add - add a shutdown function
-func (l *lead) Add(f func()) {
-	l.shutdownFunc = messaging.AddShutdown(l.shutdownFunc, f)
-}
+func (f *fieldOperative) Add(fn func()) { f.shutdownFunc = messaging.AddShutdown(f.shutdownFunc, fn) }
 
 // Shutdown - shutdown the agent
-func (l *lead) Shutdown() {
-	if !l.running {
+func (f *fieldOperative) Shutdown() {
+	if !f.running {
 		return
 	}
-	l.running = false
-	if l.shutdownFunc != nil {
-		l.shutdownFunc()
+	f.running = false
+	if f.shutdownFunc != nil {
+		f.shutdownFunc()
 	}
-	l.resiliency.Shutdown()
-	l.redirect.Shutdown()
-	msg := messaging.NewControlMessage(l.agentId, l.agentId, messaging.ShutdownEvent)
-	if l.ctrlC != nil {
-		l.ctrlC <- msg
+	f.resiliency.Shutdown()
+	f.redirect.Shutdown()
+	msg := messaging.NewControlMessage(f.agentId, f.agentId, messaging.ShutdownEvent)
+	if f.ctrlC != nil {
+		f.ctrlC <- msg
 	}
 }
 
 // Run - run the agent
-func (l *lead) Run() {
-	if l.running {
+func (f *fieldOperative) Run() {
+	if f.running {
 		return
 	}
-	go leadRun(l, guide)
+	go runFieldOperative(f, guide)
 }
 
 // shutdown - close resources
-func (l *lead) shutdown() {
-	close(l.ctrlC)
+func (f *fieldOperative) shutdown() {
+	close(f.ctrlC)
 
 }
 
-func leadRun(l *lead, guide *guidance) {
+func runFieldOperative(l *fieldOperative, guide *guidance) {
 	if l == nil {
 		return
 	}

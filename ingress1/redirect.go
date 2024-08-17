@@ -2,6 +2,8 @@ package ingress1
 
 import (
 	"fmt"
+	"github.com/advanced-go/guidance/resiliency1"
+	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -31,12 +33,10 @@ type redirectState struct {
 }
 
 type redirect struct {
-	running bool
-	agentId string
-
-	// Assignment
+	running      bool
+	agentId      string
 	origin       core.Origin
-	state        *redirectState
+	state        *resiliency1.IngressRedirectState
 	ticker       *messaging.Ticker
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
@@ -52,20 +52,19 @@ func redirectAgentUri(origin core.Origin) string {
 }
 
 // newRedirectAgent - create a new lead agent
-func newRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+func newRedirectAgent(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.Agent {
 	return newRedirect(origin, handler, redirectDuration)
 }
 
 func newRedirect(origin core.Origin, handler messaging.OpsAgent, tickerDur time.Duration) *redirect {
-	c := new(redirect)
-	c.agentId = redirectAgentUri(origin)
-	c.origin = origin
-	c.state = new(redirectState)
-	c.ticker = messaging.NewTicker(tickerDur)
-	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.handler = handler
-
-	return c
+	r := new(redirect)
+	r.agentId = redirectAgentUri(origin)
+	r.origin = origin
+	r.state = resiliency1.NewIngressRedirectState()
+	r.ticker = messaging.NewTicker(tickerDur)
+	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	r.handler = handler
+	return r
 }
 
 // String - identity
@@ -100,7 +99,7 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, redirection, observe, exp, guide)
+	go runRedirect(r, redirection, observe, guide)
 }
 
 // startup - start tickers
@@ -114,12 +113,42 @@ func (r *redirect) shutdown() {
 	r.ticker.Stop()
 }
 
-func runRedirect(r *redirect, fn *redirectFunc, observe *observation, exp *experience, guide *guidance) {
-	if r == nil {
-		return
+func (r *redirect) updatePercentage() {
+	switch r.state.Percentage {
+	case 0:
+		r.state.Percentage = 10
+	case 10:
+		r.state.Percentage = 20
+	case 20:
+		r.state.Percentage = 40
+	case 40:
+		r.state.Percentage = 70
+	case 70:
+		r.state.Percentage = 100
+	default:
 	}
-	r.startup()
-	fn.init(r, exp)
+}
+
+func (r *redirect) updateRedirectPlan(guide *guidance) {
+	p, status := guide.redirectPlan(r.handler, r.origin)
+	if status.OK() {
+		r.state.Location = p.Location
+		r.state.Status = p.Status
+	}
+}
+
+func (r *redirect) updatePercentileSLO(guide *guidance) {
+	p, status := guide.percentileSLO(r.handler, r.origin)
+	if status.OK() {
+		r.state.Percent = p.Percent
+		r.state.Latency = p.Latency
+		r.state.Minimum = p.Minimum
+	}
+}
+
+func runRedirect(r *redirect, fn *redirectFunc, observe *observation, guide *guidance) {
+	fn.startup(r, guide)
+
 	for {
 		select {
 		case <-r.ticker.C():
@@ -131,18 +160,12 @@ func runRedirect(r *redirect, fn *redirectFunc, observe *observation, exp *exper
 				r.shutdown()
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
-			case messaging.RestartEvent:
-				// How to handle duplicate restart events as multiple pods will be sending restarts?
-				// TODO : read/update from guidance
-				//m := messaging.NewControlMessage(a.dependencyAgent.Uri(),a.uri,messaging.RestartEvent)
-				//a.dependencyAgent.Message(m)
-				//a.controllers.Broadcast(m)
-
-			// Duplicates?? Should not happen.
-			// Changesets only contain the changes
-			case messaging.ChangesetApplyEvent:
-			case messaging.ChangesetRollbackEvent:
-				// TODO : apply and rollback changeset
+			case messaging.DataChangeEvent:
+				if msg.IsContentType(common.ContentTypeRedirectPlan) {
+					r.handler.AddActivity(r.agentId, "onDataChange() - redirect plan")
+					r.updateRedirectPlan(guide)
+					r.updatePercentileSLO(guide)
+				}
 			default:
 			}
 		default:

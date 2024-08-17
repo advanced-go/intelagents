@@ -1,6 +1,7 @@
 package common
 
 const (
-	ContentTypeProfile    = "application/profile"
-	ContentTypePercentile = "application/percentile"
+	ContentTypeProfile       = "application/profile"
+	ContentTypePercentileSLO = "application/percentileSLO"
+	ContentTypeRedirectPlan  = "application/redirect-plan"
 )

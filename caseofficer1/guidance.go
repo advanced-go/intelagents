@@ -19,6 +19,9 @@ type guidance struct {
 
 	ingressCDC func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.CDCEntry, *core.Status)
 	egressCDC  func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.CDCEntry, *core.Status)
+
+	//ingressAssignment func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.Assignment, *core.Status)
+	//egressAssignment  func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.Assignment, *core.Status)
 }
 
 var guide = func() *guidance {

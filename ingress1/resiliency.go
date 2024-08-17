@@ -13,29 +13,12 @@ const (
 	Class = "ingress-resiliency1"
 )
 
-var (
-	defaultPercentile = resiliency1.Percentile{Percent: 99, Latency: 2000}
-)
-
-type resiliencyState struct {
-	rateLimit float64
-	rateBurst int
-}
-
-func newResiliencyState() *resiliencyState {
-	l := new(resiliencyState)
-	l.rateLimit = -1
-	l.rateBurst = -1
-	return l
-}
-
 type resiliency struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
-	state        *resiliencyState
+	state        *resiliency1.IngressResiliencyState
 	profile      *common.Profile
-	percentile   *resiliency1.Percentile
 	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -50,17 +33,16 @@ func resiliencyAgentUri(origin core.Origin) string {
 }
 
 // NewResiliencyAgent - create a new resiliency agent
-func newResiliencyAgent(origin core.Origin, profile *common.Profile, percentile *resiliency1.Percentile, handler messaging.OpsAgent) messaging.Agent {
-	return newResiliency(origin, profile, percentile, handler)
+func newResiliencyAgent(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.Agent {
+	return newResiliency(origin, profile, handler)
 }
 
-func newResiliency(origin core.Origin, profile *common.Profile, percentile *resiliency1.Percentile, handler messaging.OpsAgent) *resiliency {
+func newResiliency(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) *resiliency {
 	r := new(resiliency)
 	r.origin = origin
 	r.agentId = resiliencyAgentUri(origin)
-	r.state = newResiliencyState()
+	r.state = resiliency1.NewIngressResiliencyState()
 	r.profile = profile
-	r.percentile = percentile
 	r.ticker = messaging.NewTicker(profile.ResiliencyDuration(-1))
 	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	r.handler = handler
@@ -84,7 +66,7 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go resiliencyRun(r, resilience, observe, exp)
+	go resiliencyRun(r, resilience, observe, exp, guide)
 }
 
 // Shutdown - shutdown the agent
@@ -115,16 +97,25 @@ func (r *resiliency) reviseTicker(newDuration time.Duration) {
 	r.ticker.Start(newDuration)
 }
 
+func (r *resiliency) updatePercentileSLO(guide *guidance) {
+	p, status := guide.percentileSLO(r.handler, r.origin)
+	if status.OK() {
+		r.state.Percent = p.Percent
+		r.state.Latency = p.Latency
+		r.state.Minimum = p.Minimum
+	}
+}
+
 // run - ingress resiliency
-func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp *experience) {
-	percentile, _ := fn.startup(r, exp)
+func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp *experience, guide *guidance) {
+	fn.startup(r, guide)
 
 	for {
 		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
 		select {
 		case <-r.ticker.C():
 			r.handler.AddActivity(r.agentId, "onTick")
-			fn.process(r, percentile, observe, exp)
+			fn.process(r, observe, exp)
 		default:
 		}
 		// control channel processing
@@ -144,13 +135,9 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp 
 						r.handler.Handle(common.ProfileTypeErrorStatus(msg.Body), "")
 					}
 				} else {
-					if msg.IsContentType(common.ContentTypePercentile) {
+					if msg.IsContentType(common.ContentTypePercentileSLO) {
 						r.handler.AddActivity(r.agentId, "onDataChange() - percentile")
-						if p, ok := msg.Body.(*resiliency1.Percentile); ok {
-							percentile = p
-						} else {
-							r.handler.Handle(common.PercentileTypeErrorStatus(msg.Body), "")
-						}
+						r.updatePercentileSLO(guide)
 					}
 				}
 			default:

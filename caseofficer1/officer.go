@@ -26,7 +26,7 @@ type caseOfficer struct {
 	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
-	leads        *messaging.Exchange
+	operatives   *messaging.Exchange
 	shutdownFunc func()
 }
 
@@ -53,7 +53,7 @@ func newAgent(traffic string, origin core.Origin, profile *common.Profile, handl
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
-	c.leads = messaging.NewExchange()
+	c.operatives = messaging.NewExchange()
 	return c
 }
 
@@ -75,7 +75,7 @@ func (c *caseOfficer) Handle(status *core.Status, requestId string) *core.Status
 // AddActivity - add activity
 func (c *caseOfficer) AddActivity(agentId string, content any) {
 	// TODO : Any operations specific processing ??  If not then forward to handler
-	//return a.handler.Handle(status, requestId)
+	c.handler.AddActivity(agentId, content)
 }
 
 // Add - add a shutdown function
@@ -87,7 +87,7 @@ func (c *caseOfficer) Run() {
 		return
 	}
 	c.running = true
-	go runAgent(c, officer, guide)
+	go runCaseOfficer(c, officer, guide)
 }
 
 // Shutdown - shutdown the agent
@@ -96,6 +96,7 @@ func (c *caseOfficer) Shutdown() {
 		return
 	}
 	c.running = false
+	// Is this needed or called in the right place??
 	if c.shutdownFunc != nil {
 		c.shutdownFunc()
 	}
@@ -103,7 +104,7 @@ func (c *caseOfficer) Shutdown() {
 	if c.ctrlC != nil {
 		c.ctrlC <- msg
 	}
-	c.leads.Broadcast(msg)
+	c.operatives.Broadcast(msg)
 }
 
 func (c *caseOfficer) startup() {
@@ -119,11 +120,11 @@ func (c *caseOfficer) reviseTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
 
-func runAgent(c *caseOfficer, fn *caseOfficerFunc, guide *guidance) {
+func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *guidance) {
 	//percentile, _ := fn.startup(c, nil, guide)
 
 	for {
-		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
+		// main processing : query for and add new assignments
 		select {
 		case <-c.ticker.C():
 			c.handler.AddActivity(c.agentId, "onTick")

@@ -14,43 +14,63 @@ const (
 
 // A nod to Linus Torvalds and plain C
 type guidance struct {
-	percentile        func(h core.ErrorHandler, origin core.Origin, curr resiliency1.Percentile) (resiliency1.Percentile, *core.Status)
-	redirect          func(h core.ErrorHandler, origin core.Origin) (resiliency1.Redirect, *core.Status)
-	addRedirectStatus func(h core.ErrorHandler, origin core.Origin, status string) *core.Status
+	percentileSLO  func(h core.ErrorHandler, origin core.Origin) (resiliency1.PercentileSLO, *core.Status)
+	redirectPlan   func(h core.ErrorHandler, origin core.Origin) (resiliency1.RedirectPlan, *core.Status)
+	updateRedirect func(h core.ErrorHandler, origin core.Origin, status string) *core.Status
+
+	redirectState   func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressRedirectState, *core.Status)
+	resiliencyState func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressResiliencyState, *core.Status)
 }
 
 var guide = func() *guidance {
 	return &guidance{
-		percentile: func(h core.ErrorHandler, origin core.Origin, curr resiliency1.Percentile) (resiliency1.Percentile, *core.Status) {
+		percentileSLO: func(h core.ErrorHandler, origin core.Origin) (resiliency1.PercentileSLO, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
-			e, status := resiliency1.IngressPercentile(ctx, origin)
-			if status.OK() {
-				return e, status
+			e, status := resiliency1.GetPercentileSLO(ctx, origin)
+			if !status.OK() {
+				h.Handle(status, "")
 			}
-			h.Handle(status, "")
-			return curr, status
+			return e, status
 		},
-		redirect: func(h core.ErrorHandler, origin core.Origin) (resiliency1.Redirect, *core.Status) {
+		redirectPlan: func(h core.ErrorHandler, origin core.Origin) (resiliency1.RedirectPlan, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
-			e, status := resiliency1.IngressRedirect(ctx, origin)
+			e, status := resiliency1.GetRedirectPlan(ctx, origin)
 			if status.OK() {
 				return e, status
 			}
 			if !status.NotFound() {
 				h.Handle(status, "")
 			}
-			return resiliency1.Redirect{}, status
+			return resiliency1.RedirectPlan{}, status
 		},
-		addRedirectStatus: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
+		updateRedirect: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addDuration)
 			defer cancel()
-			status1 := resiliency1.AddRedirectStatus(ctx, origin, status)
+			status1 := resiliency1.UpdateRedirectPlan(ctx, origin, status)
 			if !status1.OK() {
 				h.Handle(status1, "")
 			}
 			return status1
+		},
+		redirectState: func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressRedirectState, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			defer cancel()
+			s, status := resiliency1.GetIngressRedirectState(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				h.Handle(status, "")
+			}
+			return s, status
+		},
+		resiliencyState: func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressResiliencyState, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			defer cancel()
+			s, status := resiliency1.GetIngressResiliencyState(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				h.Handle(status, "")
+			}
+			return s, status
 		},
 	}
 }()
