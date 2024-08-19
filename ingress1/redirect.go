@@ -26,12 +26,6 @@ const (
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
 
-type redirectState struct {
-	host     string
-	location string
-	percent  int
-}
-
 type redirect struct {
 	running      bool
 	agentId      string
@@ -41,6 +35,7 @@ type redirect struct {
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
+	exchange     *messaging.Exchange
 	shutdownFunc func()
 }
 
@@ -64,6 +59,7 @@ func newRedirect(origin core.Origin, handler messaging.OpsAgent, tickerDur time.
 	r.ticker = messaging.NewTicker(tickerDur)
 	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	r.handler = handler
+	r.exchange = messaging.NewExchange()
 	return r
 }
 
@@ -109,24 +105,13 @@ func (r *redirect) startup() {
 
 // shutdown - close resources
 func (r *redirect) shutdown() {
+	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
+	err := r.exchange.Broadcast(msg)
+	if err != nil {
+		r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
+	}
 	close(r.ctrlC)
 	r.ticker.Stop()
-}
-
-func (r *redirect) updatePercentage() {
-	switch r.state.Percentage {
-	case 0:
-		r.state.Percentage = 10
-	case 10:
-		r.state.Percentage = 20
-	case 20:
-		r.state.Percentage = 40
-	case 40:
-		r.state.Percentage = 70
-	case 70:
-		r.state.Percentage = 100
-	default:
-	}
 }
 
 func (r *redirect) updateRedirectPlan(guide *guidance) {
@@ -146,7 +131,7 @@ func (r *redirect) updatePercentileSLO(guide *guidance) {
 	}
 }
 
-func runRedirect(r *redirect, fn *redirectFunc, observe *observation, guide *guidance) {
+func runRedirect(r *redirect, fn *redirectFunc, guide *guidance) {
 	fn.startup(r, guide)
 
 	for {
@@ -163,8 +148,10 @@ func runRedirect(r *redirect, fn *redirectFunc, observe *observation, guide *gui
 			case messaging.DataChangeEvent:
 				if msg.IsContentType(common.ContentTypeRedirectPlan) {
 					r.handler.AddActivity(r.agentId, "onDataChange() - redirect plan")
-					r.updateRedirectPlan(guide)
-					r.updatePercentileSLO(guide)
+					//r.updateRedirectPlan(guide)
+					//r.updatePercentileSLO(guide)
+				} else {
+					r.handler.Handle(common.RedirectPlanTypeErrorStatus(msg.Body), "")
 				}
 			default:
 			}

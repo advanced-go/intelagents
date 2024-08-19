@@ -14,3 +14,7 @@ func ProfileTypeErrorStatus(t any) *core.Status {
 func PercentileTypeErrorStatus(t any) *core.Status {
 	return core.NewStatusError(core.StatusInvalidArgument, errors.New(fmt.Sprintf("error: data change percentile type is invalid [%v]", reflect.TypeOf(t))))
 }
+
+func RedirectPlanTypeErrorStatus(t any) *core.Status {
+	return core.NewStatusError(core.StatusInvalidArgument, errors.New(fmt.Sprintf("error: data change reditect plan type is invalid [%v]", reflect.TypeOf(t))))
+}

@@ -2,7 +2,6 @@ package caseofficer1
 
 import (
 	"fmt"
-	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
@@ -10,11 +9,7 @@ import (
 )
 
 const (
-	Class = "case-officer1"
-)
-
-var (
-	defaultPercentile = &resiliency1.Percentile{Percent: 99, Latency: 2000}
+	CaseOfficerClass = "case-officer1"
 )
 
 type caseOfficer struct {
@@ -32,9 +27,9 @@ type caseOfficer struct {
 
 func AgentUri(traffic string, origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", Class, traffic, origin.Region, origin.Zone)
+		return fmt.Sprintf("%v:%v.%v.%v", CaseOfficerClass, traffic, origin.Region, origin.Zone)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", Class, traffic, origin.Region, origin.Zone, origin.SubZone)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", CaseOfficerClass, traffic, origin.Region, origin.Zone, origin.SubZone)
 }
 
 // NewAgent - create a new case officer agent
