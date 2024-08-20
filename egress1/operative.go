@@ -2,6 +2,7 @@ package egress1
 
 import (
 	"fmt"
+	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -51,7 +52,7 @@ func FieldOperativeUri(origin core.Origin) string {
 }
 
 // NewFieldOperative - create a new field operative
-func NewFieldOperative(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
+func NewFieldOperative(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
 	f := new(fieldOperative)
 	f.uri = FieldOperativeUri(origin)
 	f.origin = origin

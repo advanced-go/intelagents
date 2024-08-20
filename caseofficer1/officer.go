@@ -1,7 +1,7 @@
 package caseofficer1
 
 import (
-	"fmt"
+	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
@@ -13,43 +13,37 @@ const (
 )
 
 type caseOfficer struct {
-	running        bool
-	agentId        string
-	origin         core.Origin
-	traffic        string
-	lastEntryId    int
-	lastRedirectId int
-	lastFailoverId int
-	profile        *common.Profile
-	ticker         *messaging.Ticker
-	ctrlC          chan *messaging.Message
-	handler        messaging.OpsAgent
-	ingressAgents  *messaging.Exchange
-	egressAgents   *messaging.Exchange
-	shutdownFunc   func()
+	running       bool
+	agentId       string
+	origin        core.Origin
+	lastId        resiliency1.LastCDCId
+	profile       *common.Profile
+	ticker        *messaging.Ticker
+	ctrlC         chan *messaging.Message
+	handler       messaging.OpsAgent
+	ingressAgents *messaging.Exchange
+	egressAgents  *messaging.Exchange
+	redirectAgent messaging.Agent
+	failoverAgent messaging.Agent
+	shutdownFunc  func()
 }
 
-func AgentUri(traffic string, origin core.Origin) string {
-	if origin.SubZone == "" {
-		return fmt.Sprintf(core.RegionZoneHostFmt, CaseOfficerClass, traffic, origin.Region, origin.Zone)
-	}
-	return fmt.Sprintf(core.RegionZoneSubZoneHostFmt, CaseOfficerClass, traffic, origin.Region, origin.Zone, origin.SubZone)
+func AgentUri(origin core.Origin) string {
+	return origin.Uri(CaseOfficerClass)
 }
 
 // NewAgent - create a new case officer agent
-func NewAgent(traffic string, origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
-	return newAgent(traffic, origin, profile, handler)
+func NewAgent(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
+	return newAgent(origin, profile, handler)
 }
 
 // newAgent - create a new case officer agent
-func newAgent(traffic string, origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) *caseOfficer {
+func newAgent(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) *caseOfficer {
 	c := new(caseOfficer)
-	c.agentId = AgentUri(traffic, origin)
-	c.traffic = traffic
+	c.agentId = AgentUri(origin)
 	c.origin = origin
 	c.profile = profile
-	c.ticker = messaging.NewTicker(profile.CaseOfficerDuration(-1))
-
+	c.ticker = messaging.NewTicker(common.OffPeakDuration)
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
 	c.ingressAgents = messaging.NewExchange()
@@ -122,14 +116,16 @@ func (c *caseOfficer) reviseTicker(newDuration time.Duration) {
 }
 
 func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *guidance) {
-	//percentile, _ := fn.startup(c, nil, guide)
+	processMsg := messaging.NewControlMessage("", "", messaging.ProcessEvent)
+	fn.startup(c, guide)
 
 	for {
-		// main processing : query for and add new assignments
 		select {
 		case <-c.ticker.C():
-			c.handler.AddActivity(c.agentId, "onTick")
-			//fn.process(r, percentile, observe, exp)
+			c.handler.AddActivity(c.agentId, "onTick()")
+			c.failoverAgent.Message(processMsg)
+			c.redirectAgent.Message(processMsg)
+			fn.update(c, guide)
 		default:
 		}
 		// control channel processing
@@ -142,7 +138,8 @@ func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *guidance) {
 				return
 			case messaging.DataChangeEvent:
 				if msg.IsContentType(common.ContentTypeProfile) {
-					// TODO : broadcast to all field operatives
+					c.ingressAgents.Broadcast(msg)
+					c.egressAgents.Broadcast(msg)
 				}
 			default:
 			}

@@ -34,7 +34,7 @@ func (p *Profile) ResiliencyDuration(old time.Duration) time.Duration {
 	}
 }
 
-func (p *Profile) CaseOfficerDuration(old time.Duration) time.Duration {
+func (p *Profile) CaseOfficerDuration() time.Duration {
 	switch p.Tag {
 	case OffPeak:
 		return PeakDuration

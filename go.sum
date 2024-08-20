@@ -38,6 +38,14 @@ github.com/advanced-go/guidance v0.0.0-20240817123929-7fcc027f29f4 h1:hpRnJnq+RL
 github.com/advanced-go/guidance v0.0.0-20240817123929-7fcc027f29f4/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
 github.com/advanced-go/guidance v0.0.0-20240820100751-846483714885 h1:IVc/nnBxFDPG+6sbi3gJiFdW5XY9E66kxmn79F2CVNg=
 github.com/advanced-go/guidance v0.0.0-20240820100751-846483714885/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
+github.com/advanced-go/guidance v0.0.0-20240820102228-15363762e68a h1:7XkJQ2gEU4NeVoHuntEr6gUahKdByUVDKzzxfn0L4CA=
+github.com/advanced-go/guidance v0.0.0-20240820102228-15363762e68a/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
+github.com/advanced-go/guidance v0.0.0-20240820132654-0f9189e50e48 h1:DnDEzekbE+eQFqjvfQaBwGr74NQZzk4jfOywo9OfM5w=
+github.com/advanced-go/guidance v0.0.0-20240820132654-0f9189e50e48/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
+github.com/advanced-go/guidance v0.0.0-20240820140008-ce43b79ec3d3 h1:eBvIpZLrqfOVZRgstk5EbgkejAp6t085r8tB1RVijvw=
+github.com/advanced-go/guidance v0.0.0-20240820140008-ce43b79ec3d3/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
+github.com/advanced-go/guidance v0.0.0-20240820154403-21a7b25599f9 h1:onyRLqaxI4ibjc9CA+TSDi8YEYPf0r3x9F75tWi5X14=
+github.com/advanced-go/guidance v0.0.0-20240820154403-21a7b25599f9/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784 h1:aCwgv804Bm6JY6HRpnmRDZWmcgL+5s387nSi/bMlhvk=
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784/go.mod h1:LIAGTP/K0wlft3dYhHqn69QSFn9wlkcXA+c3hfh18HQ=
 github.com/advanced-go/observation v0.0.0-20240726165650-9302f1cc6c99 h1:7r1+XDvOp8QCYeu8Kn0JvVqSKB39lCF06PHlzneUGtc=

@@ -14,6 +14,7 @@ const (
 type redirectCDC struct {
 	running      bool
 	agentId      string
+	lastId       int
 	origin       core.Origin
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -26,14 +27,15 @@ func redirectCDCUri(origin core.Origin) string {
 }
 
 // redirectCDCAgent - create a new redirect CDC agent
-func redirectCDCAgent(origin core.Origin, exchange *messaging.Exchange, handler messaging.OpsAgent) messaging.Agent {
-	return newRedirectCDC(origin, exchange, handler)
+func redirectCDCAgent(origin core.Origin, lastId int, exchange *messaging.Exchange, handler messaging.OpsAgent) messaging.Agent {
+	return newRedirectCDC(origin, lastId, exchange, handler)
 }
 
 // newRedirectCDC - create a new redirectCDC struct
-func newRedirectCDC(origin core.Origin, exchange *messaging.Exchange, handler messaging.OpsAgent) *redirectCDC {
+func newRedirectCDC(origin core.Origin, lastId int, exchange *messaging.Exchange, handler messaging.OpsAgent) *redirectCDC {
 	r := new(redirectCDC)
 	r.agentId = redirectCDCUri(origin)
+	r.lastId = lastId
 	r.origin = origin
 	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	r.handler = handler
@@ -91,9 +93,10 @@ func runRedirectCDC(r *redirectCDC, guide *guidance) {
 				return
 			case messaging.ProcessEvent:
 				r.handler.AddActivity(r.agentId, messaging.ProcessEvent)
-				cdc, status := guide.redirectCDC(r.handler, r.origin)
+				entry, status := guide.updatedRedirectPlans(r.handler, r.origin, r.lastId)
 				if status.OK() {
-					for _, e := range cdc {
+					r.lastId = entry[len(entry)-1].EntryId
+					for _, e := range entry {
 						err := r.exchange.Send(newRedirectMessage(e))
 						if err != nil {
 							r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
@@ -107,12 +110,12 @@ func runRedirectCDC(r *redirectCDC, guide *guidance) {
 	}
 }
 
-func newRedirectMessage(e resiliency1.CDCRedirect) *messaging.Message {
+func newRedirectMessage(e resiliency1.RedirectPlan) *messaging.Message {
 	// TODO: create valid TO
 	origin := core.Origin{Route: e.RouteName}
 	to := redirectCDCUri(origin)
 	msg := messaging.NewControlMessage(to, "", messaging.DataChangeEvent)
-	msg.SetContentType(common.ContentTypeProfile)
+	msg.SetContentType(common.ContentTypeRedirectPlan)
 	return msg
 }
 

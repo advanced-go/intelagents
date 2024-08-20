@@ -3,7 +3,7 @@ module github.com/advanced-go/intelagents
 go 1.21.4
 
 require (
-	github.com/advanced-go/guidance v0.0.0-20240820100751-846483714885
+	github.com/advanced-go/guidance v0.0.0-20240820154403-21a7b25599f9
 	github.com/advanced-go/observation v0.0.0-20240731141632-364bb4f7a108
 	github.com/advanced-go/stdlib v0.0.0-20240820093621-b2efb18cfcc7
 )

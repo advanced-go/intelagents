@@ -80,7 +80,7 @@ func (r *redirectProcess) Run() {
 	if r.running {
 		return
 	}
-	go runRedirectProcess(r, redirection, observe, guide)
+	go runRedirectProcess(r, redirection, common.Observe, guide)
 }
 
 // startup - start tickers
@@ -110,7 +110,7 @@ func (r *redirect) updatePercentage() {
 	}
 }
 
-func runRedirectProcess(r *redirectProcess, fn *redirectFunc, observe *observation, guide *guidance) {
+func runRedirectProcess(r *redirectProcess, fn *redirectFunc, observe *common.Observation, guide *guidance) {
 	//fn.startup(r, guide)
 
 	for {

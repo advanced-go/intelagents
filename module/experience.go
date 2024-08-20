@@ -1,4 +1,4 @@
-package ingress1
+package module
 
 import (
 	"context"

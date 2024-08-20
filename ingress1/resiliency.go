@@ -66,7 +66,7 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go resiliencyRun(r, resilience, observe, exp, guide)
+	go resiliencyRun(r, resilience, common.Observe, common.Exp, guide)
 }
 
 // Shutdown - shutdown the agent
@@ -107,7 +107,7 @@ func (r *resiliency) updatePercentileSLO(guide *guidance) {
 }
 
 // run - ingress resiliency
-func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *observation, exp *experience, guide *guidance) {
+func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observation, exp *common.Experience, guide *guidance) {
 	fn.startup(r, guide)
 
 	for {

@@ -93,12 +93,13 @@ func runEntryCDC(e *entryCDC, guide *guidance) {
 				return
 			case messaging.ProcessEvent:
 				e.handler.AddActivity(e.agentId, messaging.ProcessEvent)
-				cdc, status := guide.entryCDC(e.handler, e.origin, e.lastId)
+				entry, status := guide.newAssignments(e.handler, e.origin, e.lastId)
 				if status.OK() {
-					for _, c := range cdc {
+					e.lastId = entry[len(entry)-1].EntryId
+					//updateExchange()
+					for _, e1 := range entry {
 						// TODO : update the ingress and egress agent exchanges
-						if c.EntryId != 0 {
-
+						if e1.EntryId != 0 {
 						}
 					}
 				}

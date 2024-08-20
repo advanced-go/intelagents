@@ -95,7 +95,7 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, redirection, observe, guide)
+	go runRedirect(r, redirection, guide)
 }
 
 // startup - start tickers
@@ -106,10 +106,10 @@ func (r *redirect) startup() {
 // shutdown - close resources
 func (r *redirect) shutdown() {
 	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
-	err := r.exchange.Broadcast(msg)
-	if err != nil {
-		r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
-	}
+	r.exchange.Broadcast(msg)
+	// err != nil {
+	//	r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
+	//}
 	close(r.ctrlC)
 	r.ticker.Stop()
 }
