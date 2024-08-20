@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	LeadClass = "ingress-lead1"
+	FieldOperativeClass = "ingress-field-operative1"
 )
 
 // Responsibilities:
@@ -37,9 +37,9 @@ type fieldOperative struct {
 
 func FieldOperativeUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
 // NewFieldOperative - create a new lead agent

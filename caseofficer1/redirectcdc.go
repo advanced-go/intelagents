@@ -1,8 +1,8 @@
 package caseofficer1
 
 import (
-	"fmt"
 	"github.com/advanced-go/guidance/resiliency1"
+	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 )
@@ -14,9 +14,7 @@ const (
 type redirectCDC struct {
 	running      bool
 	agentId      string
-	traffic      string
 	origin       core.Origin
-	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
 	exchange     *messaging.Exchange
@@ -24,24 +22,19 @@ type redirectCDC struct {
 }
 
 func redirectCDCUri(origin core.Origin) string {
-	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v", RedirectCDCClass, origin.Region, origin.Zone)
-	}
-	return fmt.Sprintf("%v:%v.%v.%v", RedirectCDCClass, origin.Region, origin.Zone, origin.SubZone)
+	return origin.Uri(RedirectCDCClass)
 }
 
 // redirectCDCAgent - create a new redirect CDC agent
-func redirectCDCAgent(origin core.Origin, traffic string, exchange *messaging.Exchange, handler messaging.OpsAgent) messaging.Agent {
-	return newRedirectCDC(origin, traffic, exchange, handler)
+func redirectCDCAgent(origin core.Origin, exchange *messaging.Exchange, handler messaging.OpsAgent) messaging.Agent {
+	return newRedirectCDC(origin, exchange, handler)
 }
 
 // newRedirectCDC - create a new redirectCDC struct
-func newRedirectCDC(origin core.Origin, traffic string, exchange *messaging.Exchange, handler messaging.OpsAgent) *redirectCDC {
+func newRedirectCDC(origin core.Origin, exchange *messaging.Exchange, handler messaging.OpsAgent) *redirectCDC {
 	r := new(redirectCDC)
 	r.agentId = redirectCDCUri(origin)
 	r.origin = origin
-	r.traffic = traffic
-	//e.ticker = messaging.NewTicker(profile.CaseOfficerDuration(-1))
 	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	r.handler = handler
 	r.exchange = exchange
@@ -83,17 +76,9 @@ func (r *redirectCDC) Shutdown() {
 	if r.ctrlC != nil {
 		r.ctrlC <- msg
 	}
-
 }
 
-func (r *redirectCDC) startup() {
-	r.ticker.Start(-1)
-}
-
-func (r *redirectCDC) shutdown() {
-	close(r.ctrlC)
-	r.ticker.Stop()
-}
+func (r *redirectCDC) shutdown() { close(r.ctrlC) }
 
 func runRedirectCDC(r *redirectCDC, guide *guidance) {
 	for {
@@ -104,8 +89,8 @@ func runRedirectCDC(r *redirectCDC, guide *guidance) {
 				r.shutdown()
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
-			case messaging.StartupEvent:
-				r.handler.AddActivity(r.agentId, messaging.StartupEvent)
+			case messaging.ProcessEvent:
+				r.handler.AddActivity(r.agentId, messaging.ProcessEvent)
 				cdc, status := guide.redirectCDC(r.handler, r.origin)
 				if status.OK() {
 					for _, e := range cdc {
@@ -125,9 +110,9 @@ func runRedirectCDC(r *redirectCDC, guide *guidance) {
 func newRedirectMessage(e resiliency1.CDCRedirect) *messaging.Message {
 	// TODO: create valid TO
 	origin := core.Origin{Route: e.RouteName}
-	to := origin.Route
+	to := redirectCDCUri(origin)
 	msg := messaging.NewControlMessage(to, "", messaging.DataChangeEvent)
-	//msg.SetContent(ContentTypeRedirectCDC, nil)
+	msg.SetContentType(common.ContentTypeProfile)
 	return msg
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	LeadClass = "egress-lead1"
+	FieldOperativeClass = "egress-field-operative1"
 )
 
 // Responsibilities:
@@ -22,7 +22,8 @@ const (
 //     b. Read previous egress and dependency configurations, update controllers and dependency agent
 //
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
-type lead struct {
+
+type fieldOperative struct {
 	running bool
 	uri     string
 
@@ -42,76 +43,69 @@ type lead struct {
 	shutdownFunc func()
 }
 
-func LeadAgentUri(origin core.Origin) string {
+func FieldOperativeUri(origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.Host)
+		return fmt.Sprintf("%v:%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.Host)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", LeadClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return fmt.Sprintf("%v:%v.%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewLeadAgent - create a new lead agent
-func NewLeadAgent(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
-	c := new(lead)
-	c.uri = LeadAgentUri(origin)
-	c.origin = origin
+// NewFieldOperative - create a new field operative
+func NewFieldOperative(origin core.Origin, handler messaging.OpsAgent) messaging.OpsAgent {
+	f := new(fieldOperative)
+	f.uri = FieldOperativeUri(origin)
+	f.origin = origin
 
-	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	c.handler = handler
-	c.controllers = messaging.NewExchange()
-	return c
+	f.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	f.handler = handler
+	f.controllers = messaging.NewExchange()
+	return f
 }
 
 // String - identity
-func (a *lead) String() string {
-	return a.uri
-}
+func (f *fieldOperative) String() string { return f.Uri() }
 
 // Uri - agent identifier
-func (a *lead) Uri() string {
-	return a.uri
-}
+func (f *fieldOperative) Uri() string { return f.uri }
 
 // Message - message the agent
-func (a *lead) Message(m *messaging.Message) {
-	messaging.Mux(m, a.ctrlC, nil, nil)
-}
+func (f *fieldOperative) Message(m *messaging.Message) { messaging.Mux(m, f.ctrlC, nil, nil) }
 
 // Handle - error handler
-func (a *lead) Handle(status *core.Status, requestId string) *core.Status {
+func (f *fieldOperative) Handle(status *core.Status, requestId string) *core.Status {
 	// TODO : Any operations specific processing ??  If not then forward to handler
-	return a.handler.Handle(status, requestId)
+	return f.handler.Handle(status, requestId)
 }
 
 // AddActivity - add activity
-func (a *lead) AddActivity(agentId string, content any) {
+func (f *fieldOperative) AddActivity(agentId string, content any) {
 	// TODO : Any operations specific processing ??  If not then forward to handler
-	//return a.handler.Handle(status, requestId)
+	f.handler.AddActivity(agentId, content)
 }
 
 // Add - add a shutdown function
-func (a *lead) Add(f func()) {
-	a.shutdownFunc = messaging.AddShutdown(a.shutdownFunc, f)
-
+func (f *fieldOperative) Add(fn func()) {
+	f.shutdownFunc = messaging.AddShutdown(f.shutdownFunc, fn)
 }
 
 // Shutdown - shutdown the agent
-func (a *lead) Shutdown() {
-	if !a.running {
+func (f *fieldOperative) Shutdown() {
+	if !f.running {
 		return
 	}
-	a.running = false
-	if a.shutdownFunc != nil {
-		a.shutdownFunc()
+	f.running = false
+	if f.shutdownFunc != nil {
+		f.shutdownFunc()
 	}
-	msg := messaging.NewControlMessage(a.uri, a.uri, messaging.ShutdownEvent)
-	if a.ctrlC != nil {
-		a.ctrlC <- msg
+	msg := messaging.NewControlMessage(f.uri, f.uri, messaging.ShutdownEvent)
+	if f.ctrlC != nil {
+		f.ctrlC <- msg
 	}
 }
 
 // Run - run the agent
-func (a *lead) Run() {
-	if a.running {
+func (f *fieldOperative) Run() {
+	if f.running {
 		return
 	}
 	//go runLead(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))

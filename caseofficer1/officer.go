@@ -13,23 +13,27 @@ const (
 )
 
 type caseOfficer struct {
-	running      bool
-	agentId      string
-	origin       core.Origin
-	traffic      string
-	profile      *common.Profile
-	ticker       *messaging.Ticker
-	ctrlC        chan *messaging.Message
-	handler      messaging.OpsAgent
-	operatives   *messaging.Exchange
-	shutdownFunc func()
+	running        bool
+	agentId        string
+	origin         core.Origin
+	traffic        string
+	lastEntryId    int
+	lastRedirectId int
+	lastFailoverId int
+	profile        *common.Profile
+	ticker         *messaging.Ticker
+	ctrlC          chan *messaging.Message
+	handler        messaging.OpsAgent
+	ingressAgents  *messaging.Exchange
+	egressAgents   *messaging.Exchange
+	shutdownFunc   func()
 }
 
 func AgentUri(traffic string, origin core.Origin) string {
 	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", CaseOfficerClass, traffic, origin.Region, origin.Zone)
+		return fmt.Sprintf(core.RegionZoneHostFmt, CaseOfficerClass, traffic, origin.Region, origin.Zone)
 	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", CaseOfficerClass, traffic, origin.Region, origin.Zone, origin.SubZone)
+	return fmt.Sprintf(core.RegionZoneSubZoneHostFmt, CaseOfficerClass, traffic, origin.Region, origin.Zone, origin.SubZone)
 }
 
 // NewAgent - create a new case officer agent
@@ -48,7 +52,8 @@ func newAgent(traffic string, origin core.Origin, profile *common.Profile, handl
 
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
-	c.operatives = messaging.NewExchange()
+	c.ingressAgents = messaging.NewExchange()
+	c.egressAgents = messaging.NewExchange()
 	return c
 }
 
@@ -99,7 +104,8 @@ func (c *caseOfficer) Shutdown() {
 	if c.ctrlC != nil {
 		c.ctrlC <- msg
 	}
-	c.operatives.Broadcast(msg)
+	c.ingressAgents.Broadcast(msg)
+	c.egressAgents.Broadcast(msg)
 }
 
 func (c *caseOfficer) startup() {
@@ -136,7 +142,7 @@ func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *guidance) {
 				return
 			case messaging.DataChangeEvent:
 				if msg.IsContentType(common.ContentTypeProfile) {
-
+					// TODO : broadcast to all field operatives
 				}
 			default:
 			}

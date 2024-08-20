@@ -16,7 +16,16 @@ type caseOfficerFunc struct {
 var officer = func() *caseOfficerFunc {
 	return &caseOfficerFunc{
 		startup: func(c *caseOfficer, guide *guidance) *core.Status {
+			// TODO : need to set current last CDC entries for entry, redirect, and failover
+			entry, status := guide.assignments(c.handler, c.origin)
+			if status.OK() {
+				for _, c := range entry {
+					// TODO : create the ingress and egress agent exchanges
+					if c.EntryId != 0 {
 
+					}
+				}
+			}
 			return core.StatusOK()
 		},
 
