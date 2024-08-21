@@ -2,13 +2,15 @@ package ingress1
 
 import (
 	"fmt"
+	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
 const (
-	FieldOperativeClass = "ingress-field-operative1"
+	FieldOperativeClass    = "ingress-field-operative1"
+	RedirectCompletedEvent = "event:redirect-completed"
 )
 
 // Responsibilities:
@@ -20,6 +22,7 @@ type fieldOperative struct {
 	agentId      string
 	origin       core.Origin
 	profile      *common.Profile
+	state        *resiliency1.IngressRedirectState
 	resiliency   messaging.Agent
 	redirect     messaging.Agent
 	ctrlC        chan *messaging.Message
@@ -33,24 +36,20 @@ func FieldOperativeUri(origin core.Origin) string {
 
 // NewFieldOperative - create a new field operative
 func NewFieldOperative(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
-	return newFieldOperative(origin, profile, nil, nil, handler)
+	return newFieldOperative(origin, profile, nil, handler)
 }
 
-func newFieldOperative(origin core.Origin, profile *common.Profile, resilience, redirect messaging.Agent, handler messaging.OpsAgent) *fieldOperative {
+func newFieldOperative(origin core.Origin, profile *common.Profile, resilience messaging.Agent, handler messaging.OpsAgent) *fieldOperative {
 	f := new(fieldOperative)
 	f.agentId = FieldOperativeUri(origin)
 	f.origin = origin
+	f.state = resiliency1.NewIngressRedirectState()
 	f.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	f.handler = handler
 	if resilience == nil {
 		f.resiliency = newResiliencyAgent(origin, profile, f)
 	} else {
 		f.resiliency = resilience
-	}
-	if redirect == nil {
-		f.redirect = newRedirectAgent(origin, profile, f)
-	} else {
-		f.redirect = redirect
 	}
 	return f
 }
@@ -87,7 +86,9 @@ func (f *fieldOperative) Shutdown() {
 		f.shutdownFunc()
 	}
 	f.resiliency.Shutdown()
-	f.redirect.Shutdown()
+	if f.redirect != nil {
+		f.redirect.Shutdown()
+	}
 	msg := messaging.NewControlMessage(f.agentId, f.agentId, messaging.ShutdownEvent)
 	if f.ctrlC != nil {
 		f.ctrlC <- msg
@@ -101,18 +102,19 @@ func (f *fieldOperative) Run() {
 	}
 	// Running resiliency and redirect agents as they need time to perform state initialization
 	f.resiliency.Run()
-	f.redirect.Run()
-	go runFieldOperative(f)
+	//f.redirect.Run()
+	go runFieldOperative(f, operative, localGuidance)
 }
 
 func (f *fieldOperative) shutdown() {
 	close(f.ctrlC)
 }
 
-func runFieldOperative(f *fieldOperative) {
+func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *guidance) {
 	if f == nil {
 		return
 	}
+	fn.processRedirect(f, fn, guide)
 
 	for {
 		select {
@@ -122,9 +124,15 @@ func runFieldOperative(f *fieldOperative) {
 				f.shutdown()
 				f.handler.AddActivity(f.agentId, messaging.ShutdownEvent)
 				return
+			case RedirectCompletedEvent:
+				f.redirect = nil
 			case messaging.DataChangeEvent:
 				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				forwardDataChangeEvent(f, msg)
+				if msg.ContentType() == common.ContentTypeRedirectPlan {
+					fn.processRedirect(f, fn, guide)
+				} else {
+					forwardDataChangeEvent(f, msg)
+				}
 			default:
 				f.handler.Handle(common.MessageEventErrorStatus(f.agentId, msg), "")
 			}
@@ -144,8 +152,7 @@ func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
 			f.resiliency.Message(m)
 		}
 		f.resiliency.Message(msg)
-	case common.ContentTypeRedirectPlan:
-		f.redirect.Message(msg)
+	//case common.ContentTypeRedirectPlan:
 	default:
 		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
 	}

@@ -20,7 +20,7 @@ type redirectProcess struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
-	state        *resiliency1.IngressRedirectState
+	state        resiliency1.IngressRedirectState
 	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -32,15 +32,15 @@ func redirectProcessAgentUri(origin core.Origin) string {
 }
 
 // newRedirectProcessAgent - create a new lead agent
-func newRedirectProcessAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
-	return newRedirectProcess(origin, handler, processTickerDuration)
+func newRedirectProcessAgent(origin core.Origin, state *resiliency1.IngressRedirectState, handler messaging.OpsAgent) messaging.Agent {
+	return newRedirectProcess(origin, state, handler, processTickerDuration)
 }
 
-func newRedirectProcess(origin core.Origin, handler messaging.OpsAgent, tickerDur time.Duration) *redirectProcess {
+func newRedirectProcess(origin core.Origin, state *resiliency1.IngressRedirectState, handler messaging.OpsAgent, tickerDur time.Duration) *redirectProcess {
 	r := new(redirectProcess)
 	r.agentId = redirectProcessAgentUri(origin)
 	r.origin = origin
-	r.state = resiliency1.NewIngressRedirectState()
+	r.state = *state
 	r.ticker = messaging.NewTicker(tickerDur)
 	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	r.handler = handler
@@ -93,7 +93,7 @@ func (r *redirectProcess) shutdown() {
 	r.ticker.Stop()
 }
 
-func (r *redirect) updatePercentage() {
+func (r *redirectProcess) updatePercentage() {
 	switch r.state.Percentage {
 	case 0:
 		r.state.Percentage = 10

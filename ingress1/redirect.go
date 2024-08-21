@@ -47,19 +47,18 @@ func redirectAgentUri(origin core.Origin) string {
 }
 
 // newRedirectAgent - create a new lead agent
-func newRedirectAgent(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.Agent {
-	return newRedirect(origin, handler, redirectDuration)
+func newRedirectAgent(origin core.Origin, state *resiliency1.IngressRedirectState, handler messaging.OpsAgent) messaging.Agent {
+	return newRedirect(origin, state, handler, redirectDuration)
 }
 
-func newRedirect(origin core.Origin, handler messaging.OpsAgent, tickerDur time.Duration) *redirect {
+func newRedirect(origin core.Origin, state *resiliency1.IngressRedirectState, handler messaging.OpsAgent, tickerDur time.Duration) *redirect {
 	r := new(redirect)
 	r.agentId = redirectAgentUri(origin)
 	r.origin = origin
-	r.state = resiliency1.NewIngressRedirectState()
+	r.state = state
 	r.ticker = messaging.NewTicker(tickerDur)
 	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	r.handler = handler
-	r.exchange = messaging.NewExchange()
 	return r
 }
 
@@ -95,7 +94,7 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, redirection, localGuidance)
+	go runRedirect(r, redirection, common.Observe, common.Exp, localGuidance)
 }
 
 // startup - start tickers
@@ -105,15 +104,12 @@ func (r *redirect) startup() {
 
 // shutdown - close resources
 func (r *redirect) shutdown() {
-	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
-	r.exchange.Broadcast(msg)
-	// err != nil {
-	//	r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
-	//}
+	//msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
 	close(r.ctrlC)
 	r.ticker.Stop()
 }
 
+/*
 func (r *redirect) updateRedirectPlan(guide *guidance) {
 	p, status := guide.redirectPlan(r.handler, r.origin)
 	if status.OK() {
@@ -131,13 +127,36 @@ func (r *redirect) updatePercentileSLO(guide *guidance) {
 	}
 }
 
-func runRedirect(r *redirect, fn *redirectFunc, guide *guidance) {
-	fn.startup(r, guide)
 
+*/
+
+func (r *redirect) updatePercentage() {
+	switch r.state.Percentage {
+	case 0:
+		r.state.Percentage = 10
+	case 10:
+		r.state.Percentage = 20
+	case 20:
+		r.state.Percentage = 40
+	case 40:
+		r.state.Percentage = 70
+	case 70:
+		r.state.Percentage = 100
+	default:
+	}
+}
+
+func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, exp *common.Experience, guide *guidance) {
 	for {
 		select {
 		case <-r.ticker.C():
-
+			r.handler.AddActivity(r.agentId, "onTick()")
+			fn.process(r, observe)
+			// TODO : based on process need to do the following:
+			// 1. Update percentage and send action
+			// 2. if status fail, then update redirect
+			// 3. if status succeed, then update redirect and set redirect action
+			// 4. IF done, then message parent
 		// control channel
 		case msg := <-r.ctrlC:
 			switch msg.Event() {
@@ -145,14 +164,6 @@ func runRedirect(r *redirect, fn *redirectFunc, guide *guidance) {
 				r.shutdown()
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
-			case messaging.DataChangeEvent:
-				if msg.IsContentType(common.ContentTypeRedirectPlan) {
-					r.handler.AddActivity(r.agentId, "onDataChange() - redirect plan")
-					//r.updateRedirectPlan(guide)
-					//r.updatePercentileSLO(guide)
-				} else {
-					r.handler.Handle(common.RedirectPlanTypeErrorStatus(r.agentId, msg.Body), "")
-				}
 			default:
 			}
 		default:
