@@ -151,12 +151,9 @@ func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, exp
 		select {
 		case <-r.ticker.C():
 			r.handler.AddActivity(r.agentId, "onTick()")
-			fn.process(r, observe)
-			// TODO : based on process need to do the following:
-			// 1. Update percentage and send action
-			// 2. if status fail, then update redirect
-			// 3. if status succeed, then update redirect and set redirect action
-			// 4. IF done, then message parent and shutdown
+			fn.process(r, observe, exp, guide)
+			// TODO : if process completed successfully, then return
+
 		// control channel
 		case msg := <-r.ctrlC:
 			switch msg.Event() {
