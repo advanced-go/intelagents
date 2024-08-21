@@ -142,12 +142,12 @@ func processProcessEvent(r *redirectProcess, msg *messaging.Message) {
 			r.handler.Handle(core.NewStatusError(core.StatusExecError, err), "")
 		}
 		if rs, ok := msg.Body.(*resiliency1.IngressRedirectState); ok {
-			r.state = rs
+			r.state = *rs
 			return
 		}
 		err := errors.New(fmt.Sprintf("error: redirect state process type:%v is invalid for agent:%v", reflect.TypeOf(msg.Body), r.agentId))
 		r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
-		r.state = nil
+		//r.state = nil
 	default:
 		r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg), "")
 	}

@@ -156,7 +156,7 @@ func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, exp
 			// 1. Update percentage and send action
 			// 2. if status fail, then update redirect
 			// 3. if status succeed, then update redirect and set redirect action
-			// 4. IF done, then message parent
+			// 4. IF done, then message parent and shutdown
 		// control channel
 		case msg := <-r.ctrlC:
 			switch msg.Event() {
