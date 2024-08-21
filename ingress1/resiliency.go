@@ -129,10 +129,8 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 			case messaging.DataChangeEvent:
 				if msg.IsContentType(common.ContentTypeProfile) {
 					r.handler.AddActivity(r.agentId, "onDataChange() - profile")
-					if p, ok := msg.Body.(*common.Profile); ok {
+					if p := common.GetProfile(r.handler, msg); p != nil {
 						r.reviseTicker(p.ResiliencyDuration(-1))
-					} else {
-						r.handler.Handle(common.ProfileTypeErrorStatus(msg.Body), "")
 					}
 				} else {
 					if msg.IsContentType(common.ContentTypePercentileSLO) {
@@ -145,4 +143,8 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 		default:
 		}
 	}
+}
+
+func processDataChangeEvent(r *redirect, msg *messaging.Message) {
+
 }

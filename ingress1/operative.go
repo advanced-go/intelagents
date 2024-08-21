@@ -1,11 +1,9 @@
 package ingress1
 
 import (
-	"fmt"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
-	"time"
 )
 
 const (
@@ -14,43 +12,45 @@ const (
 
 // Responsibilities:
 //  1. Startup + Restart Events
-//     a. Read all egress route configurations
-//     b. If authority routing is configured, read all host names
-//     c. Create all egress controller agents and a dependency agent if configured
-//  2. Changeset Apply Event
-//     a. Read new egress and dependency configurations, update controllers and dependency agent
-//  3. Changeset Rollback Event
-//     b. Read previous egress and dependency configurations, update controllers and dependency agent
 //
-// 4. Polling - What if an event is missed?? Need some way to save events in database.
+
 type fieldOperative struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
+	profile      *common.Profile
 	resiliency   messaging.Agent
 	redirect     messaging.Agent
-	interval     time.Duration
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
 	shutdownFunc func()
 }
 
 func FieldOperativeUri(origin core.Origin) string {
-	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.Host)
-	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return origin.Uri(FieldOperativeClass)
 }
 
-// NewFieldOperative - create a new lead agent
+// NewFieldOperative - create a new field operative
 func NewFieldOperative(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
+	return newFieldOperative(origin, profile, nil, nil, handler)
+}
+
+func newFieldOperative(origin core.Origin, profile *common.Profile, resilience, redirect messaging.Agent, handler messaging.OpsAgent) *fieldOperative {
 	f := new(fieldOperative)
 	f.agentId = FieldOperativeUri(origin)
 	f.origin = origin
 	f.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	f.handler = handler
-	f.resiliency = newResiliencyAgent(origin, profile, f)
-	f.redirect = newRedirectAgent(origin, profile, f)
+	if resilience == nil {
+		f.resiliency = newResiliencyAgent(origin, profile, f)
+	} else {
+		f.resiliency = resilience
+	}
+	if redirect == nil {
+		f.redirect = newRedirectAgent(origin, profile, f)
+	} else {
+		f.redirect = redirect
+	}
 	return f
 }
 
@@ -65,14 +65,12 @@ func (f *fieldOperative) Message(m *messaging.Message) { messaging.Mux(m, f.ctrl
 
 // Handle - error handler
 func (f *fieldOperative) Handle(status *core.Status, requestId string) *core.Status {
-	// TODO : Any operations specific processing ??  If not then forward to handler
 	return f.handler.Handle(status, requestId)
 }
 
 // AddActivity - add activity
 func (f *fieldOperative) AddActivity(agentId string, content any) {
-	// TODO : Any operations specific processing ??  If not then forward to handler
-	//return a.handler.Handle(status, requestId)
+	f.handler.AddActivity(agentId, content)
 }
 
 // Add - add a shutdown function
@@ -100,41 +98,52 @@ func (f *fieldOperative) Run() {
 	if f.running {
 		return
 	}
-	go runFieldOperative(f, guide)
+	// Running resiliency and redirect agents as they need time to perform state initialization
+	f.resiliency.Run()
+	f.redirect.Run()
+	go runFieldOperative(f)
 }
 
-// shutdown - close resources
 func (f *fieldOperative) shutdown() {
 	close(f.ctrlC)
-
 }
 
-func runFieldOperative(l *fieldOperative, guide *guidance) {
-	if l == nil {
+func runFieldOperative(f *fieldOperative) {
+	if f == nil {
 		return
 	}
-	//entry, status := guide.controllers(l.handler, l.origin)
-	//if entry.EntryId != 0 || status != nil {
-	//}
+
 	for {
 		select {
-		case msg := <-l.ctrlC:
+		case msg := <-f.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
-				l.resiliency.Shutdown()
-				l.redirect.Shutdown()
-				l.shutdown()
+				f.shutdown()
+				f.handler.AddActivity(f.agentId, messaging.ShutdownEvent)
 				return
-			case messaging.HostStartupEvent:
-				//if
-				//l.controller.Message(msg)
-			case messaging.ChangesetApplyEvent:
-				//l.controller.Message(msg)
-			case messaging.ChangesetRollbackEvent:
-				//l.controller.Message(msg)
+			case messaging.DataChangeEvent:
+				forwardDataChangeEvent(f, msg)
 			default:
 			}
 		default:
 		}
+	}
+}
+
+func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
+	switch msg.Header.Get(messaging.ContentType) {
+	case common.ContentTypeProfile:
+		if p := common.GetProfile(f.handler, msg); p != nil && p.Next().IsScaleUp() {
+			// Need to send data change event if the next window of the profile is scaling up. This means that
+			// a periodic routine done to update SLOs has been completed in the Off-Peak window.
+			m := messaging.NewControlMessage(f.resiliency.Uri(), f.agentId, messaging.DataChangeEvent)
+			m.SetContentType(common.ContentTypePercentileSLO)
+			f.resiliency.Message(m)
+		}
+		f.resiliency.Message(msg)
+	case common.ContentTypeRedirectPlan:
+		f.redirect.Message(msg)
+	default:
+		f.handler.Handle(common.MessageEventErrorStatus(msg, f.agentId), "")
 	}
 }
