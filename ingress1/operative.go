@@ -1,6 +1,7 @@
 package ingress1
 
 import (
+	"fmt"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
@@ -122,6 +123,7 @@ func runFieldOperative(f *fieldOperative) {
 				f.handler.AddActivity(f.agentId, messaging.ShutdownEvent)
 				return
 			case messaging.DataChangeEvent:
+				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
 				forwardDataChangeEvent(f, msg)
 			default:
 			}
@@ -133,7 +135,7 @@ func runFieldOperative(f *fieldOperative) {
 func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
 	switch msg.Header.Get(messaging.ContentType) {
 	case common.ContentTypeProfile:
-		if p := common.GetProfile(f.handler, msg); p != nil && p.Next().IsScaleUp() {
+		if p := common.GetProfile(f.handler, f.agentId, msg); p != nil && p.Next().IsScaleUp() {
 			// Need to send data change event if the next window of the profile is scaling up. This means that
 			// a periodic routine done to update SLOs has been completed in the Off-Peak window.
 			m := messaging.NewControlMessage(f.resiliency.Uri(), f.agentId, messaging.DataChangeEvent)
@@ -144,6 +146,6 @@ func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
 	case common.ContentTypeRedirectPlan:
 		f.redirect.Message(msg)
 	default:
-		f.handler.Handle(common.MessageEventErrorStatus(msg, f.agentId), "")
+		f.handler.Handle(common.MessageEventErrorStatus(f.agentId, msg), "")
 	}
 }

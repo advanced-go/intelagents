@@ -80,7 +80,7 @@ func (r *redirectProcess) Run() {
 	if r.running {
 		return
 	}
-	go runRedirectProcess(r, redirection, common.Observe, guide)
+	go runRedirectProcess(r, redirection, common.Observe, localGuidance)
 }
 
 // startup - start tickers

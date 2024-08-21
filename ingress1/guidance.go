@@ -22,7 +22,7 @@ type guidance struct {
 	resiliencyState func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressResiliencyState, *core.Status)
 }
 
-var guide = func() *guidance {
+var localGuidance = func() *guidance {
 	return &guidance{
 		percentileSLO: func(h core.ErrorHandler, origin core.Origin) (resiliency1.PercentileSLO, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)

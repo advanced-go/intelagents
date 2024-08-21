@@ -77,13 +77,13 @@ func (p *Profile) CaseOfficerDuration() time.Duration {
 	}
 }
 
-func GetProfile(h core.ErrorHandler, msg *messaging.Message) *Profile {
+func GetProfile(h core.ErrorHandler, agentId string, msg *messaging.Message) *Profile {
 	if !msg.IsContentType(ContentTypeProfile) {
 		return nil
 	}
 	if p, ok := msg.Body.(*Profile); ok {
 		return p
 	}
-	h.Handle(ProfileTypeErrorStatus(msg.Body), "")
+	h.Handle(ProfileTypeErrorStatus(agentId, msg.Body), "")
 	return nil
 }

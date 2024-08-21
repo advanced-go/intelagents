@@ -66,7 +66,7 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go resiliencyRun(r, resilience, common.Observe, common.Exp, guide)
+	go resiliencyRun(r, resilience, common.Observe, common.Exp, localGuidance)
 }
 
 // Shutdown - shutdown the agent
@@ -127,24 +127,23 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
 			case messaging.DataChangeEvent:
-				if msg.IsContentType(common.ContentTypeProfile) {
-					r.handler.AddActivity(r.agentId, "onDataChange() - profile")
-					if p := common.GetProfile(r.handler, msg); p != nil {
-						r.reviseTicker(p.ResiliencyDuration(-1))
-					}
-				} else {
-					if msg.IsContentType(common.ContentTypePercentileSLO) {
-						r.handler.AddActivity(r.agentId, "onDataChange() - percentile")
-						r.updatePercentileSLO(guide)
-					}
-				}
-			default:
+				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
+				processDataChangeEvent(r, msg, guide)
 			}
 		default:
 		}
 	}
 }
 
-func processDataChangeEvent(r *redirect, msg *messaging.Message) {
-
+func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *guidance) {
+	switch msg.ContentType() {
+	case common.ContentTypeProfile:
+		if p := common.GetProfile(r.handler, r.agentId, msg); p != nil {
+			r.reviseTicker(p.ResiliencyDuration(-1))
+		}
+	case common.ContentTypePercentileSLO:
+		r.updatePercentileSLO(guide)
+	default:
+		r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
+	}
 }

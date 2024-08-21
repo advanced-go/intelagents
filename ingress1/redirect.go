@@ -95,7 +95,7 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, redirection, guide)
+	go runRedirect(r, redirection, localGuidance)
 }
 
 // startup - start tickers
@@ -151,7 +151,7 @@ func runRedirect(r *redirect, fn *redirectFunc, guide *guidance) {
 					//r.updateRedirectPlan(guide)
 					//r.updatePercentileSLO(guide)
 				} else {
-					r.handler.Handle(common.RedirectPlanTypeErrorStatus(msg.Body), "")
+					r.handler.Handle(common.RedirectPlanTypeErrorStatus(r.agentId, msg.Body), "")
 				}
 			default:
 			}
