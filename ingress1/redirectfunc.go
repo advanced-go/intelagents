@@ -6,7 +6,6 @@ import (
 	"github.com/advanced-go/stdlib/core"
 )
 
-// A nod to Linus Torvalds and plain C
 type redirectFunc struct {
 	startup func(r *redirect, guide *guidance) (*resiliency1.IngressRedirectState, *core.Status)
 	process func(r *redirect, observe *common.Observation) *core.Status

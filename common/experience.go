@@ -9,11 +9,9 @@ import (
 )
 
 const (
-	//queryInferenceDuration  = time.Second * 2
 	addInferenceDuration = time.Second * 2
-	//insertActionDuration    = time.Second * 2
-	getActionDuration = time.Second * 2
-	addActionDuration = time.Second * 2
+	getActionDuration    = time.Second * 2
+	addActionDuration    = time.Second * 2
 )
 
 // A nod to Linus Torvalds and plain C
@@ -86,7 +84,5 @@ var Exp = func() *Experience {
 			}
 			return status
 		},
-		//processControllerAction: controllerAction,
-		//reviseTicker:  controllerReviseTicker,
 	}
 }()

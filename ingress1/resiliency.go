@@ -129,6 +129,8 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 			case messaging.DataChangeEvent:
 				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
 				processDataChangeEvent(r, msg, guide)
+			default:
+				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
 			}
 		default:
 		}
@@ -144,6 +146,6 @@ func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *guidan
 	case common.ContentTypePercentileSLO:
 		r.updatePercentileSLO(guide)
 	default:
-		r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
+		r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg), "")
 	}
 }

@@ -126,6 +126,7 @@ func runFieldOperative(f *fieldOperative) {
 				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
 				forwardDataChangeEvent(f, msg)
 			default:
+				f.handler.Handle(common.MessageEventErrorStatus(f.agentId, msg), "")
 			}
 		default:
 		}
@@ -146,6 +147,6 @@ func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
 	case common.ContentTypeRedirectPlan:
 		f.redirect.Message(msg)
 	default:
-		f.handler.Handle(common.MessageEventErrorStatus(f.agentId, msg), "")
+		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
 	}
 }
