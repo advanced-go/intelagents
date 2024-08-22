@@ -8,17 +8,12 @@ import (
 )
 
 type redirectFunc struct {
-	startup func(r *redirect, guide *guidance) (*resiliency1.IngressRedirectState, *core.Status)
 	process func(r *redirect, observe *common.Observation, guide *common.Guidance) (completed bool, status *core.Status)
+	update  func(r *redirect, guide *common.Guidance, local *guidance, ok bool) *core.Status
 }
 
 var redirection = func() *redirectFunc {
 	return &redirectFunc{
-		startup: func(r *redirect, guide *guidance) (*resiliency1.IngressRedirectState, *core.Status) {
-			s, status := guide.redirectState(r.handler, r.origin)
-			r.startup()
-			return s, status
-		},
 		// TODO : based on process need to do the following:
 		// 1. Process observation and determine if SLO is met
 		// 2. If SLO is met, then update percentage
@@ -45,6 +40,25 @@ var redirection = func() *redirectFunc {
 				r.updatePercentage()
 			}
 			return completed, status
+		},
+		update: func(r *redirect, guide *common.Guidance, local *guidance, ok bool) *core.Status {
+			rs := resiliency1.RedirectStatusSucceeded
+			if !ok {
+				rs = resiliency1.RedirectStatusFailed
+			}
+			status := local.updateRedirect(r.handler, r.origin, rs)
+			if !status.OK() {
+				return status
+			}
+			status = guide.AddRedirectAction(r.handler, r.origin, &resiliency1.RedirectAction{
+				EntryId:     r.state.EntryId,
+				RouteName:   r.state.RouteName,
+				CreatedTS:   time.Time{},
+				InferenceId: 0,
+				Location:    r.state.Location,
+				StatusCode:  r.state.Status,
+			})
+			return status
 		},
 	}
 }()

@@ -16,15 +16,6 @@ const (
 
 // Responsibilities:
 //  1. Startup + Restart Events
-//     a. Read all egress route configurations
-//     b. If authority routing is configured, read all host names
-//     c. Create all egress controller agents and a dependency agent if configured
-//  2. Changeset Apply Event
-//     a. Read new egress and dependency configurations, update controllers and dependency agent
-//  3. Changeset Rollback Event
-//     b. Read previous egress and dependency configurations, update controllers and dependency agent
-//
-// 4. Polling - What if an event is missed?? Need some way to save events in database.
 
 type redirect struct {
 	running      bool
@@ -140,11 +131,7 @@ func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, gui
 			r.handler.AddActivity(r.agentId, "onTick()")
 			completed, status := fn.process(r, observe, guide)
 			if completed {
-				rs := resiliency1.RedirectStatusSucceeded
-				if !status.OK() {
-					rs = resiliency1.RedirectStatusFailed
-				}
-				localGuide.updateRedirect(r.handler, r.origin, rs)
+				fn.update(r, guide, localGuide, status.OK())
 				r.handler.Message(messaging.NewControlMessage("", r.agentId, RedirectCompletedEvent))
 				r.shutdown()
 				return
