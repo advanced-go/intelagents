@@ -97,16 +97,6 @@ func (r *redirect) shutdown() {
 	r.ticker.Stop()
 }
 
-/*
-func (r *redirect) updateRedirectPlan(guide *guidance) {
-	p, status := guide.redirectPlan(r.handler, r.origin)
-	if status.OK() {
-		r.state.Location = p.Location
-		r.state.Status = p.Status
-	}
-}
-*/
-
 func (r *redirect) updatePercentage() {
 	switch r.state.Percentage {
 	case 0:

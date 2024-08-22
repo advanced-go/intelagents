@@ -150,7 +150,6 @@ func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
 			f.resiliency.Message(m)
 		}
 		f.resiliency.Message(msg)
-	//case common.ContentTypeRedirectPlan:
 	default:
 		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
 	}

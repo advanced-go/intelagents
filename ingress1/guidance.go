@@ -12,10 +12,8 @@ const (
 	getDuration = time.Second * 2
 )
 
-// A nod to Linus Torvalds and plain C
 type guidance struct {
 	percentileSLO  func(h core.ErrorHandler, origin core.Origin) (resiliency1.PercentileSLO, *core.Status)
-	redirectPlan   func(h core.ErrorHandler, origin core.Origin) (resiliency1.RedirectPlan, *core.Status)
 	updateRedirect func(h core.ErrorHandler, origin core.Origin, status string) *core.Status
 
 	redirectState   func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressRedirectState, *core.Status)
@@ -32,18 +30,6 @@ var localGuidance = func() *guidance {
 				h.Handle(status, "")
 			}
 			return e, status
-		},
-		redirectPlan: func(h core.ErrorHandler, origin core.Origin) (resiliency1.RedirectPlan, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
-			defer cancel()
-			e, status := resiliency1.GetRedirectPlan(ctx, origin)
-			if status.OK() {
-				return e, status
-			}
-			if !status.NotFound() {
-				h.Handle(status, "")
-			}
-			return resiliency1.RedirectPlan{}, status
 		},
 		updateRedirect: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addDuration)

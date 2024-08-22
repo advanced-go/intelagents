@@ -8,12 +8,9 @@ import (
 	"github.com/advanced-go/stdlib/core"
 )
 
-// A nod to Linus Torvalds and plain C
 type resiliencyFunc struct {
 	startup func(r *resiliency, guide *guidance) *core.Status
 	process func(r *resiliency, observe *common.Observation, exp *common.Experience, guide *common.Guidance) ([]timeseries1.Entry, *core.Status)
-	//inference func(r *resiliency, entry []timeseries1.Entry) (inference1.Entry, *core.Status)
-	//action    func(r *resiliency, entry inference1.Entry) (resiliency1.RateLimitingAction, *core.Status)
 }
 
 var (
