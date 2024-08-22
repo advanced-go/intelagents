@@ -35,7 +35,7 @@ func redirectAgentUri(origin core.Origin) string {
 	return fmt.Sprintf("%v:%v.%v.%v.%v", RedirectClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// newRedirectAgent - create a new lead agent
+// newRedirectAgent - create a new redirect agent
 func newRedirectAgent(origin core.Origin, state *resiliency1.IngressRedirectState, handler messaging.OpsAgent) messaging.Agent {
 	return newRedirect(origin, state, handler, redirectDuration)
 }

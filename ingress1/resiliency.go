@@ -32,7 +32,7 @@ func resiliencyAgentUri(origin core.Origin) string {
 	return fmt.Sprintf("%v:%v.%v.%v.%v", Class, origin.Region, origin.Zone, origin.SubZone, origin.Host)
 }
 
-// NewResiliencyAgent - create a new resiliency agent
+// newResiliencyAgent - create a new resiliency agent
 func newResiliencyAgent(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.Agent {
 	return newResiliency(origin, profile, handler)
 }
