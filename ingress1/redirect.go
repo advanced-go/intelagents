@@ -21,7 +21,7 @@ type redirect struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
-	state        *resiliency1.IngressRedirectState
+	state        resiliency1.IngressRedirectState
 	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -36,11 +36,11 @@ func redirectAgentUri(origin core.Origin) string {
 }
 
 // newRedirectAgent - create a new redirect agent
-func newRedirectAgent(origin core.Origin, state *resiliency1.IngressRedirectState, handler messaging.OpsAgent) messaging.Agent {
+func newRedirectAgent(origin core.Origin, state resiliency1.IngressRedirectState, handler messaging.OpsAgent) messaging.Agent {
 	return newRedirect(origin, state, handler, redirectDuration)
 }
 
-func newRedirect(origin core.Origin, state *resiliency1.IngressRedirectState, handler messaging.OpsAgent, tickerDur time.Duration) *redirect {
+func newRedirect(origin core.Origin, state resiliency1.IngressRedirectState, handler messaging.OpsAgent, tickerDur time.Duration) *redirect {
 	r := new(redirect)
 	r.agentId = redirectAgentUri(origin)
 	r.origin = origin

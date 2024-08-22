@@ -17,7 +17,7 @@ type resiliency struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
-	state        *resiliency1.IngressResiliencyState
+	state        resiliency1.IngressResiliencyState
 	profile      *common.Profile
 	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
@@ -41,7 +41,7 @@ func newResiliency(origin core.Origin, profile *common.Profile, handler messagin
 	r := new(resiliency)
 	r.origin = origin
 	r.agentId = resiliencyAgentUri(origin)
-	r.state = resiliency1.NewIngressResiliencyState()
+	resiliency1.NewIngressResiliencyState(&r.state)
 	r.profile = profile
 	r.ticker = messaging.NewTicker(profile.ResiliencyDuration(-1))
 	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)

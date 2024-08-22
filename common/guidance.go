@@ -25,8 +25,8 @@ type Guidance struct {
 
 	FailoverPlan func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.FailoverPlan, *core.Status)
 
-	RedirectState   func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressRedirectState, *core.Status)
-	ResiliencyState func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressResiliencyState, *core.Status)
+	RedirectState   func(h core.ErrorHandler, origin core.Origin) (resiliency1.IngressRedirectState, *core.Status)
+	ResiliencyState func(h core.ErrorHandler, origin core.Origin) (resiliency1.IngressResiliencyState, *core.Status)
 	EgressState     func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.EgressState, *core.Status)
 }
 
@@ -86,7 +86,7 @@ var Guide = func() *Guidance {
 			}
 			return s, status
 		},
-		RedirectState: func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressRedirectState, *core.Status) {
+		RedirectState: func(h core.ErrorHandler, origin core.Origin) (resiliency1.IngressRedirectState, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
 			s, status := resiliency1.GetIngressRedirectState(ctx, origin)
@@ -95,7 +95,7 @@ var Guide = func() *Guidance {
 			}
 			return s, status
 		},
-		ResiliencyState: func(h core.ErrorHandler, origin core.Origin) (*resiliency1.IngressResiliencyState, *core.Status) {
+		ResiliencyState: func(h core.ErrorHandler, origin core.Origin) (resiliency1.IngressResiliencyState, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
 			s, status := resiliency1.GetIngressResiliencyState(ctx, origin)

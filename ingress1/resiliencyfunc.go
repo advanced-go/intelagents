@@ -25,7 +25,7 @@ var (
 			startup: func(r *resiliency, guide *common.Guidance) *core.Status {
 				s, status := guide.ResiliencyState(r.handler, r.origin)
 				if status.OK() {
-					*r.state = *s
+					r.state = s
 				}
 				r.startup()
 				return status

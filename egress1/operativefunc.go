@@ -9,11 +9,10 @@ import (
 
 type operativeFunc struct {
 	startup func(f *fieldOperative, guide *common.Guidance) *core.Status
-	update  func(f *fieldOperative, guide *guidance) *core.Status
 }
 
 var (
-	newAgent = func(origin core.Origin, profile *common.Profile, state *resiliency1.EgressState, handler messaging.OpsAgent) messaging.Agent {
+	newAgent = func(origin core.Origin, profile *common.Profile, state resiliency1.EgressState, handler messaging.OpsAgent) messaging.Agent {
 		return newResiliencyAgent(origin, profile, state, handler)
 	}
 
@@ -42,7 +41,7 @@ func updateExchange(f *fieldOperative, entries []resiliency1.EgressState) {
 			InstanceId: "",
 			Route:      "",
 		}
-		agent := newResiliencyAgent(o, f.profile, &e, f.handler)
+		agent := newAgent(o, f.profile, e, f.handler)
 		f.agents.Register(agent)
 		agent.Run()
 	}

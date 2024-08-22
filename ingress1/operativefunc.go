@@ -10,7 +10,7 @@ import (
 
 type operativeFunc struct {
 	setRedirectState func(f *fieldOperative, guide *common.Guidance) *core.Status
-	newRedirectAgent func(f *fieldOperative, state *resiliency1.IngressRedirectState)
+	newRedirectAgent func(f *fieldOperative, state resiliency1.IngressRedirectState)
 	processRedirect  func(f *fieldOperative, fn *operativeFunc, guide *common.Guidance)
 }
 
@@ -19,11 +19,11 @@ var operative = func() *operativeFunc {
 		setRedirectState: func(f *fieldOperative, guide *common.Guidance) *core.Status {
 			s, status := guide.RedirectState(f.handler, f.origin)
 			if status.OK() {
-				*f.state = *s
+				f.state = s
 			}
 			return status
 		},
-		newRedirectAgent: func(f *fieldOperative, state *resiliency1.IngressRedirectState) {
+		newRedirectAgent: func(f *fieldOperative, state resiliency1.IngressRedirectState) {
 			f.redirect = newRedirectAgent(f.origin, state, f)
 		},
 		processRedirect: processRedirect,

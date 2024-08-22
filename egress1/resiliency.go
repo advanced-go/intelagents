@@ -17,7 +17,7 @@ type resiliency struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
-	state        *resiliency1.EgressState
+	state        resiliency1.EgressState
 	profile      *common.Profile
 	ticker       *messaging.Ticker
 	ctrlC        chan *messaging.Message
@@ -30,16 +30,16 @@ func ResiliencyAgentUri(origin core.Origin) string {
 }
 
 // newResiliencyAgent - create a new Resiliency agent
-func newResiliencyAgent(origin core.Origin, profile *common.Profile, state *resiliency1.EgressState, handler messaging.OpsAgent) messaging.OpsAgent {
+func newResiliencyAgent(origin core.Origin, profile *common.Profile, state resiliency1.EgressState, handler messaging.OpsAgent) messaging.OpsAgent {
 	return newResiliency(origin, profile, state, handler)
 }
 
-func newResiliency(origin core.Origin, profile *common.Profile, state *resiliency1.EgressState, handler messaging.OpsAgent) *resiliency {
+func newResiliency(origin core.Origin, profile *common.Profile, state resiliency1.EgressState, handler messaging.OpsAgent) *resiliency {
 	c := new(resiliency)
 	c.agentId = ResiliencyAgentUri(origin)
 	c.origin = origin
 	c.profile = profile
-	*c.state = *state
+	c.state = state
 	c.ticker = messaging.NewTicker(profile.ResiliencyDuration(-1))
 	c.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	c.handler = handler
@@ -74,7 +74,7 @@ func (r *resiliency) Shutdown() {
 		return
 	}
 	r.running = false
-	if r.shutdown != nil {
+	if r.shutdownFunc != nil {
 		r.shutdown()
 	}
 	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)

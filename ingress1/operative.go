@@ -22,7 +22,7 @@ type fieldOperative struct {
 	agentId      string
 	origin       core.Origin
 	profile      *common.Profile
-	state        *resiliency1.IngressRedirectState
+	state        resiliency1.IngressRedirectState
 	resiliency   messaging.Agent
 	redirect     messaging.Agent
 	ctrlC        chan *messaging.Message
@@ -43,7 +43,7 @@ func newFieldOperative(origin core.Origin, profile *common.Profile, resilience m
 	f := new(fieldOperative)
 	f.agentId = FieldOperativeUri(origin)
 	f.origin = origin
-	f.state = resiliency1.NewIngressRedirectState()
+	resiliency1.NewIngressRedirectState(&f.state)
 	f.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	f.handler = handler
 	if resilience == nil {

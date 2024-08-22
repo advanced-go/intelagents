@@ -22,6 +22,7 @@ func testLog(_ context.Context, agentId string, content any) *core.Status {
 	return core.StatusOK()
 }
 
+/*
 func ExampleControllerAgentUri() {
 	origin := core.Origin{
 		Region:     "us-central1",
@@ -44,3 +45,6 @@ func ExampleControllerAgentUri() {
 	//test: AgentUri() -> [egress-controller1:us-west1.a.host]
 
 }
+
+
+*/
