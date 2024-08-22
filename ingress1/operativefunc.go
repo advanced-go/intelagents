@@ -30,6 +30,7 @@ var operative = func() *operativeFunc {
 	}
 }()
 
+// TODO: What is the correct handling for SQL commands of: insert, update, delete?
 func processRedirect(f *fieldOperative, fn *operativeFunc, guide *common.Guidance) {
 	if f.redirect != nil {
 		err := errors.New(fmt.Sprintf("error: currently active redirect agent:%v", f.agentId))

@@ -93,10 +93,10 @@ func runRedirectCDC(r *redirectCDC, guide *guidance) {
 				return
 			case messaging.ProcessEvent:
 				r.handler.AddActivity(r.agentId, messaging.ProcessEvent)
-				entry, status := guide.updatedRedirectPlans(r.handler, r.origin, r.lastId)
+				plans, status := guide.updatedRedirectPlans(r.handler, r.origin, r.lastId)
 				if status.OK() {
-					r.lastId = entry[len(entry)-1].EntryId
-					for _, e := range entry {
+					r.lastId = plans[len(plans)-1].EntryId
+					for _, e := range plans {
 						err := r.exchange.Send(newRedirectMessage(e))
 						if err != nil {
 							r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
@@ -116,6 +116,7 @@ func newRedirectMessage(e resiliency1.RedirectPlan) *messaging.Message {
 	to := redirectCDCUri(origin)
 	msg := messaging.NewControlMessage(to, "", messaging.DataChangeEvent)
 	msg.SetContentType(common.ContentTypeRedirectPlan)
+	msg.Body = e
 	return msg
 }
 

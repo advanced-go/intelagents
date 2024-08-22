@@ -93,10 +93,10 @@ func runFailoverCDC(f *failoverCDC, guide *guidance) {
 				return
 			case messaging.ProcessEvent:
 				f.handler.AddActivity(f.agentId, messaging.ProcessEvent)
-				entry, status := guide.updatedFailoverPlans(f.handler, f.origin, f.lastId)
+				plans, status := guide.updatedFailoverPlans(f.handler, f.origin, f.lastId)
 				if status.OK() {
-					f.lastId = entry[len(entry)-1].EntryId
-					for _, e := range entry {
+					f.lastId = plans[len(plans)-1].EntryId
+					for _, e := range plans {
 						err := f.exchange.Send(newFailoverMessage(e))
 						if err != nil {
 							f.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
@@ -116,5 +116,6 @@ func newFailoverMessage(e resiliency1.FailoverPlan) *messaging.Message {
 	to := failoverCDCUri(origin)
 	msg := messaging.NewControlMessage(to, "", messaging.DataChangeEvent)
 	msg.SetContentType(common.ContentTypeFailoverPlan)
+	msg.Body = e
 	return msg
 }
