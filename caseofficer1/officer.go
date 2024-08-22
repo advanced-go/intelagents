@@ -95,11 +95,13 @@ func (c *caseOfficer) Shutdown() {
 		c.shutdownFunc()
 	}
 	msg := messaging.NewControlMessage(c.agentId, c.agentId, messaging.ShutdownEvent)
+	// Is this right?
+	c.ingressAgents.Broadcast(msg)
+	c.egressAgents.Broadcast(msg)
 	if c.ctrlC != nil {
 		c.ctrlC <- msg
 	}
-	c.ingressAgents.Broadcast(msg)
-	c.egressAgents.Broadcast(msg)
+
 }
 
 func (c *caseOfficer) startup() {
@@ -142,6 +144,7 @@ func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *guidance) {
 					c.egressAgents.Broadcast(msg)
 				}
 			default:
+				c.handler.Handle(common.MessageEventErrorStatus(c.agentId, msg), "")
 			}
 		default:
 		}

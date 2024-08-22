@@ -28,7 +28,7 @@ func failoverCDCUri(origin core.Origin) string {
 
 // failoverCDCAgent - create a new redirect CDC agent
 func failoverCDCAgent(origin core.Origin, lastId int, exchange *messaging.Exchange, handler messaging.OpsAgent) messaging.Agent {
-	return newRedirectCDC(origin, lastId, exchange, handler)
+	return newFailoverCDC(origin, lastId, exchange, handler)
 }
 
 // newFailoverCDC - create a new failoverCDCC struct
