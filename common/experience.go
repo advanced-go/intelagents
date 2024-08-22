@@ -11,9 +11,7 @@ const (
 	addInferenceDuration = time.Second * 2
 )
 
-// A nod to Linus Torvalds and plain C
-
-// Experience - experience functions
+// Experience - experience functions struct, a nod to Linus Torvalds and plain C
 type Experience struct {
 	AddInference func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) *core.Status
 

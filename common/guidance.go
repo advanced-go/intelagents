@@ -11,9 +11,7 @@ const (
 	addActionDuration = time.Second * 2
 )
 
-// A nod to Linus Torvalds and plain C
-
-// Guidance - guidance functions
+// Guidance - guidance functions struct, a nod to Linus Torvalds and plain C
 type Guidance struct {
 	AddRateLimitingAction func(h core.ErrorHandler, origin core.Origin, action *resiliency1.RateLimitingAction) *core.Status
 	AddRoutingAction      func(h core.ErrorHandler, origin core.Origin, action *resiliency1.RoutingAction) *core.Status

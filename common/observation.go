@@ -11,9 +11,7 @@ const (
 	timeseriesDuration = time.Second * 2
 )
 
-// A nod to Linus Torvalds and plain C
-
-// Observation - observation functions
+// Observation - observation functions struct, a nod to Linus Torvalds and plain C
 type Observation struct {
 	IngressTimeseries func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
 	EgressTimeseries  func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
