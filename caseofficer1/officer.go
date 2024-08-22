@@ -90,14 +90,13 @@ func (c *caseOfficer) Shutdown() {
 		return
 	}
 	c.running = false
-	// Is this needed or called in the right place??
+	// Removes agent from its exchange if registered
 	if c.shutdownFunc != nil {
 		c.shutdownFunc()
 	}
 	msg := messaging.NewControlMessage(c.agentId, c.agentId, messaging.ShutdownEvent)
-	// Is this right?
-	c.ingressAgents.Broadcast(msg)
-	c.egressAgents.Broadcast(msg)
+	c.ingressAgents.Shutdown()
+	c.egressAgents.Shutdown()
 	if c.ctrlC != nil {
 		c.ctrlC <- msg
 	}

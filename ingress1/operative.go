@@ -82,6 +82,7 @@ func (f *fieldOperative) Shutdown() {
 		return
 	}
 	f.running = false
+	// Removes agent from its exchange if registered
 	if f.shutdownFunc != nil {
 		f.shutdownFunc()
 	}
