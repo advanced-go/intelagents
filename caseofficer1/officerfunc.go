@@ -47,7 +47,7 @@ var officer = func() *caseOfficerFunc {
 	}
 }()
 
-func updateExchange(c *caseOfficer, entries []resiliency1.Entry) {
+func updateExchange(c *caseOfficer, entries []resiliency1.HostEntry) {
 	for _, e := range entries {
 		o := core.Origin{
 			Region:     e.Region,
