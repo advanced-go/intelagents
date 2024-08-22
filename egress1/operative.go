@@ -28,6 +28,7 @@ type fieldOperative struct {
 	running      bool
 	agentId      string
 	origin       core.Origin
+	profile      *common.Profile
 	agents       *messaging.Exchange
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
@@ -41,9 +42,14 @@ func FieldOperativeUri(origin core.Origin) string {
 
 // NewFieldOperative - create a new field operative
 func NewFieldOperative(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
+	return newFieldOperative(origin, profile, handler)
+}
+
+func newFieldOperative(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) *fieldOperative {
 	f := new(fieldOperative)
 	f.agentId = FieldOperativeUri(origin)
 	f.origin = origin
+	f.profile = profile
 	f.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	f.handler = handler
 	f.agents = messaging.NewExchange()
@@ -61,20 +67,16 @@ func (f *fieldOperative) Message(m *messaging.Message) { messaging.Mux(m, f.ctrl
 
 // Handle - error handler
 func (f *fieldOperative) Handle(status *core.Status, requestId string) *core.Status {
-	// TODO : Any operations specific processing ??  If not then forward to handler
 	return f.handler.Handle(status, requestId)
 }
 
 // AddActivity - add activity
 func (f *fieldOperative) AddActivity(agentId string, content any) {
-	// TODO : Any operations specific processing ??  If not then forward to handler
 	f.handler.AddActivity(agentId, content)
 }
 
 // Add - add a shutdown function
-func (f *fieldOperative) Add(fn func()) {
-	f.shutdownFunc = messaging.AddShutdown(f.shutdownFunc, fn)
-}
+func (f *fieldOperative) Add(fn func()) { f.shutdownFunc = messaging.AddShutdown(f.shutdownFunc, fn) }
 
 // Shutdown - shutdown the agent
 func (f *fieldOperative) Shutdown() {
@@ -97,18 +99,18 @@ func (f *fieldOperative) Run() {
 	if f.running {
 		return
 	}
-	go runFieldOperative(f, common.Guide)
+	go runFieldOperative(f, operative, common.Guide)
 }
 
 func (f *fieldOperative) shutdown() {
 	close(f.ctrlC)
 }
 
-func runFieldOperative(f *fieldOperative, guide *common.Guidance) {
+func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guidance) {
 	if f == nil {
 		return
 	}
-	//fn.processRedirect(f, fn, guide)
+	fn.startup(f, guide)
 
 	for {
 		select {
@@ -118,12 +120,10 @@ func runFieldOperative(f *fieldOperative, guide *common.Guidance) {
 				f.shutdown()
 				f.handler.AddActivity(f.agentId, messaging.ShutdownEvent)
 				return
-
 			case messaging.DataChangeEvent:
 				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
 				if msg.ContentType() == common.ContentTypeFailoverPlan {
-					msg.S
-					f.agents.Send()fn.processRedirect(f, fn, guide)
+					f.agents.Send(msg)
 				} else {
 					forwardDataChangeEvent(f, msg)
 				}
