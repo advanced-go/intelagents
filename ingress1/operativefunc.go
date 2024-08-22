@@ -26,21 +26,6 @@ var operative = func() *operativeFunc {
 			f.redirect = newRedirectAgent(f.origin, state, f)
 		},
 		processRedirect: processRedirect,
-
-		/*
-			process: func(r *redirect, observe *common.Observation) *core.Status {
-				r.handler.AddActivity(r.agentId, "onProcess()")
-				redirectOrigin := r.origin
-				redirectOrigin.Host = r.state.Location
-				_, status := observe.IngressTimeseries(r.handler, redirectOrigin)
-				if !status.OK() {
-					return status
-				}
-				// Need to verify that observation meets the percentile SLO
-				return core.StatusOK()
-			},
-
-		*/
 	}
 }()
 

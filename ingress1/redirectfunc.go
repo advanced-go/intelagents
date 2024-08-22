@@ -3,14 +3,13 @@ package ingress1
 import (
 	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
-	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
+	"time"
 )
 
 type redirectFunc struct {
-	startup  func(r *redirect, guide *guidance) (*resiliency1.IngressRedirectState, *core.Status)
-	process  func(r *redirect, observe *common.Observation, exp *common.Experience, guide *guidance) *core.Status
-	process2 func(r *resiliency, observe *common.Observation, exp *common.Experience) ([]timeseries1.Entry, *core.Status)
+	startup func(r *redirect, guide *guidance) (*resiliency1.IngressRedirectState, *core.Status)
+	process func(r *redirect, observe *common.Observation, guide *common.Guidance) (completed bool, status *core.Status)
 }
 
 var redirection = func() *redirectFunc {
@@ -21,41 +20,31 @@ var redirection = func() *redirectFunc {
 			return s, status
 		},
 		// TODO : based on process need to do the following:
-		// 1. Update percentage and send action
-		// 2. if status fail, then update redirect
-		// 3. if status succeed, then update redirect and set redirect action
-		// 4. IF done, then message parent and shutdown
-		process: func(r *redirect, observe *common.Observation, exp *common.Experience, guide *guidance) *core.Status {
+		// 1. Process observation and determine if SLO is met
+		// 2. If SLO is met, then update percentage
+		// 3. How to update percentage
+		process: func(r *redirect, observe *common.Observation, guide *common.Guidance) (completed bool, status *core.Status) {
 			redirectOrigin := r.origin
 			redirectOrigin.Host = r.state.Location
-			_, status := observe.IngressTimeseries(r.handler, redirectOrigin)
+			_, status = observe.IngressTimeseries(r.handler, redirectOrigin)
 			if !status.OK() {
-				return status
+				return true, status
 			}
 			// Need to verify that observation meets the percentile SLO
-			return core.StatusOK()
-		},
-
-		process2: func(r *resiliency, observe *common.Observation, exp *common.Experience) ([]timeseries1.Entry, *core.Status) {
-			r.handler.AddActivity(r.agentId, "onTick")
-			ts, status1 := observe.IngressTimeseries(r.handler, r.origin)
-			if !status1.OK() || status1.NotFound() {
-				return ts, status1
+			// if the observation meets the SLO, then create a new Routing action
+			action := resiliency1.RoutingAction{
+				EntryId:     r.state.EntryId,
+				RouteName:   r.state.RouteName,
+				CreatedTS:   time.Time{},
+				InferenceId: 0,
+				Location:    r.state.Location,
+				Percentage:  r.state.Percentage,
 			}
-			i, status := resiliencyInference(r, ts)
-			if !status.OK() {
-				return ts, status
+			status = guide.AddRoutingAction(r.handler, r.origin, &action)
+			if !completed {
+				r.updatePercentage()
 			}
-			status = exp.AddInference(r.handler, r.origin, i)
-			if !status.OK() {
-				return ts, status
-			}
-			action, status2 := resiliencyAction(r, i)
-			if !status2.OK() {
-				return ts, status2
-			}
-			status = exp.AddRateLimitingAction(r.handler, r.origin, action)
-			return ts, status
+			return completed, status
 		},
 	}
 }()

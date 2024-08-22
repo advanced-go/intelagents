@@ -100,9 +100,7 @@ func (f *fieldOperative) Run() {
 	if f.running {
 		return
 	}
-	// Running resiliency and redirect agents as they need time to perform state initialization
 	f.resiliency.Run()
-	//f.redirect.Run()
 	go runFieldOperative(f, operative, localGuidance)
 }
 

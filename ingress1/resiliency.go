@@ -66,7 +66,7 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go resiliencyRun(r, resilience, common.Observe, common.Exp, localGuidance)
+	go resiliencyRun(r, resilience, common.Observe, common.Exp, common.Guide, localGuidance)
 }
 
 // Shutdown - shutdown the agent
@@ -107,15 +107,15 @@ func (r *resiliency) updatePercentileSLO(guide *guidance) {
 }
 
 // run - ingress resiliency
-func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observation, exp *common.Experience, guide *guidance) {
-	fn.startup(r, guide)
+func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observation, exp *common.Experience, guide *common.Guidance, localGuide *guidance) {
+	fn.startup(r, localGuide)
 
 	for {
 		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
 		select {
 		case <-r.ticker.C():
 			r.handler.AddActivity(r.agentId, "onTick")
-			fn.process(r, observe, exp)
+			fn.process(r, observe, exp, guide)
 		default:
 		}
 		// control channel processing
@@ -128,7 +128,7 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 				return
 			case messaging.DataChangeEvent:
 				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				processDataChangeEvent(r, msg, guide)
+				processDataChangeEvent(r, msg, localGuide)
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
 			}

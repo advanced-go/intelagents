@@ -32,10 +32,8 @@ type redirect struct {
 	origin       core.Origin
 	state        *resiliency1.IngressRedirectState
 	ticker       *messaging.Ticker
-	interval     time.Duration
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
-	exchange     *messaging.Exchange
 	shutdownFunc func()
 }
 
@@ -94,7 +92,7 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, redirection, common.Observe, common.Exp, localGuidance)
+	go runRedirect(r, redirection, common.Observe, common.Guide, localGuidance)
 }
 
 // startup - start tickers
@@ -104,7 +102,6 @@ func (r *redirect) startup() {
 
 // shutdown - close resources
 func (r *redirect) shutdown() {
-	//msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
 	close(r.ctrlC)
 	r.ticker.Stop()
 }
@@ -117,17 +114,6 @@ func (r *redirect) updateRedirectPlan(guide *guidance) {
 		r.state.Status = p.Status
 	}
 }
-
-func (r *redirect) updatePercentileSLO(guide *guidance) {
-	p, status := guide.percentileSLO(r.handler, r.origin)
-	if status.OK() {
-		r.state.Percent = p.Percent
-		r.state.Latency = p.Latency
-		r.state.Minimum = p.Minimum
-	}
-}
-
-
 */
 
 func (r *redirect) updatePercentage() {
@@ -146,15 +132,23 @@ func (r *redirect) updatePercentage() {
 	}
 }
 
-func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, exp *common.Experience, guide *guidance) {
+func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, guide *common.Guidance, localGuide *guidance) {
+	r.startup()
 	for {
 		select {
 		case <-r.ticker.C():
 			r.handler.AddActivity(r.agentId, "onTick()")
-			fn.process(r, observe, exp, guide)
-			// TODO : if process completed successfully, then return
-
-		// control channel
+			completed, status := fn.process(r, observe, guide)
+			if completed {
+				rs := resiliency1.RedirectStatusSucceeded
+				if !status.OK() {
+					rs = resiliency1.RedirectStatusFailed
+				}
+				localGuide.updateRedirect(r.handler, r.origin, rs)
+				r.handler.Message(messaging.NewControlMessage("", r.agentId, RedirectCompletedEvent))
+				r.shutdown()
+				return
+			}
 		case msg := <-r.ctrlC:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
