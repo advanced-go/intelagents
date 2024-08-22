@@ -9,7 +9,7 @@ import (
 
 type redirectFunc struct {
 	process func(r *redirect, observe *common.Observation, guide *common.Guidance) (completed bool, status *core.Status)
-	update  func(r *redirect, guide *common.Guidance, local *guidance, ok bool) *core.Status
+	update  func(r *redirect, guide *common.Guidance, ok bool) *core.Status
 }
 
 var redirection = func() *redirectFunc {
@@ -41,12 +41,12 @@ var redirection = func() *redirectFunc {
 			}
 			return completed, status
 		},
-		update: func(r *redirect, guide *common.Guidance, local *guidance, ok bool) *core.Status {
+		update: func(r *redirect, guide *common.Guidance, ok bool) *core.Status {
 			rs := resiliency1.RedirectStatusSucceeded
 			if !ok {
 				rs = resiliency1.RedirectStatusFailed
 			}
-			status := local.updateRedirect(r.handler, r.origin, rs)
+			status := guide.UpdateRedirect(r.handler, r.origin, rs)
 			if !status.OK() {
 				return status
 			}

@@ -102,14 +102,14 @@ func (f *fieldOperative) Run() {
 		return
 	}
 	f.resiliency.Run()
-	go runFieldOperative(f, operative, localGuidance)
+	go runFieldOperative(f, operative, common.Guide)
 }
 
 func (f *fieldOperative) shutdown() {
 	close(f.ctrlC)
 }
 
-func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *guidance) {
+func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guidance) {
 	if f == nil {
 		return
 	}

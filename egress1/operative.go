@@ -25,19 +25,10 @@ const (
 // 4. Polling - What if an event is missed?? Need some way to save events in database.
 
 type fieldOperative struct {
-	running bool
-	uri     string
-
-	// Assignment
-	origin core.Origin
-
-	// Guidance/configuration
-	guideVersion         string // Version for authority and egress, helps to stop duplicate updates of egress routes
-	processingScheduleId string
-
-	// Routing controllers
-	controllers *messaging.Exchange
-
+	running      bool
+	agentId      string
+	origin       core.Origin
+	agents       *messaging.Exchange
 	interval     time.Duration
 	ctrlC        chan *messaging.Message
 	handler      messaging.OpsAgent
@@ -45,21 +36,17 @@ type fieldOperative struct {
 }
 
 func FieldOperativeUri(origin core.Origin) string {
-	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.Host)
-	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", FieldOperativeClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return origin.Uri(FieldOperativeClass)
 }
 
 // NewFieldOperative - create a new field operative
 func NewFieldOperative(origin core.Origin, profile *common.Profile, handler messaging.OpsAgent) messaging.OpsAgent {
 	f := new(fieldOperative)
-	f.uri = FieldOperativeUri(origin)
+	f.agentId = FieldOperativeUri(origin)
 	f.origin = origin
-
 	f.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
 	f.handler = handler
-	f.controllers = messaging.NewExchange()
+	f.agents = messaging.NewExchange()
 	return f
 }
 
@@ -67,7 +54,7 @@ func NewFieldOperative(origin core.Origin, profile *common.Profile, handler mess
 func (f *fieldOperative) String() string { return f.Uri() }
 
 // Uri - agent identifier
-func (f *fieldOperative) Uri() string { return f.uri }
+func (f *fieldOperative) Uri() string { return f.agentId }
 
 // Message - message the agent
 func (f *fieldOperative) Message(m *messaging.Message) { messaging.Mux(m, f.ctrlC, nil, nil) }
@@ -98,7 +85,8 @@ func (f *fieldOperative) Shutdown() {
 	if f.shutdownFunc != nil {
 		f.shutdownFunc()
 	}
-	msg := messaging.NewControlMessage(f.uri, f.uri, messaging.ShutdownEvent)
+	f.agents.Shutdown()
+	msg := messaging.NewControlMessage(f.agentId, f.agentId, messaging.ShutdownEvent)
 	if f.ctrlC != nil {
 		f.ctrlC <- msg
 	}
@@ -109,5 +97,49 @@ func (f *fieldOperative) Run() {
 	if f.running {
 		return
 	}
-	//go runLead(a, newObservation(a.handler), newGuidance(a.handler), newOperations(a.handler))
+	go runFieldOperative(f, common.Guide)
+}
+
+func (f *fieldOperative) shutdown() {
+	close(f.ctrlC)
+}
+
+func runFieldOperative(f *fieldOperative, guide *common.Guidance) {
+	if f == nil {
+		return
+	}
+	//fn.processRedirect(f, fn, guide)
+
+	for {
+		select {
+		case msg := <-f.ctrlC:
+			switch msg.Event() {
+			case messaging.ShutdownEvent:
+				f.shutdown()
+				f.handler.AddActivity(f.agentId, messaging.ShutdownEvent)
+				return
+
+			case messaging.DataChangeEvent:
+				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
+				if msg.ContentType() == common.ContentTypeFailoverPlan {
+					msg.S
+					f.agents.Send()fn.processRedirect(f, fn, guide)
+				} else {
+					forwardDataChangeEvent(f, msg)
+				}
+			default:
+				f.handler.Handle(common.MessageEventErrorStatus(f.agentId, msg), "")
+			}
+		default:
+		}
+	}
+}
+
+func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
+	switch msg.Header.Get(messaging.ContentType) {
+	case common.ContentTypeProfile:
+		f.agents.Broadcast(msg)
+	default:
+		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
+	}
 }

@@ -83,7 +83,7 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, redirection, common.Observe, common.Guide, localGuidance)
+	go runRedirect(r, redirection, common.Observe, common.Guide)
 }
 
 // startup - start tickers
@@ -113,7 +113,7 @@ func (r *redirect) updatePercentage() {
 	}
 }
 
-func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, guide *common.Guidance, localGuide *guidance) {
+func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, guide *common.Guidance) {
 	r.startup()
 	for {
 		select {
@@ -121,7 +121,7 @@ func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, gui
 			r.handler.AddActivity(r.agentId, "onTick()")
 			completed, status := fn.process(r, observe, guide)
 			if completed {
-				fn.update(r, guide, localGuide, status.OK())
+				fn.update(r, guide, status.OK())
 				r.handler.Message(messaging.NewControlMessage("", r.agentId, RedirectCompletedEvent))
 				r.shutdown()
 				return

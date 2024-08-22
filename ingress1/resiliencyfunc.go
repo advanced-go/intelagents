@@ -9,7 +9,7 @@ import (
 )
 
 type resiliencyFunc struct {
-	startup func(r *resiliency, guide *guidance) *core.Status
+	startup func(r *resiliency, guide *common.Guidance) *core.Status
 	process func(r *resiliency, observe *common.Observation, exp *common.Experience, guide *common.Guidance) ([]timeseries1.Entry, *core.Status)
 }
 
@@ -22,8 +22,8 @@ var (
 	}
 	resilience = func() *resiliencyFunc {
 		return &resiliencyFunc{
-			startup: func(r *resiliency, guide *guidance) *core.Status {
-				s, status := guide.resiliencyState(r.handler, r.origin)
+			startup: func(r *resiliency, guide *common.Guidance) *core.Status {
+				s, status := guide.ResiliencyState(r.handler, r.origin)
 				if status.OK() {
 					*r.state = *s
 				}

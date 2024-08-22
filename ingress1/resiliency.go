@@ -66,7 +66,7 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go resiliencyRun(r, resilience, common.Observe, common.Exp, common.Guide, localGuidance)
+	go resiliencyRun(r, resilience, common.Observe, common.Exp, common.Guide)
 }
 
 // Shutdown - shutdown the agent
@@ -97,8 +97,8 @@ func (r *resiliency) reviseTicker(newDuration time.Duration) {
 	r.ticker.Start(newDuration)
 }
 
-func (r *resiliency) updatePercentileSLO(guide *guidance) {
-	p, status := guide.percentileSLO(r.handler, r.origin)
+func (r *resiliency) updatePercentileSLO(guide *common.Guidance) {
+	p, status := guide.PercentileSLO(r.handler, r.origin)
 	if status.OK() {
 		r.state.Percent = p.Percent
 		r.state.Latency = p.Latency
@@ -107,8 +107,8 @@ func (r *resiliency) updatePercentileSLO(guide *guidance) {
 }
 
 // run - ingress resiliency
-func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observation, exp *common.Experience, guide *common.Guidance, localGuide *guidance) {
-	fn.startup(r, localGuide)
+func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observation, exp *common.Experience, guide *common.Guidance) {
+	fn.startup(r, guide)
 
 	for {
 		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
@@ -128,7 +128,7 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 				return
 			case messaging.DataChangeEvent:
 				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				processDataChangeEvent(r, msg, localGuide)
+				processDataChangeEvent(r, msg, guide)
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
 			}
@@ -137,7 +137,7 @@ func resiliencyRun(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 	}
 }
 
-func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *guidance) {
+func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *common.Guidance) {
 	switch msg.ContentType() {
 	case common.ContentTypeProfile:
 		if p := common.GetProfile(r.handler, r.agentId, msg); p != nil {
