@@ -33,6 +33,7 @@ var (
 func updateExchange(f *fieldOperative, entries []resiliency1.EgressState) {
 	for i, _ := range entries {
 		e := entries[i]
+		// TODO: verify creation of origin from entries and field operative
 		o := core.Origin{
 			Region:     e.Region,
 			Zone:       e.Zone,

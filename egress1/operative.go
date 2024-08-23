@@ -136,7 +136,7 @@ func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guida
 }
 
 func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
-	switch msg.Header.Get(messaging.ContentType) {
+	switch msg.ContentType() {
 	case common.ContentTypeProfile:
 		f.agents.Broadcast(msg)
 	default:
