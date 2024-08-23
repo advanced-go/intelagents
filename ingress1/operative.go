@@ -113,7 +113,7 @@ func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guida
 	if f == nil {
 		return
 	}
-	fn.processRedirect(f, fn, guide)
+	fn.processRedirectStartup(f, fn, guide)
 
 	for {
 		select {
@@ -128,7 +128,7 @@ func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guida
 			case messaging.DataChangeEvent:
 				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
 				if msg.ContentType() == common.ContentTypeRedirectPlan {
-					fn.processRedirect(f, fn, guide)
+					fn.processRedirectMessage(f, fn, msg)
 				} else {
 					forwardDataChangeEvent(f, msg)
 				}
