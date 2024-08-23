@@ -8,26 +8,25 @@ import (
 )
 
 const (
-	addActionDuration = time.Second * 2
-	getDuration       = time.Second * 2
-	addDuration       = time.Second * 2
-	deleteDuration    = time.Second * 2
+	getDuration    = time.Second * 2
+	addDuration    = time.Second * 2
+	deleteDuration = time.Second * 2
 )
 
 // Guidance - guidance functions struct, a nod to Linus Torvalds and plain C
 type Guidance struct {
 	PercentileSLO      func(h core.ErrorHandler, origin core.Origin) (resiliency1.PercentileSLO, *core.Status)
 	UpdateRedirect     func(h core.ErrorHandler, origin core.Origin, status string) *core.Status
-	DeleteFailoverPlan func(h core.ErrorHandler, origin core.Origin) *core.Status
+	DeleteEgressConfig func(h core.ErrorHandler, origin core.Origin) *core.Status
 
 	RedirectState   func(h core.ErrorHandler, origin core.Origin) (resiliency1.IngressRedirectState, *core.Status)
 	ResiliencyState func(h core.ErrorHandler, origin core.Origin) (resiliency1.IngressResiliencyState, *core.Status)
 	EgressState     func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.EgressState, *core.Status)
 
-	Assignments          func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.HostEntry, resiliency1.LastCDCId, *core.Status)
-	NewAssignments       func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.HostEntry, *core.Status)
-	UpdatedRedirectPlans func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.RedirectPlan, *core.Status)
-	UpdatedFailoverPlans func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.FailoverPlan, *core.Status)
+	Assignments            func(h core.ErrorHandler, origin core.Origin) ([]resiliency1.HostEntry, resiliency1.LastCDCId, *core.Status)
+	NewAssignments         func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.HostEntry, *core.Status)
+	UpdatedRedirectConfigs func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.RedirectConfig, *core.Status)
+	UpdatedEgressConfigs   func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.EgressConfig, *core.Status)
 }
 
 var Guide = func() *Guidance {
@@ -44,16 +43,16 @@ var Guide = func() *Guidance {
 		UpdateRedirect: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addDuration)
 			defer cancel()
-			status1 := resiliency1.UpdateRedirectPlan(ctx, origin, status)
+			status1 := resiliency1.UpdateRedirectConfig(ctx, origin, status)
 			if !status1.OK() {
 				h.Handle(status1, "")
 			}
 			return status1
 		},
-		DeleteFailoverPlan: func(h core.ErrorHandler, origin core.Origin) *core.Status {
+		DeleteEgressConfig: func(h core.ErrorHandler, origin core.Origin) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), deleteDuration)
 			defer cancel()
-			status := resiliency1.DeleteFailoverPlan(ctx, origin)
+			status := resiliency1.DeleteEgressConfig(ctx, origin)
 			if !status.OK() && !status.NotFound() {
 				h.Handle(status, "")
 			}
@@ -104,19 +103,19 @@ var Guide = func() *Guidance {
 			}
 			return e, status
 		},
-		UpdatedRedirectPlans: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.RedirectPlan, *core.Status) {
+		UpdatedRedirectConfigs: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.RedirectConfig, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
-			e, status := resiliency1.GetUpdatedRedirectPlans(ctx, origin, lastId)
+			e, status := resiliency1.GetUpdatedRedirectConfigs(ctx, origin, lastId)
 			if !status.OK() && !status.NotFound() {
 				h.Handle(status, "")
 			}
 			return e, status
 		},
-		UpdatedFailoverPlans: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.FailoverPlan, *core.Status) {
+		UpdatedEgressConfigs: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]resiliency1.EgressConfig, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
-			e, status := resiliency1.GetUpdatedFailoverPlans(ctx, origin, lastId)
+			e, status := resiliency1.GetUpdatedEgressConfigs(ctx, origin, lastId)
 			if !status.OK() && !status.NotFound() {
 				h.Handle(status, "")
 			}

@@ -30,9 +30,9 @@ func processRedirectMessage(f *fieldOperative, fn *operativeFunc, msg *messaging
 		err := errors.New(fmt.Sprintf("error: currently active redirect agent:%v", f.agentId))
 		f.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
 	}
-	if r, ok := msg.Body.(resiliency1.RedirectPlan); ok {
+	if r, ok := msg.Body.(resiliency1.RedirectConfig); ok {
 		switch r.SQLCommand {
-		case "insert":
+		case common.SQLInsert:
 			f.state.Location = r.Location
 			f.state.Status = r.Status
 			f.state.EntryId = r.EntryId
@@ -42,8 +42,8 @@ func processRedirectMessage(f *fieldOperative, fn *operativeFunc, msg *messaging
 				f.redirect.Run()
 			}
 		// TODO : how are these handled
-		case "update":
-		case "delete":
+		case common.SQLUpdate:
+		case common.SQLDelete:
 		default:
 		}
 	} else {

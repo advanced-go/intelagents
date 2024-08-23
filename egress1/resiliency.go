@@ -13,6 +13,9 @@ const (
 	ResiliencyClass = "egress-resiliency1"
 )
 
+// TODO : need to determine a way to increase/decrease the rate of observations if the traffic does not
+//         match the profile.
+
 type resiliency struct {
 	running      bool
 	agentId      string
@@ -126,7 +129,7 @@ func runResiliency(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 				return
 			case messaging.DataChangeEvent:
 				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				processDataChangeEvent(r, msg, guide)
+				processDataChangeEvent(r, msg, exp)
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
 			}
@@ -135,17 +138,30 @@ func runResiliency(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 	}
 }
 
-// TODO : process changes to the failover plan
-func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *common.Guidance) {
+func processDataChangeEvent(r *resiliency, msg *messaging.Message, exp *common.Experience) {
 	switch msg.ContentType() {
 	case common.ContentTypeProfile:
 		if p := common.GetProfile(r.handler, r.agentId, msg); p != nil {
 			r.reviseTicker(p.ResiliencyDuration(-1))
 		}
-	case common.ContentTypeFailoverPlan:
-		//plan,status :=
-		// TODO :
+		return
+	case common.ContentTypeEgressConfig:
+		// Only a configuration update, insert and delete are handled by field operative
+		if p, ok := msg.Body.(resiliency1.EgressConfig); ok {
+			// Threshold is safe to change as there is no shared external state via actions
+			r.state.Threshold = p.Threshold
+			// If the scope changes then initialize all the following state:
+			// 1. Current action
+			// 2. Current location and percentage.
+			if r.state.Scope != p.Scope {
+				exp.ResetRoutingAction(r.handler, p.Origin(), r.agentId)
+				r.state.Scope = p.Scope
+				r.state.Location = ""
+				r.state.Percentage = -1
+			}
+			return
+		}
 	default:
-		r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg), "")
 	}
+	r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg), "")
 }

@@ -3,6 +3,7 @@ package caseofficer1
 import (
 	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
+	"github.com/advanced-go/intelagents/ingress1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 )
@@ -93,11 +94,11 @@ func runRedirectCDC(r *redirectCDC, guide *common.Guidance) {
 				return
 			case messaging.ProcessEvent:
 				r.handler.AddActivity(r.agentId, messaging.ProcessEvent)
-				plans, status := guide.UpdatedRedirectPlans(r.handler, r.origin, r.lastId)
+				entries, status := guide.UpdatedRedirectConfigs(r.handler, r.origin, r.lastId)
 				if status.OK() {
-					r.lastId = plans[len(plans)-1].EntryId
-					for _, e := range plans {
-						err := r.exchange.Send(newRedirectMessage(e))
+					r.lastId = entries[len(entries)-1].EntryId
+					for _, e := range entries {
+						err := r.exchange.Send(newRedirectMessage(r, e))
 						if err != nil {
 							r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
 						}
@@ -110,20 +111,11 @@ func runRedirectCDC(r *redirectCDC, guide *common.Guidance) {
 	}
 }
 
-func newRedirectMessage(e resiliency1.RedirectPlan) *messaging.Message {
-	// TODO: create valid TO
-	origin := core.Origin{Route: e.RouteName}
-	to := redirectCDCUri(origin)
-	msg := messaging.NewControlMessage(to, "", messaging.DataChangeEvent)
-	msg.SetContentType(common.ContentTypeRedirectPlan)
+func newRedirectMessage(r *redirectCDC, e resiliency1.RedirectConfig) *messaging.Message {
+	o := e.Origin()
+	to := ingress1.FieldOperativeUri(o)
+	msg := messaging.NewControlMessage(to, r.agentId, messaging.DataChangeEvent)
+	msg.SetContentType(common.ContentTypeRedirectConfig)
 	msg.Body = e
 	return msg
 }
-
-/*
-select {
-case <-e.ticker.C():
-default:
-}
-
-*/

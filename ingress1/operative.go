@@ -127,7 +127,7 @@ func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guida
 				f.redirect = nil
 			case messaging.DataChangeEvent:
 				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				if msg.ContentType() == common.ContentTypeRedirectPlan {
+				if msg.ContentType() == common.ContentTypeRedirectConfig {
 					fn.processRedirectMessage(f, fn, msg)
 				} else {
 					forwardDataChangeEvent(f, msg)
@@ -143,7 +143,11 @@ func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guida
 func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
 	switch msg.Header.Get(messaging.ContentType) {
 	case common.ContentTypeProfile:
-		if p := common.GetProfile(f.handler, f.agentId, msg); p != nil && p.Next().IsScaleUp() {
+		p := common.GetProfile(f.handler, f.agentId, msg)
+		if p == nil {
+			return
+		}
+		if p.Next().IsScaleUp() {
 			// Need to send data change event if the next window of the profile is scaling up. This means that
 			// a periodic routine done to update SLOs has been completed in the Off-Peak window.
 			m := messaging.NewControlMessage(f.resiliency.Uri(), f.agentId, messaging.DataChangeEvent)

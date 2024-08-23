@@ -8,7 +8,8 @@ import (
 )
 
 type operativeFunc struct {
-	startup func(f *fieldOperative, guide *common.Guidance) *core.Status
+	startup      func(f *fieldOperative, guide *common.Guidance)
+	onDataChange func(f *fieldOperative, guide *common.Guidance, msg *messaging.Message)
 }
 
 var (
@@ -18,13 +19,40 @@ var (
 
 	operative = func() *operativeFunc {
 		return &operativeFunc{
-			startup: func(f *fieldOperative, guide *common.Guidance) *core.Status {
+			startup: func(f *fieldOperative, guide *common.Guidance) {
 				s, status := guide.EgressState(f.handler, f.origin)
 				if !status.OK() {
-					return status
+					return
 				}
 				updateExchange(f, s)
-				return status
+				return
+			},
+			onDataChange: func(f *fieldOperative, guide *common.Guidance, msg *messaging.Message) {
+				plan, ok := msg.Body.(resiliency1.EgressConfig)
+				if !ok {
+					f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
+					return
+				}
+				switch plan.SQLCommand {
+				case common.SQLUpdate:
+					msg.SetFrom(f.agentId)
+					msg.SetTo(plan.Origin().Uri(ResiliencyClass))
+					f.agents.Send(msg)
+				case common.SQLInsert:
+					var state resiliency1.EgressState
+					resiliency1.NewEgressState(&state)
+					// Stale profile is OK, as the resiliency agent can handle the RPS mismatch between the
+					// profile and actual.
+					agent := newAgent(plan.Origin(), f.profile, state, f.handler)
+					f.agents.Register(agent)
+					agent.Run()
+				case common.SQLDelete:
+					a := f.agents.Get(plan.Origin().Uri(ResiliencyClass))
+					if a != nil {
+						a.Shutdown()
+					}
+				default:
+				}
 			},
 		}
 	}()
@@ -33,16 +61,7 @@ var (
 func updateExchange(f *fieldOperative, entries []resiliency1.EgressState) {
 	for i, _ := range entries {
 		e := entries[i]
-		// TODO: verify creation of origin from entries and field operative
-		o := core.Origin{
-			Region:     e.Region,
-			Zone:       e.Zone,
-			SubZone:    "",
-			Host:       "",
-			InstanceId: "",
-			Route:      "",
-		}
-		agent := newAgent(o, f.profile, e, f.handler)
+		agent := newAgent(e.Origin(), f.profile, e, f.handler)
 		f.agents.Register(agent)
 		agent.Run()
 	}

@@ -13,6 +13,9 @@ const (
 	Class = "ingress-resiliency1"
 )
 
+// TODO : need to determine a way to increase/decrease the rate of observations if the traffic does not
+//         match the profile.
+
 type resiliency struct {
 	running      bool
 	agentId      string
@@ -140,11 +143,14 @@ func runResiliency(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *common.Guidance) {
 	switch msg.ContentType() {
 	case common.ContentTypeProfile:
+		// GetProfile errors on cast
 		if p := common.GetProfile(r.handler, r.agentId, msg); p != nil {
 			r.reviseTicker(p.ResiliencyDuration(-1))
 		}
+		return
 	case common.ContentTypePercentileSLO:
 		r.updatePercentileSLO(guide)
+		return
 	default:
 		r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg), "")
 	}

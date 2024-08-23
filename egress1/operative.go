@@ -122,8 +122,8 @@ func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guida
 				return
 			case messaging.DataChangeEvent:
 				f.handler.AddActivity(f.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				if msg.ContentType() == common.ContentTypeFailoverPlan {
-					f.agents.Send(msg)
+				if msg.ContentType() == common.ContentTypeEgressConfig {
+					fn.onDataChange(f, guide, msg)
 				} else {
 					forwardDataChangeEvent(f, msg)
 				}

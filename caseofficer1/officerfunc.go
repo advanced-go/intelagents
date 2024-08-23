@@ -32,7 +32,7 @@ var (
 					updateExchange(c, entry)
 				}
 				c.redirectAgent = newRedirectCDC(c.origin, c.lastId.Redirect, c.ingressAgents, c)
-				c.failoverAgent = newFailoverCDC(c.origin, c.lastId.Failover, c.egressAgents, c)
+				c.failoverAgent = newEgressCDC(c.origin, c.lastId.Egress, c.egressAgents, c)
 				c.startup()
 				return core.StatusOK()
 			},
