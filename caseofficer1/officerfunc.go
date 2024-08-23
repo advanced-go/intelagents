@@ -11,8 +11,8 @@ import (
 
 // A nod to Linus Torvalds and plain C
 type caseOfficerFunc struct {
-	startup func(c *caseOfficer, guide *guidance) *core.Status
-	update  func(c *caseOfficer, guide *guidance) *core.Status
+	startup func(c *caseOfficer, guide *common.Guidance) *core.Status
+	update  func(c *caseOfficer, guide *common.Guidance) *core.Status
 }
 
 var (
@@ -25,8 +25,8 @@ var (
 
 	officer = func() *caseOfficerFunc {
 		return &caseOfficerFunc{
-			startup: func(c *caseOfficer, guide *guidance) *core.Status {
-				entry, lastId, status := guide.assignments(c.handler, c.origin)
+			startup: func(c *caseOfficer, guide *common.Guidance) *core.Status {
+				entry, lastId, status := guide.Assignments(c.handler, c.origin)
 				if status.OK() {
 					c.lastId = lastId
 					updateExchange(c, entry)
@@ -36,8 +36,8 @@ var (
 				c.startup()
 				return core.StatusOK()
 			},
-			update: func(c *caseOfficer, guide *guidance) *core.Status {
-				entry, status := guide.newAssignments(c.handler, c.origin, c.lastId.Entry)
+			update: func(c *caseOfficer, guide *common.Guidance) *core.Status {
+				entry, status := guide.NewAssignments(c.handler, c.origin, c.lastId.Entry)
 				if status.OK() {
 					c.lastId.Entry = entry[len(entry)-1].EntryId
 					updateExchange(c, entry)

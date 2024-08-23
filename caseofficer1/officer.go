@@ -81,7 +81,7 @@ func (c *caseOfficer) Run() {
 		return
 	}
 	c.running = true
-	go runCaseOfficer(c, officer, guide)
+	go runCaseOfficer(c, officer, common.Guide)
 }
 
 // Shutdown - shutdown the agent
@@ -116,7 +116,7 @@ func (c *caseOfficer) reviseTicker(newDuration time.Duration) {
 	c.ticker.Start(newDuration)
 }
 
-func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *guidance) {
+func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *common.Guidance) {
 	processMsg := messaging.NewControlMessage("", "", messaging.ProcessEvent)
 	fn.startup(c, guide)
 

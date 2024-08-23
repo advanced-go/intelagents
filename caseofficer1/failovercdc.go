@@ -61,7 +61,7 @@ func (f *failoverCDC) Run() {
 		return
 	}
 	f.running = true
-	go runFailoverCDC(f, guide)
+	go runFailoverCDC(f, common.Guide)
 }
 
 // Shutdown - shutdown the agent
@@ -82,7 +82,7 @@ func (f *failoverCDC) Shutdown() {
 
 func (f *failoverCDC) shutdown() { close(f.ctrlC) }
 
-func runFailoverCDC(f *failoverCDC, guide *guidance) {
+func runFailoverCDC(f *failoverCDC, guide *common.Guidance) {
 	for {
 		select {
 		case msg := <-f.ctrlC:
@@ -93,7 +93,7 @@ func runFailoverCDC(f *failoverCDC, guide *guidance) {
 				return
 			case messaging.ProcessEvent:
 				f.handler.AddActivity(f.agentId, messaging.ProcessEvent)
-				plans, status := guide.updatedFailoverPlans(f.handler, f.origin, f.lastId)
+				plans, status := guide.UpdatedFailoverPlans(f.handler, f.origin, f.lastId)
 				if status.OK() {
 					f.lastId = plans[len(plans)-1].EntryId
 					for _, e := range plans {

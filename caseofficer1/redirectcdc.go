@@ -61,7 +61,7 @@ func (r *redirectCDC) Run() {
 		return
 	}
 	r.running = true
-	go runRedirectCDC(r, guide)
+	go runRedirectCDC(r, common.Guide)
 }
 
 // Shutdown - shutdown the agent
@@ -82,7 +82,7 @@ func (r *redirectCDC) Shutdown() {
 
 func (r *redirectCDC) shutdown() { close(r.ctrlC) }
 
-func runRedirectCDC(r *redirectCDC, guide *guidance) {
+func runRedirectCDC(r *redirectCDC, guide *common.Guidance) {
 	for {
 		select {
 		case msg := <-r.ctrlC:
@@ -93,7 +93,7 @@ func runRedirectCDC(r *redirectCDC, guide *guidance) {
 				return
 			case messaging.ProcessEvent:
 				r.handler.AddActivity(r.agentId, messaging.ProcessEvent)
-				plans, status := guide.updatedRedirectPlans(r.handler, r.origin, r.lastId)
+				plans, status := guide.UpdatedRedirectPlans(r.handler, r.origin, r.lastId)
 				if status.OK() {
 					r.lastId = plans[len(plans)-1].EntryId
 					for _, e := range plans {
