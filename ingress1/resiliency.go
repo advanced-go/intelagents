@@ -115,7 +115,7 @@ func runResiliency(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 		select {
 		case <-r.ticker.C():
 			r.handler.AddActivity(r.agentId, "onTick")
-			fn.process(r, observe, exp, guide)
+			fn.process(r, observe, exp)
 		default:
 		}
 		// control channel processing

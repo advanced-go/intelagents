@@ -6,6 +6,8 @@ github.com/advanced-go/experience v0.0.0-20240811120348-9d720367d972 h1:L/8BMHS+
 github.com/advanced-go/experience v0.0.0-20240811120348-9d720367d972/go.mod h1:Y79NtJLovoBNt5Xo213FXSry2qfUA+G3qXxQiS6WO1c=
 github.com/advanced-go/experience v0.0.0-20240811123632-6ab820068151 h1:oWDPzpOVanB0+u9fbr4hLtusxchz5j3loIXIQxcfRkA=
 github.com/advanced-go/experience v0.0.0-20240811123632-6ab820068151/go.mod h1:Y79NtJLovoBNt5Xo213FXSry2qfUA+G3qXxQiS6WO1c=
+github.com/advanced-go/experience v0.0.0-20240823104101-2833bebdad55 h1:IWJWPecC/cxPEokA2yzI/Fy5rLbvzee7juXYqObOn10=
+github.com/advanced-go/experience v0.0.0-20240823104101-2833bebdad55/go.mod h1:Y79NtJLovoBNt5Xo213FXSry2qfUA+G3qXxQiS6WO1c=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5 h1:4+YNnTo/OqtrE4jwYJ5ZeEaex1xFYEFabIHfwaQzZ4U=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5/go.mod h1:6GqdPnE0Fh6o34pehFuYf9No3NOHlW0NeXEqgp+xy3Y=
 github.com/advanced-go/guidance v0.0.0-20240724124403-97786ec4fee7 h1:FQH3WNH6p/KIkoqRxrSWxCyMxlvIJkZhmCJOKri7Ipo=
@@ -56,6 +58,10 @@ github.com/advanced-go/guidance v0.0.0-20240822195818-f1fc7524291d h1:IKwkLdlkja
 github.com/advanced-go/guidance v0.0.0-20240822195818-f1fc7524291d/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
 github.com/advanced-go/guidance v0.0.0-20240823100751-7e2685ccc520 h1:DeJKYWRaMHOs7SpXBsoWR+vSclmzgdDr3hfe2k03F3Q=
 github.com/advanced-go/guidance v0.0.0-20240823100751-7e2685ccc520/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
+github.com/advanced-go/guidance v0.0.0-20240823101516-da9d535f3b69 h1:yA7tvlwJPrqm6JnMhppZluTW4XOZneoVz8FLEod8jek=
+github.com/advanced-go/guidance v0.0.0-20240823101516-da9d535f3b69/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
+github.com/advanced-go/guidance v0.0.0-20240823105539-e14fd7143488 h1:ROTu3ymA0f/LrzZ5bxDFqrfjB1iDGVKs8/a+pppPpbA=
+github.com/advanced-go/guidance v0.0.0-20240823105539-e14fd7143488/go.mod h1:lOQhLUD+iPTIy66cY3ib0BojGFVh+DwKmORw4/rFWb8=
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784 h1:aCwgv804Bm6JY6HRpnmRDZWmcgL+5s387nSi/bMlhvk=
 github.com/advanced-go/observation v0.0.0-20240720114725-42e5dc267784/go.mod h1:LIAGTP/K0wlft3dYhHqn69QSFn9wlkcXA+c3hfh18HQ=
 github.com/advanced-go/observation v0.0.0-20240726165650-9302f1cc6c99 h1:7r1+XDvOp8QCYeu8Kn0JvVqSKB39lCF06PHlzneUGtc=

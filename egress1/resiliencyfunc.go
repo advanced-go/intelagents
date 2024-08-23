@@ -1,8 +1,8 @@
 package egress1
 
 import (
+	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/experience/inference1"
-	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/observation/timeseries1"
 	"github.com/advanced-go/stdlib/core"
@@ -14,10 +14,13 @@ type resiliencyFunc struct {
 }
 
 var (
-	action = func(r *resiliency, entry inference1.Entry) (resiliency1.RateLimitingAction, *core.Status) {
-		return resiliencyAction(r, entry)
+	processRateLimitingAction = func(r *resiliency, entry inference1.Entry) (action1.RateLimiting, *core.Status) {
+		return resiliencyRateLimitingAction(r, entry)
 	}
-	inference = func(r *resiliency, entry []timeseries1.Entry) (inference1.Entry, *core.Status) {
+	processRoutingAction = func(r *resiliency, entry inference1.Entry) (action1.Routing, *core.Status) {
+		return resiliencyRoutingAction(r, entry)
+	}
+	processInference = func(r *resiliency, entry []timeseries1.Entry) (inference1.Entry, *core.Status) {
 		return resiliencyInference(r, entry)
 	}
 	resilience = func() *resiliencyFunc {
@@ -35,7 +38,7 @@ var (
 				if !status1.OK() || status1.NotFound() {
 					return ts, status1
 				}
-				i, status := inference(r, ts)
+				i, status := processInference(r, ts)
 				if !status.OK() {
 					return ts, status
 				}
@@ -43,11 +46,13 @@ var (
 				if !status.OK() {
 					return ts, status
 				}
-				action, status2 := action(r, i)
+				action, status2 := processRateLimitingAction(r, i)
 				if !status2.OK() {
 					return ts, status2
 				}
-				status = guide.AddRateLimitingAction(r.handler, r.origin, &action)
+				status = exp.AddRateLimitingAction(r.handler, r.origin, action)
+
+				// TODO : add processing of routing action
 				return ts, status
 			},
 		}
@@ -58,6 +63,10 @@ func resiliencyInference(c *resiliency, entry []timeseries1.Entry) (inference1.E
 	return inference1.Entry{}, core.StatusOK()
 }
 
-func resiliencyAction(r *resiliency, entry inference1.Entry) (resiliency1.RateLimitingAction, *core.Status) {
-	return resiliency1.RateLimitingAction{}, core.StatusOK()
+func resiliencyRateLimitingAction(r *resiliency, entry inference1.Entry) (action1.RateLimiting, *core.Status) {
+	return action1.RateLimiting{}, core.StatusOK()
+}
+
+func resiliencyRoutingAction(r *resiliency, entry inference1.Entry) (action1.Routing, *core.Status) {
+	return action1.Routing{}, core.StatusOK()
 }

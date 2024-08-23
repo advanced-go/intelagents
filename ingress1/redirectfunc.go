@@ -1,6 +1,7 @@
 package ingress1
 
 import (
+	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/stdlib/core"
@@ -8,8 +9,8 @@ import (
 )
 
 type redirectFunc struct {
-	process func(r *redirect, observe *common.Observation, guide *common.Guidance) (completed bool, status *core.Status)
-	update  func(r *redirect, guide *common.Guidance, ok bool) *core.Status
+	process func(r *redirect, observe *common.Observation, exp *common.Experience, guide *common.Guidance) (completed bool, status *core.Status)
+	update  func(r *redirect, exp *common.Experience, guide *common.Guidance, ok bool) *core.Status
 }
 
 var redirection = func() *redirectFunc {
@@ -18,7 +19,7 @@ var redirection = func() *redirectFunc {
 		// 1. Process observation and determine if SLO is met
 		// 2. If SLO is met, then update percentage
 		// 3. How to update percentage
-		process: func(r *redirect, observe *common.Observation, guide *common.Guidance) (completed bool, status *core.Status) {
+		process: func(r *redirect, observe *common.Observation, exp *common.Experience, guide *common.Guidance) (completed bool, status *core.Status) {
 			redirectOrigin := r.origin
 			redirectOrigin.Host = r.state.Location
 			_, status = observe.IngressTimeseries(r.handler, redirectOrigin)
@@ -27,7 +28,7 @@ var redirection = func() *redirectFunc {
 			}
 			// Need to verify that observation meets the percentile SLO
 			// if the observation meets the SLO, then create a new Routing action
-			action := resiliency1.RoutingAction{
+			action := action1.Routing{
 				EntryId:     r.state.EntryId,
 				RouteName:   r.state.RouteName,
 				CreatedTS:   time.Time{},
@@ -35,13 +36,13 @@ var redirection = func() *redirectFunc {
 				Location:    r.state.Location,
 				Percentage:  r.state.Percentage,
 			}
-			status = guide.AddRoutingAction(r.handler, r.origin, &action)
+			status = exp.AddRoutingAction(r.handler, r.origin, action)
 			if !completed {
 				r.updatePercentage()
 			}
 			return completed, status
 		},
-		update: func(r *redirect, guide *common.Guidance, ok bool) *core.Status {
+		update: func(r *redirect, exp *common.Experience, guide *common.Guidance, ok bool) *core.Status {
 			rs := resiliency1.RedirectStatusSucceeded
 			if !ok {
 				rs = resiliency1.RedirectStatusFailed
@@ -50,7 +51,7 @@ var redirection = func() *redirectFunc {
 			if !status.OK() {
 				return status
 			}
-			status = guide.AddRedirectAction(r.handler, r.origin, &resiliency1.RedirectAction{
+			status = exp.AddRedirectAction(r.handler, r.origin, action1.Redirect{
 				EntryId:     r.state.EntryId,
 				RouteName:   r.state.RouteName,
 				CreatedTS:   time.Time{},
