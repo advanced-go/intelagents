@@ -56,11 +56,11 @@ func (r *resiliency) String() string { return r.Uri() }
 func (r *resiliency) Uri() string { return r.agentId }
 
 // Message - message the agent
-func (r *resiliency) Message(m *messaging.Message) { messaging.Mux(m, r.ctrlC, nil, nil) }
+func (r *resiliency) Message(m *messaging.Message) { r.ctrlC <- m }
 
 // Handle - error handler
-func (r *resiliency) Handle(status *core.Status, requestId string) *core.Status {
-	return r.handler.Handle(status, requestId)
+func (r *resiliency) Handle(status *core.Status) *core.Status {
+	return r.handler.Handle(status)
 }
 
 // AddActivity - add activity
@@ -131,7 +131,7 @@ func runResiliency(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
 				processDataChangeEvent(r, msg, exp)
 			default:
-				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
+				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
 			}
 		default:
 		}
@@ -149,13 +149,13 @@ func processDataChangeEvent(r *resiliency, msg *messaging.Message, exp *common.E
 		// Only a configuration update, insert and delete are handled by field operative
 		if p, ok := msg.Body.(resiliency1.EgressConfig); ok {
 			// Threshold is safe to change as there is no shared external state via actions
-			r.state.Threshold = p.Threshold
+			r.state.FailoverThreshold = p.FailoverThreshold
 			// If the scope changes then initialize all the following state:
 			// 1. Current action
 			// 2. Current location and percentage.
-			if r.state.Scope != p.Scope {
+			if r.state.FailoverScope != p.FailoverScope {
 				exp.ResetRoutingAction(r.handler, p.Origin(), r.agentId)
-				r.state.Scope = p.Scope
+				r.state.FailoverScope = p.FailoverScope
 				r.state.Location = ""
 				r.state.Percentage = -1
 			}
@@ -163,5 +163,5 @@ func processDataChangeEvent(r *resiliency, msg *messaging.Message, exp *common.E
 		}
 	default:
 	}
-	r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg), "")
+	r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg))
 }

@@ -24,7 +24,7 @@ var Observe = func() *Observation {
 			defer cancel()
 			e, status := timeseries1.IngressQuery(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return e, status
 		},
@@ -33,7 +33,7 @@ var Observe = func() *Observation {
 			defer cancel()
 			e, status := timeseries1.EgressQuery(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return e, status
 		},

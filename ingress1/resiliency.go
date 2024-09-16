@@ -59,7 +59,7 @@ func (r *resiliency) String() string { return r.Uri() }
 func (r *resiliency) Uri() string { return r.agentId }
 
 // Message - message the agent
-func (r *resiliency) Message(m *messaging.Message) { messaging.Mux(m, r.ctrlC, nil, nil) }
+func (r *resiliency) Message(m *messaging.Message) { r.ctrlC <- m }
 
 // Add - add a shutdown function
 func (r *resiliency) Add(f func()) { r.shutdownFunc = messaging.AddShutdown(r.shutdownFunc, f) }
@@ -133,7 +133,7 @@ func runResiliency(r *resiliency, fn *resiliencyFunc, observe *common.Observatio
 				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
 				processDataChangeEvent(r, msg, guide)
 			default:
-				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg), "")
+				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
 			}
 		default:
 		}
@@ -152,6 +152,6 @@ func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *common
 		r.updatePercentileSLO(guide)
 		return
 	default:
-		r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg), "")
+		r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg))
 	}
 }

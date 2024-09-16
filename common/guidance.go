@@ -36,7 +36,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			e, status := resiliency1.GetPercentileSLO(ctx, origin)
 			if !status.OK() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return e, status
 		},
@@ -45,7 +45,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			status1 := resiliency1.UpdateRedirectConfig(ctx, origin, status)
 			if !status1.OK() {
-				h.Handle(status1, "")
+				h.Handle(status1)
 			}
 			return status1
 		},
@@ -54,7 +54,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			status := resiliency1.DeleteEgressConfig(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return status
 		},
@@ -63,7 +63,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			s, status := resiliency1.GetIngressRedirectState(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return s, status
 		},
@@ -72,7 +72,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			s, status := resiliency1.GetIngressResiliencyState(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return s, status
 		},
@@ -81,7 +81,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			s, status := resiliency1.GetEgressState(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return s, status
 		},
@@ -90,7 +90,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			e, last, status := resiliency1.GetHostEntries(ctx, origin)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return e, last, status
 		},
@@ -99,7 +99,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			e, status := resiliency1.GetNewHostEntries(ctx, origin, lastId)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return e, status
 		},
@@ -108,7 +108,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			e, status := resiliency1.GetUpdatedRedirectConfigs(ctx, origin, lastId)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return e, status
 		},
@@ -117,7 +117,7 @@ var Guide = func() *Guidance {
 			defer cancel()
 			e, status := resiliency1.GetUpdatedEgressConfigs(ctx, origin, lastId)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return e, status
 		},

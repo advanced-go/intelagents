@@ -58,12 +58,12 @@ func (c *caseOfficer) String() string { return c.Uri() }
 func (c *caseOfficer) Uri() string { return c.agentId }
 
 // Message - message the agent
-func (c *caseOfficer) Message(m *messaging.Message) { messaging.Mux(m, c.ctrlC, nil, nil) }
+func (c *caseOfficer) Message(m *messaging.Message) { c.ctrlC <- m }
 
 // Handle - error handler
-func (c *caseOfficer) Handle(status *core.Status, requestId string) *core.Status {
+func (c *caseOfficer) Handle(status *core.Status) *core.Status {
 	// TODO : do we need any processing specific to a case officer? If not then forward to handler
-	return c.handler.Handle(status, requestId)
+	return c.handler.Handle(status)
 }
 
 // AddActivity - add activity
@@ -143,7 +143,7 @@ func runCaseOfficer(c *caseOfficer, fn *caseOfficerFunc, guide *common.Guidance)
 					c.egressAgents.Broadcast(msg)
 				}
 			default:
-				c.handler.Handle(common.MessageEventErrorStatus(c.agentId, msg), "")
+				c.handler.Handle(common.MessageEventErrorStatus(c.agentId, msg))
 			}
 		default:
 		}

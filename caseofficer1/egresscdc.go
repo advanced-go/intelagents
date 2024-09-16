@@ -51,7 +51,7 @@ func (e *egressCDC) String() string { return e.Uri() }
 func (e *egressCDC) Uri() string { return e.agentId }
 
 // Message - message the agent
-func (e *egressCDC) Message(m *messaging.Message) { messaging.Mux(m, e.ctrlC, nil, nil) }
+func (e *egressCDC) Message(m *messaging.Message) { e.ctrlC <- m }
 
 // Add - add a shutdown function
 func (e *egressCDC) Add(fn func()) { e.shutdownFunc = messaging.AddShutdown(e.shutdownFunc, fn) }
@@ -99,7 +99,7 @@ func runEgressCDC(e *egressCDC, guide *common.Guidance) {
 					for _, c := range entries {
 						err := e.exchange.Send(newEgressMessage(e, c))
 						if err != nil {
-							e.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
+							e.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err))
 						}
 					}
 				}

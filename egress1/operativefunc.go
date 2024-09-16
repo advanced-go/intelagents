@@ -30,7 +30,7 @@ var (
 			onDataChange: func(f *fieldOperative, guide *common.Guidance, msg *messaging.Message) {
 				plan, ok := msg.Body.(resiliency1.EgressConfig)
 				if !ok {
-					f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
+					f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg))
 					return
 				}
 				switch plan.SQLCommand {

@@ -84,6 +84,6 @@ func GetProfile(h core.ErrorHandler, agentId string, msg *messaging.Message) *Pr
 	if p, ok := msg.Body.(*Profile); ok {
 		return p
 	}
-	h.Handle(ProfileTypeErrorStatus(agentId, msg.Body), "")
+	h.Handle(ProfileTypeErrorStatus(agentId, msg.Body))
 	return nil
 }

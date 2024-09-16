@@ -28,7 +28,7 @@ var operative = func() *operativeFunc {
 func processRedirectMessage(f *fieldOperative, fn *operativeFunc, msg *messaging.Message) {
 	if f.redirect != nil {
 		err := errors.New(fmt.Sprintf("error: currently active redirect agent:%v", f.agentId))
-		f.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
+		f.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err))
 	}
 	if r, ok := msg.Body.(resiliency1.RedirectConfig); ok {
 		switch r.SQLCommand {
@@ -36,7 +36,7 @@ func processRedirectMessage(f *fieldOperative, fn *operativeFunc, msg *messaging
 			f.state.Location = r.Location
 			f.state.Status = r.Status
 			f.state.EntryId = r.EntryId
-			f.state.RouteName = r.RouteName
+			f.state.Route = r.Route
 			if f.state.IsConfigured() {
 				fn.newRedirectAgent(f, f.state)
 				f.redirect.Run()
@@ -47,14 +47,14 @@ func processRedirectMessage(f *fieldOperative, fn *operativeFunc, msg *messaging
 		default:
 		}
 	} else {
-		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
+		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg))
 	}
 }
 
 func processRedirectStartup(f *fieldOperative, fn *operativeFunc, guide *common.Guidance) {
 	if f.redirect != nil {
 		err := errors.New(fmt.Sprintf("error: currently active redirect agent:%v", f.agentId))
-		f.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
+		f.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err))
 	}
 	state, status := guide.RedirectState(f.handler, f.origin)
 	if !status.OK() {

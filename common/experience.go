@@ -32,7 +32,7 @@ var Exp = func() *Experience {
 			defer cancel()
 			status := inference1.IngressInsert(ctx, nil, e)
 			if !status.OK() && !status.NotFound() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return status
 		},
@@ -41,7 +41,7 @@ var Exp = func() *Experience {
 			defer cancel()
 			status := action1.AddRateLimiting(ctx, origin, action)
 			if !status.OK() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return status
 		},
@@ -50,7 +50,7 @@ var Exp = func() *Experience {
 			defer cancel()
 			status := action1.AddRouting(ctx, origin, action)
 			if !status.OK() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return status
 		},
@@ -59,7 +59,7 @@ var Exp = func() *Experience {
 			defer cancel()
 			status := action1.AddRedirect(ctx, origin, action)
 			if !status.OK() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return status
 		},
@@ -68,7 +68,7 @@ var Exp = func() *Experience {
 			defer cancel()
 			status := action1.ResetRouting(ctx, origin, agentId)
 			if !status.OK() {
-				h.Handle(status, "")
+				h.Handle(status)
 			}
 			return status
 		},

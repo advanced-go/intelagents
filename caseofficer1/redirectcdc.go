@@ -51,7 +51,7 @@ func (r *redirectCDC) String() string { return r.Uri() }
 func (r *redirectCDC) Uri() string { return r.agentId }
 
 // Message - message the agent
-func (r *redirectCDC) Message(m *messaging.Message) { messaging.Mux(m, r.ctrlC, nil, nil) }
+func (r *redirectCDC) Message(m *messaging.Message) { r.ctrlC <- m }
 
 // Add - add a shutdown function
 func (r *redirectCDC) Add(f func()) { r.shutdownFunc = messaging.AddShutdown(r.shutdownFunc, f) }
@@ -100,7 +100,7 @@ func runRedirectCDC(r *redirectCDC, guide *common.Guidance) {
 					for _, e := range entries {
 						err := r.exchange.Send(newRedirectMessage(r, e))
 						if err != nil {
-							r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
+							r.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err))
 						}
 					}
 				}

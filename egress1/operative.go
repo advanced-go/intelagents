@@ -63,11 +63,11 @@ func (f *fieldOperative) String() string { return f.Uri() }
 func (f *fieldOperative) Uri() string { return f.agentId }
 
 // Message - message the agent
-func (f *fieldOperative) Message(m *messaging.Message) { messaging.Mux(m, f.ctrlC, nil, nil) }
+func (f *fieldOperative) Message(m *messaging.Message) { f.ctrlC <- m }
 
 // Handle - error handler
-func (f *fieldOperative) Handle(status *core.Status, requestId string) *core.Status {
-	return f.handler.Handle(status, requestId)
+func (f *fieldOperative) Handle(status *core.Status) *core.Status {
+	return f.handler.Handle(status)
 }
 
 // AddActivity - add activity
@@ -128,7 +128,7 @@ func runFieldOperative(f *fieldOperative, fn *operativeFunc, guide *common.Guida
 					forwardDataChangeEvent(f, msg)
 				}
 			default:
-				f.handler.Handle(common.MessageEventErrorStatus(f.agentId, msg), "")
+				f.handler.Handle(common.MessageEventErrorStatus(f.agentId, msg))
 			}
 		default:
 		}
@@ -140,6 +140,6 @@ func forwardDataChangeEvent(f *fieldOperative, msg *messaging.Message) {
 	case common.ContentTypeProfile:
 		f.agents.Broadcast(msg)
 	default:
-		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg), "")
+		f.handler.Handle(common.MessageContentTypeErrorStatus(f.agentId, msg))
 	}
 }

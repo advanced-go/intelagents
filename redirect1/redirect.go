@@ -1,4 +1,4 @@
-package ingress1
+package redirect1
 
 import (
 	"fmt"
@@ -10,20 +10,23 @@ import (
 )
 
 const (
-	RedirectClass    = "ingress-redirect1"
-	redirectDuration = time.Second * 60
+	RedirectClass          = "ingress-redirect1"
+	redirectDuration       = time.Second * 60
+	RedirectCompletedEvent = "event:redirect-completed"
 )
 
 // Responsibilities:
 //  1. Startup + Restart Events
 
 type redirect struct {
-	running      bool
-	agentId      string
-	origin       core.Origin
-	state        resiliency1.IngressRedirectState
-	ticker       *messaging.Ticker
-	ctrlC        chan *messaging.Message
+	running bool
+	agentId string
+	origin  core.Origin
+	state   resiliency1.IngressRedirectState
+	ticker  *messaging.Ticker
+	//ctrlC        chan *messaging.Message
+	lhc          Channel
+	rhc          Channel
 	handler      messaging.OpsAgent
 	shutdownFunc func()
 }
@@ -46,7 +49,9 @@ func newRedirect(origin core.Origin, state resiliency1.IngressRedirectState, han
 	r.origin = origin
 	r.state = state
 	r.ticker = messaging.NewTicker(tickerDur)
-	r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	//r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
+	r.rhc = NewChannel(true)
+	r.lhc = NewChannel(true)
 	r.handler = handler
 	return r
 }
@@ -58,7 +63,14 @@ func (r *redirect) String() string { return r.agentId }
 func (r *redirect) Uri() string { return r.agentId }
 
 // Message - message the agent
-func (r *redirect) Message(m *messaging.Message) { r.ctrlC <- m }
+func (r *redirect) Message(m *messaging.Message) {
+	// How to determine which channel??
+	if m.Channel() == messaging.ChannelLeftHemisphere {
+		r.lhc.Send(m)
+	} else {
+		r.rhc.Send(m)
+	}
+}
 
 // Add - add a shutdown function
 func (r *redirect) Add(f func()) { r.shutdownFunc = messaging.AddShutdown(r.shutdownFunc, f) }
@@ -73,9 +85,11 @@ func (r *redirect) Shutdown() {
 		r.shutdownFunc()
 	}
 	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
-	if r.ctrlC != nil {
-		r.ctrlC <- msg
-	}
+	r.rhc.Send(msg)
+	r.lhc.Send(msg)
+	//if r.ctrlC != nil {
+	//	r.ctrlC <- msg
+	//}
 }
 
 // Run - run the agent
@@ -93,7 +107,9 @@ func (r *redirect) startup() {
 
 // shutdown - close resources
 func (r *redirect) shutdown() {
-	close(r.ctrlC)
+	r.rhc.Close()
+	r.lhc.Close()
+	//close(r.ctrlC)
 	r.ticker.Stop()
 }
 
@@ -130,7 +146,7 @@ func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, exp
 				r.shutdown()
 				return
 			}
-		case msg := <-r.ctrlC:
+		case msg := <-r.rhc.C:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				r.shutdown()

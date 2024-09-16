@@ -1,4 +1,4 @@
-package ingress1
+package redirect1
 
 import (
 	"github.com/advanced-go/experience/action1"
@@ -30,7 +30,7 @@ var redirection = func() *redirectFunc {
 			// if the observation meets the SLO, then create a new Routing action
 			action := action1.Routing{
 				EntryId:     r.state.EntryId,
-				RouteName:   r.state.Route,
+				RouteName:   r.state.RouteName,
 				CreatedTS:   time.Time{},
 				InferenceId: 0,
 				Location:    r.state.Location,
@@ -53,7 +53,7 @@ var redirection = func() *redirectFunc {
 			}
 			status = exp.AddRedirectAction(r.handler, r.origin, action1.Redirect{
 				EntryId:     r.state.EntryId,
-				RouteName:   r.state.Route,
+				RouteName:   r.state.RouteName,
 				CreatedTS:   time.Time{},
 				InferenceId: 0,
 				Location:    r.state.Location,

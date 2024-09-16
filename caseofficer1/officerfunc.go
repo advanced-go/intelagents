@@ -75,7 +75,7 @@ func initAgent(c *caseOfficer, origin core.Origin, ingress bool) {
 		err = c.egressAgents.Register(agent)
 	}
 	if err != nil {
-		c.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err), "")
+		c.handler.Handle(core.NewStatusError(core.StatusInvalidArgument, err))
 	} else {
 		agent.Run()
 	}
