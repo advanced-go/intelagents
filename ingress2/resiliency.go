@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
+	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -128,24 +129,17 @@ func runResiliencyRHC(r *resiliency, fn *resiliencyFunc, observe *common.Observa
 	fn.startup(r, guide)
 
 	for {
-		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
-		select {
-		case <-r.ticker.C():
-			r.handler.AddActivity(r.agentId, "onTick")
-			fn.process(r, observe, exp)
-		default:
-		}
 		// control channel processing
 		select {
-		case msg := <-r.ctrlC:
+		case msg := <-r.rhc.C:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				r.shutdown()
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
-			case messaging.DataChangeEvent:
-				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				processDataChangeEvent(r, msg, guide)
+			//case messaging.DataChangeEvent:
+			//	r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
+			//	processDataChangeEvent(r, msg, guide)
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
 			}
@@ -155,18 +149,23 @@ func runResiliencyRHC(r *resiliency, fn *resiliencyFunc, observe *common.Observa
 }
 
 // run - ingress resiliency for the LHC
-func runResiliencyLHC(r *resiliency, fn *resiliencyFunc, observe *common.Observation, exp *common.Experience, guide *common.Guidance) {
+func runResiliencyLHC(r *resiliency, fn *resiliencyFunc, observe *common2.Access, guide *common.Guidance) {
 	fn.startup(r, guide)
 
 	for {
-		// main agent processing : on tick -> observe access -> process inference with percentile -> create action
+		// observation processing
 		select {
 		case <-r.ticker.C():
 			r.handler.AddActivity(r.agentId, "onTick")
-			fn.process(r, observe, exp)
+			e, status := observe.IngressTimeseries(r.handler, r.origin)
+			if status.OK() {
+				m := messaging.NewRightHemisphereMessage("", r.agentId, messaging.DataChangeEvent)
+				m.Body = e
+				r.Message(m)
+			}
 		default:
 		}
-		// control channel processing
+		// message processing
 		select {
 		case msg := <-r.lhc.C:
 			switch msg.Event() {
@@ -175,28 +174,14 @@ func runResiliencyLHC(r *resiliency, fn *resiliencyFunc, observe *common.Observa
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
 			case messaging.DataChangeEvent:
-				r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-				processDataChangeEvent(r, msg, guide)
+				// GetProfile errors on cast
+				if p := common2.GetProfile(r.handler, r.agentId, msg); p != nil {
+					r.reviseTicker(p.ResiliencyDuration(-1))
+				}
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
 			}
 		default:
 		}
-	}
-}
-
-func processDataChangeEvent(r *resiliency, msg *messaging.Message, guide *common.Guidance) {
-	switch msg.ContentType() {
-	case common.ContentTypeProfile:
-		// GetProfile errors on cast
-		if p := common.GetProfile(r.handler, r.agentId, msg); p != nil {
-			r.reviseTicker(p.ResiliencyDuration(-1))
-		}
-		return
-	case common.ContentTypePercentileSLO:
-		r.updatePercentileSLO(guide)
-		return
-	default:
-		r.handler.Handle(common.MessageContentTypeErrorStatus(r.agentId, msg))
 	}
 }
