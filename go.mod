@@ -5,7 +5,7 @@ go 1.21.4
 require (
 	github.com/advanced-go/guidance v0.0.0-20240916193005-168df200e216
 	github.com/advanced-go/observation v0.0.0-20240914160125-b5563f58d24d
-	github.com/advanced-go/stdlib v0.0.0-20240916163233-77ffc51165de
+	github.com/advanced-go/stdlib v0.0.0-20240917125015-ffbc8a3daf1c
 )
 
 require (
