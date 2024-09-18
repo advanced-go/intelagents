@@ -15,7 +15,7 @@ const (
 // run - ingress resiliency for the RHC
 func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 	rateLimiting := action1.RateLimiting{}
-	common2.SetRateLimiting(r.handler, r.origin, &rateLimiting, exp)
+	common2.SetRateLimitingAction(r.handler, r.origin, &rateLimiting, exp)
 
 	for {
 		// message processing
@@ -39,7 +39,7 @@ func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 				action := newAction(inf)
 				rateLimiting.Limit = action.Limit
 				rateLimiting.Burst = action.Burst
-				addExperience(r, inf, action, exp)
+				common2.AddExperience(r.handler, r.origin, inf, action, exp)
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
 			}

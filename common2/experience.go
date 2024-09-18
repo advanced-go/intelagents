@@ -62,7 +62,7 @@ var Exp = func() *Experience {
 		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
-			status := action1.AddRateLimiting(ctx, origin, action)
+			status := action1.IngressAddRateLimiting(ctx, origin, action)
 			if !status.OK() {
 				h.Handle(status)
 			}

@@ -3,6 +3,7 @@ package common2
 import (
 	"github.com/advanced-go/events/threshold1"
 	"github.com/advanced-go/experience/action1"
+	"github.com/advanced-go/experience/inference1"
 	"github.com/advanced-go/stdlib/core"
 )
 
@@ -39,7 +40,7 @@ func SetThreshold(h core.ErrorHandler, origin core.Origin, t *threshold1.Entry, 
 	}
 }
 
-func SetRateLimiting(h core.ErrorHandler, origin core.Origin, rl *action1.RateLimiting, exp *Experience) {
+func SetRateLimitingAction(h core.ErrorHandler, origin core.Origin, rl *action1.RateLimiting, exp *Experience) {
 	if rl == nil {
 		return
 	}
@@ -50,4 +51,13 @@ func SetRateLimiting(h core.ErrorHandler, origin core.Origin, rl *action1.RateLi
 		rl.Limit = defaultLimit
 		rl.Burst = defaultBurst
 	}
+}
+
+func AddExperience(h core.ErrorHandler, origin core.Origin, inf *inference1.Entry, action *action1.RateLimiting, exp *Experience) *core.Status {
+	id, status := exp.AddIngressInference(h, origin, *inf)
+	if status.OK() {
+		action.InferenceId = id
+		status = exp.AddRateLimitingAction(h, origin, *action)
+	}
+	return status
 }
