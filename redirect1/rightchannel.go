@@ -14,6 +14,7 @@ func runRedirectRHC(r *redirect, fn *redirectFunc, observe *common.Observation, 
 			completed, status := fn.process(r, observe, exp)
 			if completed {
 				fn.update(r, exp, guide, status.OK())
+				/*
 				func (r *redirect) updatePercentage() {
 					switch r.state.Percentage {
 					case 0:
@@ -25,10 +26,12 @@ func runRedirectRHC(r *redirect, fn *redirectFunc, observe *common.Observation, 
 						r.shutdown()
 						return
 					}
+
+				 */
 		case msg := <-r.rhc.C:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
-				r.shutdown()
+				r.rhc.Close()
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
 			default:

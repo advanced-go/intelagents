@@ -15,7 +15,7 @@ const (
 // run - ingress resiliency for the RHC
 func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 	rateLimiting := action1.RateLimiting{}
-	setRateLimiting(r, &rateLimiting, exp)
+	common2.SetRateLimiting(r.handler, r.origin, &rateLimiting, exp)
 
 	for {
 		// message processing

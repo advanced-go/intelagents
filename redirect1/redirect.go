@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
+	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -99,5 +100,6 @@ func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirect(r, redirection, common.Observe, common.Exp, common.Guide)
+	go runRedirectRHC(r, redirection, common.Observe, common.Exp, common.Guide)
+	go runRedirectLHC(r, common2.Event)
 }

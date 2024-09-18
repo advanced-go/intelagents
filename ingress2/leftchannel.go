@@ -11,7 +11,7 @@ import (
 func runResiliencyLHC(r *resiliency, observe *common2.Events) {
 	ticker := messaging.NewTicker(r.duration)
 	limit := threshold1.Entry{}
-	setThreshold(r, &limit, observe)
+	common2.SetThreshold(r.handler, r.origin, &limit, observe)
 
 	ticker.Start(-1)
 	for {
