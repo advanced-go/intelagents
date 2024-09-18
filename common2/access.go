@@ -24,7 +24,7 @@ type Access struct {
 	Threshold func(h core.ErrorHandler, origin core.Origin) ([]threshold1.Entry, *core.Status)
 }
 
-var Observ = func() *Access {
+var Events = func() *Access {
 	return &Access{
 		IngressTimeseries: func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeseriesDuration)

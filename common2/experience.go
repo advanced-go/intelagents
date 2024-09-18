@@ -11,6 +11,7 @@ import (
 const (
 	addInferenceDuration = time.Second * 2
 	addActionDuration    = time.Second * 2
+	getActionDuration    = time.Second * 2
 	resetDuration        = time.Second * 10
 )
 
@@ -18,11 +19,14 @@ const (
 type Experience struct {
 	AddInference func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) *core.Status
 
+	GetRateLimitingAction func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status)
 	AddRateLimitingAction func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status
-	AddRoutingAction      func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status
-	AddRedirectAction     func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
 
+	GetRoutingAction   func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status)
+	AddRoutingAction   func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status
 	ResetRoutingAction func(h core.ErrorHandler, origin core.Origin, agentId string) *core.Status
+
+	AddRedirectAction func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
 }
 
 var Exp = func() *Experience {
@@ -36,6 +40,15 @@ var Exp = func() *Experience {
 			}
 			return status
 		},
+		GetRateLimitingAction: func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)
+			defer cancel()
+			e, status := action1.GetCurrentRateLimiting(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				h.Handle(status)
+			}
+			return e, status
+		},
 		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
@@ -44,6 +57,15 @@ var Exp = func() *Experience {
 				h.Handle(status)
 			}
 			return status
+		},
+		GetRoutingAction: func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)
+			defer cancel()
+			e, status := action1.GetCurrentRouting(ctx, origin)
+			if !status.OK() && !status.NotFound() {
+				h.Handle(status)
+			}
+			return e, status
 		},
 		AddRoutingAction: func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)

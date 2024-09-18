@@ -14,6 +14,10 @@ github.com/advanced-go/experience v0.0.0-20240823140508-f75e17fa5979 h1:InD1Zwdf
 github.com/advanced-go/experience v0.0.0-20240823140508-f75e17fa5979/go.mod h1:Y79NtJLovoBNt5Xo213FXSry2qfUA+G3qXxQiS6WO1c=
 github.com/advanced-go/experience v0.0.0-20240916184558-e2f15ab38459 h1:9XK310nqwFZnoykiRci2mcPli1OwZAtsMX6DCQJVGsw=
 github.com/advanced-go/experience v0.0.0-20240916184558-e2f15ab38459/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
+github.com/advanced-go/experience v0.0.0-20240917190416-e2dba9d3c1ee h1:fEeQSB/47x7mL+ZMpA5XP/KC4RcgLWLDHQ5tb3u5Roo=
+github.com/advanced-go/experience v0.0.0-20240917190416-e2dba9d3c1ee/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
+github.com/advanced-go/experience v0.0.0-20240917192935-98a9abaab8ba h1:lwjTnJ5MFS54D01gdBnb8/lnGSgkRxN5lfweGq5Krso=
+github.com/advanced-go/experience v0.0.0-20240917192935-98a9abaab8ba/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5 h1:4+YNnTo/OqtrE4jwYJ5ZeEaex1xFYEFabIHfwaQzZ4U=
 github.com/advanced-go/guidance v0.0.0-20240718194714-fb9c3df720d5/go.mod h1:6GqdPnE0Fh6o34pehFuYf9No3NOHlW0NeXEqgp+xy3Y=
 github.com/advanced-go/guidance v0.0.0-20240724124403-97786ec4fee7 h1:FQH3WNH6p/KIkoqRxrSWxCyMxlvIJkZhmCJOKri7Ipo=
@@ -130,6 +134,8 @@ github.com/advanced-go/stdlib v0.0.0-20240916163233-77ffc51165de h1:haFy1YNe/y2k
 github.com/advanced-go/stdlib v0.0.0-20240916163233-77ffc51165de/go.mod h1:bvuWc7Tx57LArgrEvbPxKW4hvIYGS3pw7iG4P6xofoQ=
 github.com/advanced-go/stdlib v0.0.0-20240917125015-ffbc8a3daf1c h1:/Q6R/5R04Ihs3RxitmOa/A3gTMu0XF9cnk67rECz6DM=
 github.com/advanced-go/stdlib v0.0.0-20240917125015-ffbc8a3daf1c/go.mod h1:bvuWc7Tx57LArgrEvbPxKW4hvIYGS3pw7iG4P6xofoQ=
+github.com/advanced-go/stdlib v0.0.0-20240917153945-4eae429aec37 h1:+S/m7jDkkGBfTa7DVzDHfxIB+Zqvt4YFIIAKxfNKElQ=
+github.com/advanced-go/stdlib v0.0.0-20240917153945-4eae429aec37/go.mod h1:bvuWc7Tx57LArgrEvbPxKW4hvIYGS3pw7iG4P6xofoQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

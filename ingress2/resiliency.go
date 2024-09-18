@@ -2,7 +2,6 @@ package ingress2
 
 import (
 	"fmt"
-	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/core"
@@ -11,21 +10,26 @@ import (
 )
 
 const (
-	Class = "ingress-resiliency2"
+	Class           = "ingress-resiliency2"
+	defaultDuration = time.Minute * 5
 )
 
 // TODO : need to determine a way to increase/decrease the rate of observations if the traffic does not
 //         match the profile.
 
 type resiliency struct {
-	running      bool
-	agentId      string
-	origin       core.Origin
-	state        resiliency1.IngressResiliencyState
-	profile      *common.Profile
-	ticker       *messaging.Ticker
-	lhc          *messaging.Channel
-	rhc          *messaging.Channel
+	running bool
+	agentId string
+	origin  core.Origin
+
+	// Left channel
+	duration time.Duration
+	lhc      *messaging.Channel
+
+	// Right channel
+
+	rhc *messaging.Channel
+
 	handler      messaging.OpsAgent
 	shutdownFunc func()
 }
@@ -46,10 +50,15 @@ func newResiliency(origin core.Origin, profile *common.Profile, handler messagin
 	r := new(resiliency)
 	r.origin = origin
 	r.agentId = resiliencyAgentUri(origin)
-	resiliency1.NewIngressResiliencyState(&r.state)
-	r.profile = profile
-	r.ticker = messaging.NewTicker(profile.ResiliencyDuration(-1))
+
+	// Left channel
+	r.duration = defaultDuration
+	if profile != nil {
+		r.duration = profile.ResiliencyDuration(-1)
+	}
 	r.lhc = messaging.NewEnabledChannel()
+
+	// Right channel
 	r.rhc = messaging.NewEnabledChannel()
 	r.handler = handler
 	return r
@@ -67,7 +76,7 @@ func (r *resiliency) Message(m *messaging.Message) {
 		return
 	}
 	// Specifically for the lhc or profile content
-	if m.IsContentType(common.ContentTypeProfile) || m.Channel() == messaging.ChannelLeftHemisphere {
+	if m.IsContentType(common.ContentTypeProfile) || m.Channel() == messaging.ChannelLeft {
 		r.lhc.C <- m
 	} else {
 		r.rhc.C <- m
@@ -82,7 +91,8 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go runResiliencyRHC(r, nil, common.Observe, common.Exp, common.Guide)
+	//go runResiliencyRHC(r, nil, common.Observe, common.Exp, common.Guide)
+	go runResiliencyLHC(r, common2.Events)
 }
 
 // Shutdown - shutdown the agent
@@ -99,89 +109,4 @@ func (r *resiliency) Shutdown() {
 	r.lhc.C <- msg
 	r.rhc.Enable()
 	r.rhc.C <- msg
-}
-
-func (r *resiliency) startup() {
-	r.ticker.Start(-1)
-}
-
-func (r *resiliency) shutdown() {
-	r.lhc.Close()
-	r.rhc.Close()
-	r.ticker.Stop()
-}
-
-func (r *resiliency) reviseTicker(newDuration time.Duration) {
-	r.ticker.Start(newDuration)
-}
-
-func (r *resiliency) updatePercentileSLO(guide *common.Guidance) {
-	p, status := guide.PercentileSLO(r.handler, r.origin)
-	if status.OK() {
-		r.state.Percent = p.Percent
-		r.state.Latency = p.Latency
-		r.state.Minimum = p.Minimum
-	}
-}
-
-// run - ingress resiliency for the RHC
-func runResiliencyRHC(r *resiliency, fn *resiliencyFunc, observe *common.Observation, exp *common.Experience, guide *common.Guidance) {
-	fn.startup(r, guide)
-
-	for {
-		// control channel processing
-		select {
-		case msg := <-r.rhc.C:
-			switch msg.Event() {
-			case messaging.ShutdownEvent:
-				r.shutdown()
-				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
-				return
-			//case messaging.DataChangeEvent:
-			//	r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-			//	processDataChangeEvent(r, msg, guide)
-			default:
-				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
-			}
-		default:
-		}
-	}
-}
-
-// run - ingress resiliency for the LHC
-func runResiliencyLHC(r *resiliency, fn *resiliencyFunc, observe *common2.Access, guide *common.Guidance) {
-	fn.startup(r, guide)
-
-	for {
-		// observation processing
-		select {
-		case <-r.ticker.C():
-			r.handler.AddActivity(r.agentId, "onTick")
-			e, status := observe.IngressTimeseries(r.handler, r.origin)
-			if status.OK() {
-				m := messaging.NewRightHemisphereMessage("", r.agentId, messaging.DataChangeEvent)
-				m.Body = e
-				r.Message(m)
-			}
-		default:
-		}
-		// message processing
-		select {
-		case msg := <-r.lhc.C:
-			switch msg.Event() {
-			case messaging.ShutdownEvent:
-				r.shutdown()
-				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
-				return
-			case messaging.DataChangeEvent:
-				// GetProfile errors on cast
-				if p := common2.GetProfile(r.handler, r.agentId, msg); p != nil {
-					r.reviseTicker(p.ResiliencyDuration(-1))
-				}
-			default:
-				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
-			}
-		default:
-		}
-	}
 }
