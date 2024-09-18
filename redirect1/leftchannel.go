@@ -1,15 +1,15 @@
-package ingress2
+package redirect1
 
 import (
-	"github.com/advanced-go/events/threshold1"
+	"github.com/advanced-go/access/threshold1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
 // run - ingress resiliency for the LHC
-func runResiliencyLHC(r *resiliency, observe *common2.Events) {
-	ticker := messaging.NewTicker(r.duration)
+func runRedirectLHC(r *redirect, observe *common2.Access) {
+	ticker := messaging.NewTicker(redirectDuration)
 	limit := threshold1.Entry{}
 	setThreshold(r, &limit, observe)
 
@@ -21,7 +21,7 @@ func runResiliencyLHC(r *resiliency, observe *common2.Events) {
 			r.handler.AddActivity(r.agentId, "onTick")
 			actual, status := observe.Threshold(r.handler, r.origin)
 			if status.OK() {
-				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, common2.NewObservation(actual[0], limit))
+				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, newObservation(actual[0], limit))
 				r.Message(m)
 			}
 		default:

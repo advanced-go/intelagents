@@ -22,8 +22,9 @@ type redirect struct {
 	running bool
 	agentId string
 	origin  core.Origin
-	state   resiliency1.IngressRedirectState
-	ticker  *messaging.Ticker
+
+	state  resiliency1.IngressRedirectState
+	ticker *messaging.Ticker
 	//ctrlC        chan *messaging.Message
 	lhc          Channel
 	rhc          Channel
@@ -65,7 +66,7 @@ func (r *redirect) Uri() string { return r.agentId }
 // Message - message the agent
 func (r *redirect) Message(m *messaging.Message) {
 	// How to determine which channel??
-	if m.Channel() == messaging.ChannelLeftHemisphere {
+	if m.Channel() == messaging.ChannelLeft {
 		r.lhc.Send(m)
 	} else {
 		r.rhc.Send(m)

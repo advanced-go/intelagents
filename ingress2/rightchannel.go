@@ -28,7 +28,7 @@ func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 				return
 			case messaging.ObservationEvent:
 				r.handler.AddActivity(r.agentId, messaging.ObservationEvent)
-				observe, ok := msg.Body.(*observation)
+				observe, ok := msg.Body.(*common2.Observation)
 				if !ok {
 					continue
 				}

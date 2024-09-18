@@ -3,9 +3,10 @@ package ingress2
 import (
 	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/experience/inference1"
+	"github.com/advanced-go/intelagents/common2"
 )
 
-func runInference(r *resiliency, observe *observation) *inference1.Entry {
+func runInference(r *resiliency, observe *common2.Observation) *inference1.Entry {
 	inf := inference1.NewEntry()
 
 	return inf

@@ -1,5 +1,7 @@
 github.com/advanced-go/access v0.0.0-20240917105736-bf2d8fe2cbcf h1:Uycx2mVa8wuRqnQ5HY12bDdQnjMCfv84ZNShJJXZ1ZY=
 github.com/advanced-go/access v0.0.0-20240917105736-bf2d8fe2cbcf/go.mod h1:71ToN/h+tHkl48UIaBu2KV35wbAPRzplxWMs4dd8WE8=
+github.com/advanced-go/events v0.0.0-20240918124335-07bd40a619d5 h1:inDuwwD4yTlVz5lCU94srZoi+RrQyb9CuZm+MN/JLmw=
+github.com/advanced-go/events v0.0.0-20240918124335-07bd40a619d5/go.mod h1:Zm78pJ1o/gX8n0L2GrkhWBlt8OPwHwkGzGiINWr2rgc=
 github.com/advanced-go/experience v0.0.0-20240730062915-06ddc87c0672 h1:gRtbHQfc/zWx73PvBzBQxQvfgL82ji8QwYNLj2xasBo=
 github.com/advanced-go/experience v0.0.0-20240730062915-06ddc87c0672/go.mod h1:rjylV4tL3ttAOVvoRvCLxxICo79JKygCTZQEspfFvEM=
 github.com/advanced-go/experience v0.0.0-20240730133437-a234da7ee48c h1:WTWzuuWTMw3yv3ev4qDfsXIJ7xUfCYAW+IoLSkowOow=

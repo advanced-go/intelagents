@@ -13,8 +13,8 @@ const (
 	timeseriesDuration = time.Second * 2
 )
 
-// Access - access functions struct, a nod to Linus Torvalds and plain C
-type Access struct {
+// Events - access functions struct, a nod to Linus Torvalds and plain C
+type Events struct {
 	IngressTimeseries func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
 	EgressTimeseries  func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
 
@@ -24,8 +24,8 @@ type Access struct {
 	Threshold func(h core.ErrorHandler, origin core.Origin) ([]threshold1.Entry, *core.Status)
 }
 
-var Events = func() *Access {
-	return &Access{
+var Event = func() *Events {
+	return &Events{
 		IngressTimeseries: func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeseriesDuration)
 			defer cancel()

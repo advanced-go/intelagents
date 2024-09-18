@@ -10,6 +10,7 @@ require (
 
 require (
 	github.com/advanced-go/access v0.0.0-20240917105736-bf2d8fe2cbcf // indirect
+	github.com/advanced-go/events v0.0.0-20240918124335-07bd40a619d5 // indirect
 	github.com/advanced-go/experience v0.0.0-20240918101845-760e5553f9cf // indirect
 	github.com/advanced-go/postgresql v0.0.0-20240914153537-d55ad0af58ff // indirect
 	github.com/google/uuid v1.6.0 // indirect
