@@ -27,7 +27,6 @@ type resiliency struct {
 	lhc      *messaging.Channel
 
 	// Right channel
-
 	rhc *messaging.Channel
 
 	handler      messaging.OpsAgent
@@ -91,7 +90,7 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	//go runResiliencyRHC(r, nil, common.Observe, common.Exp, common.Guide)
+	go runResiliencyRHC(r, common2.Exp)
 	go runResiliencyLHC(r, common2.Events)
 }
 

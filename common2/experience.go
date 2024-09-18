@@ -17,7 +17,8 @@ const (
 
 // Experience - experience functions struct, a nod to Linus Torvalds and plain C
 type Experience struct {
-	AddInference func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) *core.Status
+	AddIngressInference func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) (int, *core.Status)
+	AddEgressInference  func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) (int, *core.Status)
 
 	GetRateLimitingAction func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status)
 	AddRateLimitingAction func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status
@@ -31,14 +32,23 @@ type Experience struct {
 
 var Exp = func() *Experience {
 	return &Experience{
-		AddInference: func(h core.ErrorHandler, origin core.Origin, e inference1.Entry) *core.Status {
+		AddIngressInference: func(h core.ErrorHandler, origin core.Origin, e inference1.Entry) (int, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), addInferenceDuration)
 			defer cancel()
-			status := inference1.IngressInsert(ctx, nil, e)
-			if !status.OK() && !status.NotFound() {
+			id, status := inference1.AddIngress(ctx, nil, e)
+			if !status.OK() {
 				h.Handle(status)
 			}
-			return status
+			return id, status
+		},
+		AddEgressInference: func(h core.ErrorHandler, origin core.Origin, e inference1.Entry) (int, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), addInferenceDuration)
+			defer cancel()
+			id, status := inference1.AddEgress(ctx, nil, e)
+			if !status.OK() {
+				h.Handle(status)
+			}
+			return id, status
 		},
 		GetRateLimitingAction: func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)

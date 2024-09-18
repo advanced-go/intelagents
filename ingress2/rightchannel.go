@@ -15,7 +15,7 @@ const (
 // run - ingress resiliency for the RHC
 func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 	rateLimiting := action1.RateLimiting{}
-	updateRateLimiting(r, &rateLimiting, exp)
+	setRateLimiting(r, &rateLimiting, exp)
 
 	for {
 		// message processing
@@ -27,27 +27,23 @@ func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
 			case messaging.ObservationEvent:
-
-				inf, action, status := runInference(r, nil, exp)
-			//	r.handler.AddActivity(r.agentId, fmt.Sprintf("%v - %v", msg.Event(), msg.ContentType()))
-			//	processDataChangeEvent(r, msg, guide)
+				r.handler.AddActivity(r.agentId, messaging.ObservationEvent)
+				observe, ok := msg.Body.(*observation)
+				if !ok {
+					continue
+				}
+				inf := runInference(r, observe)
+				if inf == nil {
+					continue
+				}
+				action := newAction(inf)
+				rateLimiting.Limit = action.Limit
+				rateLimiting.Burst = action.Burst
+				addExperience(r, inf, action, exp)
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
 			}
 		default:
 		}
-	}
-}
-
-func updateRateLimiting(r *resiliency, rl *action1.RateLimiting, exp *common2.Experience) {
-	if r == nil || rl == nil {
-		return
-	}
-	act, status := exp.GetRateLimitingAction(r.handler, r.origin)
-	if status.OK() {
-		*rl = act
-	} else {
-		rl.Limit = defaultLimit
-		rl.Burst = defaultBurst
 	}
 }

@@ -7,17 +7,11 @@ import (
 	"github.com/advanced-go/stdlib/messaging"
 )
 
-const (
-	thresholdPercent = 95
-	thresholdValue   = 3000 // milliseconds
-	thresholdMinimum = 0
-)
-
 // run - ingress resiliency for the LHC
 func runResiliencyLHC(r *resiliency, observe *common2.Access) {
 	ticker := messaging.NewTicker(r.duration)
 	limit := threshold1.Entry{}
-	updateThreshold(r, &limit, observe)
+	setThreshold(r, &limit, observe)
 
 	ticker.Start(-1)
 	for {
@@ -49,21 +43,5 @@ func runResiliencyLHC(r *resiliency, observe *common2.Access) {
 			}
 		default:
 		}
-	}
-}
-
-func updateThreshold(r *resiliency, t *threshold1.Entry, observe *common2.Access) {
-	if r == nil || t == nil {
-		return
-	}
-	e, status := observe.Threshold(r.handler, r.origin)
-	if status.OK() {
-		t.Percent = e[0].Percent
-		t.Value = e[0].Value
-		t.Minimum = e[0].Minimum
-	} else {
-		t.Percent = thresholdPercent
-		t.Value = thresholdValue
-		t.Minimum = thresholdMinimum
 	}
 }
