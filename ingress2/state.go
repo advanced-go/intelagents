@@ -12,7 +12,7 @@ func setThreshold(r *resiliency, t *threshold1.Entry, observe *common2.Events) {
 	if r == nil || t == nil {
 		return
 	}
-	e, status := observe.Threshold(r.handler, r.origin)
+	e, status := observe.IngressThreshold(r.handler, r.origin)
 	if status.OK() {
 		t.Percent = e[0].Percent
 		t.Value = e[0].Value

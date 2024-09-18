@@ -23,11 +23,10 @@ type redirect struct {
 	agentId string
 	origin  core.Origin
 
-	state  resiliency1.IngressRedirectState
-	ticker *messaging.Ticker
-	//ctrlC        chan *messaging.Message
-	lhc          Channel
-	rhc          Channel
+	// Channels
+	lhc *messaging.Channel
+	rhc *messaging.Channel
+
 	handler      messaging.OpsAgent
 	shutdownFunc func()
 }
@@ -48,11 +47,13 @@ func newRedirect(origin core.Origin, state resiliency1.IngressRedirectState, han
 	r := new(redirect)
 	r.agentId = redirectAgentUri(origin)
 	r.origin = origin
-	r.state = state
-	r.ticker = messaging.NewTicker(tickerDur)
+
+	//r.state = state
+	//r.ticker = messaging.NewTicker(tickerDur)
 	//r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-	r.rhc = NewChannel(true)
-	r.lhc = NewChannel(true)
+
+	r.rhc = messaging.NewEnabledChannel()
+	r.lhc = messaging.NewEnabledChannel()
 	r.handler = handler
 	return r
 }
@@ -86,11 +87,11 @@ func (r *redirect) Shutdown() {
 		r.shutdownFunc()
 	}
 	msg := messaging.NewControlMessage(r.agentId, r.agentId, messaging.ShutdownEvent)
+	r.rhc.Enable()
 	r.rhc.Send(msg)
+	r.lhc.Enable()
 	r.lhc.Send(msg)
-	//if r.ctrlC != nil {
-	//	r.ctrlC <- msg
-	//}
+
 }
 
 // Run - run the agent
@@ -99,63 +100,4 @@ func (r *redirect) Run() {
 		return
 	}
 	go runRedirect(r, redirection, common.Observe, common.Exp, common.Guide)
-}
-
-// startup - start tickers
-func (r *redirect) startup() {
-	r.ticker.Start(-1)
-}
-
-// shutdown - close resources
-func (r *redirect) shutdown() {
-	r.rhc.Close()
-	r.lhc.Close()
-	//close(r.ctrlC)
-	r.ticker.Stop()
-}
-
-func (r *redirect) updatePercentage() {
-	switch r.state.Percentage {
-	case 0:
-		r.state.Percentage = 10
-	case 10:
-		r.state.Percentage = 20
-	case 20:
-		r.state.Percentage = 40
-	case 40:
-		r.state.Percentage = 70
-	case 70:
-		r.state.Percentage = 100
-	default:
-	}
-}
-
-func onTick() {
-
-}
-
-func runRedirect(r *redirect, fn *redirectFunc, observe *common.Observation, exp *common.Experience, guide *common.Guidance) {
-	r.startup()
-	for {
-		select {
-		case <-r.ticker.C():
-			r.handler.AddActivity(r.agentId, "onTick()")
-			completed, status := fn.process(r, observe, exp)
-			if completed {
-				fn.update(r, exp, guide, status.OK())
-				r.handler.Message(messaging.NewControlMessage("", r.agentId, RedirectCompletedEvent))
-				r.shutdown()
-				return
-			}
-		case msg := <-r.rhc.C:
-			switch msg.Event() {
-			case messaging.ShutdownEvent:
-				r.shutdown()
-				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
-				return
-			default:
-			}
-		default:
-		}
-	}
 }

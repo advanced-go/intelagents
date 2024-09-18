@@ -22,12 +22,10 @@ type resiliency struct {
 	agentId string
 	origin  core.Origin
 
-	// Left channel
+	// Channels
 	duration time.Duration
 	lhc      *messaging.Channel
-
-	// Right channel
-	rhc *messaging.Channel
+	rhc      *messaging.Channel
 
 	handler      messaging.OpsAgent
 	shutdownFunc func()

@@ -8,7 +8,7 @@ import (
 )
 
 // run - ingress resiliency for the LHC
-func runRedirectLHC(r *redirect, observe *common2.Access) {
+func runRedirectLHC(r *redirect, observe *common2.Events) {
 	ticker := messaging.NewTicker(redirectDuration)
 	limit := threshold1.Entry{}
 	setThreshold(r, &limit, observe)
@@ -21,7 +21,7 @@ func runRedirectLHC(r *redirect, observe *common2.Access) {
 			r.handler.AddActivity(r.agentId, "onTick")
 			actual, status := observe.Threshold(r.handler, r.origin)
 			if status.OK() {
-				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, newObservation(actual[0], limit))
+				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, common2.NewObservation(actual[0], limit))
 				r.Message(m)
 			}
 		default:
@@ -32,7 +32,7 @@ func runRedirectLHC(r *redirect, observe *common2.Access) {
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				ticker.Stop()
-				r.rhc.Close()
+				r.lhc.Close()
 				return
 			case messaging.DataChangeEvent:
 				if p := common2.GetProfile(r.handler, r.agentId, msg); p != nil {

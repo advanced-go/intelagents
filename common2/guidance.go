@@ -17,8 +17,8 @@ const (
 
 // Guidance - guidance functions struct, a nod to Linus Torvalds and plain C
 type Guidance struct {
-	HostEntries    func(h core.ErrorHandler, origin core.Origin) ([]host1.HostEntry, *core.Status)
-	NewHostEntries func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.HostEntry, *core.Status)
+	HostEntries    func(h core.ErrorHandler, origin core.Origin) ([]host1.Entry, *core.Status)
+	NewHostEntries func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, *core.Status)
 
 	IngressRedirect          func(h core.ErrorHandler, origin core.Origin) ([]redirect1.RedirectConfig, *core.Status)
 	UpdatedIngressRedirect   func(h core.ErrorHandler, origin core.Origin, lastId int) ([]redirect1.RedirectConfig, *core.Status)
@@ -36,7 +36,7 @@ type Guidance struct {
 
 var Guide = func() *Guidance {
 	return &Guidance{
-		HostEntries: func(h core.ErrorHandler, origin core.Origin) ([]host1.HostEntry, *core.Status) {
+		HostEntries: func(h core.ErrorHandler, origin core.Origin) ([]host1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
 			e, _, status := host1.GetHostEntries(ctx, origin)
@@ -45,7 +45,7 @@ var Guide = func() *Guidance {
 			}
 			return e, status
 		},
-		NewHostEntries: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.HostEntry, *core.Status) {
+		NewHostEntries: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
 			e, status := host1.GetNewHostEntries(ctx, origin, lastId)
