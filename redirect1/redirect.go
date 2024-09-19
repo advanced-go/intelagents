@@ -101,7 +101,7 @@ func (r *redirect) Run() {
 		}
 		return
 	}
-	//go runRedirectRHC(r, redirection, common.Observe, common.Exp, common.Guide)
+	go runRedirectRHC(r, common2.IngressExperience, common2.IngressGuidance)
 	go runRedirectLHC(r, common2.IngressEvents)
 	r.running = true
 }

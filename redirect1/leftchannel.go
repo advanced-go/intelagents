@@ -11,20 +11,27 @@ import (
 func runRedirectLHC(r *redirect, observe *common2.Events) {
 	origin := redirectOrigin(r.origin, r.state.Location)
 	ticker := messaging.NewTicker(redirectDuration)
+	stepTicker := messaging.NewTicker(r.state.Policy.StepDuration)
+
 	// Set the threshold to the current host's, and use that to compare to the redirect host's actual threshold
 	limit := threshold1.Entry{}
 	common2.SetPercentileThreshold(r.handler, r.origin, &limit, observe)
 
 	ticker.Start(-1)
+	stepTicker.Start(-1)
 	for {
 		// observation processing
 		select {
 		case <-ticker.C():
+			// Need percentage and status code thresholds
 			actual, status := observe.GetThreshold(r.handler, origin)
 			if status.OK() {
-				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, common2.NewObservation(actual[0], limit))
+				m := messaging.NewRightChannelMessage(r.agentId, r.agentId, messaging.ObservationEvent, common2.NewObservation(actual[0], limit))
 				r.Message(m)
 			}
+		case <-stepTicker.C():
+			m := messaging.NewRightChannelMessage(r.agentId, r.agentId, messaging.TickEvent, nil)
+			r.Message(m)
 		default:
 		}
 		// message processing
