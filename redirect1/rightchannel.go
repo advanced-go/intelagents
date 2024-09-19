@@ -1,43 +1,45 @@
 package redirect1
 
 import (
+	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/intelagents/common"
+	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
-func runRedirectRHC(r *redirect, fn *redirectFunc, observe *common.Observation, exp *common.Experience, guide *common.Guidance) {
-	r.startup()
+func runRedirectRHC(r *redirect, fn *redirectFunc, observe *common2.Events, exp *common2.Experience, guide *common.Guidance) {
+	routing := action1.NewRouting()
+	common2.SetRoutingAction(r.handler, r.origin, routing, exp)
+
 	for {
 		select {
-		case <-r.ticker.C():
-			r.handler.AddActivity(r.agentId, "onTick()")
-			completed, status := fn.process(r, observe, exp)
-			if completed {
-				fn.update(r, exp, guide, status.OK())
-				/*
-				func (r *redirect) updatePercentage() {
-					switch r.state.Percentage {
-					case 0:
-						r.state.Percentage = 10
-					case 10:
-						r.state.Percentage = 20
-					case 20:
-						r.handler.Message(messaging.NewControlMessage("", r.agentId, RedirectCompletedEvent))
-						r.shutdown()
-						return
-					}
-
-				 */
 		case msg := <-r.rhc.C:
 			switch msg.Event() {
 			case messaging.ShutdownEvent:
 				r.rhc.Close()
 				r.handler.AddActivity(r.agentId, messaging.ShutdownEvent)
 				return
+			case messaging.ObservationEvent:
+				r.handler.AddActivity(r.agentId, messaging.ObservationEvent)
+				observe, ok := msg.Body.(*common2.Observation)
+				if !ok {
+					continue
+				}
+				
+				/*
+					inf := runInference(r, observe)
+					if inf == nil {
+						continue
+					}
+					action := newAction(inf)
+					rateLimiting.Limit = action.Limit
+					rateLimiting.Burst = action.Burst
+					common2.AddRateLimitingExperience(r.handler, r.origin, inf, action, exp)
+
+				*/
 			default:
 			}
 		default:
 		}
 	}
 }
-

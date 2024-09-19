@@ -9,8 +9,8 @@ import (
 
 // run - ingress resiliency for the RHC
 func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
-	rateLimiting := action1.RateLimiting{}
-	common2.SetRateLimitingAction(r.handler, r.origin, &rateLimiting, exp)
+	rateLimiting := action1.NewRateLimiting()
+	common2.SetRateLimitingAction(r.handler, r.origin, rateLimiting, exp)
 
 	for {
 		// message processing

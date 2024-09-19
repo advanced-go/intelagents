@@ -17,19 +17,19 @@ const (
 
 // Experience - experience interface, with a nod to Linus Torvalds and plain C
 type Experience struct {
-	GetLastRateLimitingAction func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status)
-	AddRateLimitingAction     func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status
+	GetActiveRateLimitingAction func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status)
+	AddRateLimitingAction       func(h core.ErrorHandler, origin core.Origin, action *action1.RateLimiting) *core.Status
 
-	GetLastRoutingAction func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status)
-	AddRoutingAction     func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status
+	GetActiveRoutingAction func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status)
+	AddRoutingAction       func(h core.ErrorHandler, origin core.Origin, action *action1.Routing) *core.Status
 
-	AddRedirectAction func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
-	AddInference      func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) (int, *core.Status)
+	AddRedirectAction func(h core.ErrorHandler, origin core.Origin, action *action1.Redirect) *core.Status
+	AddInference      func(h core.ErrorHandler, origin core.Origin, entry *inference1.Entry) (int, *core.Status)
 }
 
 var IngressExperience = func() *Experience {
 	return &Experience{
-		GetLastRateLimitingAction: func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status) {
+		GetActiveRateLimitingAction: func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)
 			defer cancel()
 			e, status := action1.GetIngressActiveRateLimiting(ctx, origin)
@@ -38,7 +38,7 @@ var IngressExperience = func() *Experience {
 			}
 			return e, status
 		},
-		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status {
+		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action *action1.RateLimiting) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
 			status := action1.AddIngressRateLimiting(ctx, origin, action)
@@ -47,7 +47,7 @@ var IngressExperience = func() *Experience {
 			}
 			return status
 		},
-		GetLastRoutingAction: func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status) {
+		GetActiveRoutingAction: func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)
 			defer cancel()
 			e, status := action1.GetIngressActiveRouting(ctx, origin)
@@ -56,7 +56,7 @@ var IngressExperience = func() *Experience {
 			}
 			return e, status
 		},
-		AddRoutingAction: func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status {
+		AddRoutingAction: func(h core.ErrorHandler, origin core.Origin, action *action1.Routing) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
 			status := action1.AddIngressRouting(ctx, origin, action)
@@ -65,7 +65,7 @@ var IngressExperience = func() *Experience {
 			}
 			return status
 		},
-		AddRedirectAction: func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status {
+		AddRedirectAction: func(h core.ErrorHandler, origin core.Origin, action *action1.Redirect) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
 			status := action1.AddIngressRedirect(ctx, origin, action)
@@ -74,7 +74,7 @@ var IngressExperience = func() *Experience {
 			}
 			return status
 		},
-		AddInference: func(h core.ErrorHandler, origin core.Origin, e inference1.Entry) (int, *core.Status) {
+		AddInference: func(h core.ErrorHandler, origin core.Origin, e *inference1.Entry) (int, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), addInferenceDuration)
 			defer cancel()
 			id, status := inference1.AddIngress(ctx, nil, e)
@@ -88,7 +88,7 @@ var IngressExperience = func() *Experience {
 
 var EgressExperience = func() *Experience {
 	return &Experience{
-		GetLastRateLimitingAction: func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status) {
+		GetActiveRateLimitingAction: func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)
 			defer cancel()
 			e, status := action1.GetEgressActiveRateLimiting(ctx, origin)
@@ -97,7 +97,7 @@ var EgressExperience = func() *Experience {
 			}
 			return e, status
 		},
-		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status {
+		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action *action1.RateLimiting) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
 			status := action1.AddEgressRateLimiting(ctx, origin, action)
@@ -106,7 +106,7 @@ var EgressExperience = func() *Experience {
 			}
 			return status
 		},
-		GetLastRoutingAction: func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status) {
+		GetActiveRoutingAction: func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getActionDuration)
 			defer cancel()
 			e, status := action1.GetEgressActiveRouting(ctx, origin)
@@ -115,7 +115,7 @@ var EgressExperience = func() *Experience {
 			}
 			return e, status
 		},
-		AddRoutingAction: func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status {
+		AddRoutingAction: func(h core.ErrorHandler, origin core.Origin, action *action1.Routing) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
 			status := action1.AddEgressRouting(ctx, origin, action)
@@ -124,7 +124,7 @@ var EgressExperience = func() *Experience {
 			}
 			return status
 		},
-		AddRedirectAction: func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status {
+		AddRedirectAction: func(h core.ErrorHandler, origin core.Origin, action *action1.Redirect) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
 			status := action1.AddEgressRedirect(ctx, origin, action)
@@ -133,7 +133,7 @@ var EgressExperience = func() *Experience {
 			}
 			return status
 		},
-		AddInference: func(h core.ErrorHandler, origin core.Origin, e inference1.Entry) (int, *core.Status) {
+		AddInference: func(h core.ErrorHandler, origin core.Origin, e *inference1.Entry) (int, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), addInferenceDuration)
 			defer cancel()
 			id, status := inference1.AddEgress(ctx, nil, e)
