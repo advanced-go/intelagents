@@ -15,7 +15,7 @@ const (
 	thresholdDuration  = time.Second * 2
 )
 
-// Events - access functions struct, a nod to Linus Torvalds and plain C
+// Events - events interface, with a nod to Linus Torvalds and plain C
 type Events struct {
 	QueryTimeseries func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
 	QueryLog        func(h core.ErrorHandler, origin core.Origin) ([]log1.Entry, *core.Status)

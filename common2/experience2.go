@@ -15,15 +15,16 @@ const (
 	resetDuration        = time.Second * 10
 )
 
-// Experience - experience functions struct, a nod to Linus Torvalds and plain C
+// Experience - experience interface, with a nod to Linus Torvalds and plain C
 type Experience struct {
 	GetLastRateLimitingAction func(h core.ErrorHandler, origin core.Origin) (action1.RateLimiting, *core.Status)
 	AddRateLimitingAction     func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status
-	GetLastRoutingAction      func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status)
-	AddRoutingAction          func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status
-	AddRedirectAction         func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
 
-	AddInference func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) (int, *core.Status)
+	GetLastRoutingAction func(h core.ErrorHandler, origin core.Origin) (action1.Routing, *core.Status)
+	AddRoutingAction     func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status
+
+	AddRedirectAction func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status
+	AddInference      func(h core.ErrorHandler, origin core.Origin, entry inference1.Entry) (int, *core.Status)
 }
 
 var IngressExperience = func() *Experience {
