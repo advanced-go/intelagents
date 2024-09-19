@@ -56,7 +56,7 @@ func SetRateLimitingAction(h core.ErrorHandler, origin core.Origin, a *action1.R
 	if a == nil {
 		return
 	}
-	act, status := exp.GetRateLimitingAction(h, origin)
+	act, status := exp.GetLastRateLimitingAction(h, origin)
 	if status.OK() {
 		*a = act
 	} else {
@@ -68,7 +68,7 @@ func SetRoutingAction(h core.ErrorHandler, origin core.Origin, a *action1.Routin
 	if a == nil {
 		return
 	}
-	act, status := exp.GetRoutingAction(h, origin)
+	act, status := exp.GetLastRoutingAction(h, origin)
 	if status.OK() {
 		*a = act
 	} else {
