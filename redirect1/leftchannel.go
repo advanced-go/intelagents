@@ -4,14 +4,17 @@ import (
 	"github.com/advanced-go/events/threshold1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/intelagents/common2"
+	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
 // run - ingress resiliency for the LHC
 func runRedirectLHC(r *redirect, observe *common2.Events) {
+	redirectOrigin := redirectOrigin()core.Origin{}
 	ticker := messaging.NewTicker(redirectDuration)
+	// Set the threshold to the current hosts, and use that to compare to the redirect hosts threshold
 	limit := threshold1.Entry{}
-	common2.SetThreshold(r.handler, r.origin, &limit, observe)
+	common2.SetPercentileThreshold(r.handler, r.origin, &limit, observe)
 
 	ticker.Start(-1)
 	for {

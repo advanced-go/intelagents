@@ -1,7 +1,6 @@
 package ingress2
 
 import (
-	"fmt"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/core"
@@ -32,10 +31,7 @@ type resiliency struct {
 }
 
 func resiliencyAgentUri(origin core.Origin) string {
-	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", Class, origin.Region, origin.Zone, origin.Host)
-	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", Class, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return origin.Uri(Class)
 }
 
 // NewResiliencyAgent - create a new resiliency agent

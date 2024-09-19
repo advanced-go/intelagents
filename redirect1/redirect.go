@@ -1,7 +1,6 @@
 package redirect1
 
 import (
-	"fmt"
 	"github.com/advanced-go/guidance/resiliency1"
 	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/intelagents/common2"
@@ -11,7 +10,7 @@ import (
 )
 
 const (
-	RedirectClass          = "ingress-redirect1"
+	Class                  = "ingress-redirect1"
 	redirectDuration       = time.Second * 60
 	RedirectCompletedEvent = "event:redirect-completed"
 )
@@ -33,18 +32,15 @@ type redirect struct {
 }
 
 func redirectAgentUri(origin core.Origin) string {
-	if origin.SubZone == "" {
-		return fmt.Sprintf("%v:%v.%v.%v", RedirectClass, origin.Region, origin.Zone, origin.Host)
-	}
-	return fmt.Sprintf("%v:%v.%v.%v.%v", RedirectClass, origin.Region, origin.Zone, origin.SubZone, origin.Host)
+	return origin.Uri(Class)
 }
 
 // newRedirectAgent - create a new redirect agent
 func newRedirectAgent(origin core.Origin, state resiliency1.IngressRedirectState, handler messaging.OpsAgent) messaging.Agent {
-	return newRedirect(origin, state, handler, redirectDuration)
+	return newRedirect(origin, state, handler)
 }
 
-func newRedirect(origin core.Origin, state resiliency1.IngressRedirectState, handler messaging.OpsAgent, tickerDur time.Duration) *redirect {
+func newRedirect(origin core.Origin, state resiliency1.IngressRedirectState, handler messaging.OpsAgent) *redirect {
 	r := new(redirect)
 	r.agentId = redirectAgentUri(origin)
 	r.origin = origin

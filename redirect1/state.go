@@ -1,5 +1,7 @@
 package redirect1
 
+import "github.com/advanced-go/stdlib/core"
+
 func updatePercentage(curr int) int {
 	next := 0
 	switch curr {
@@ -16,4 +18,11 @@ func updatePercentage(curr int) int {
 	default:
 	}
 	return next
+}
+
+// TODO: need to create host from location if location is a URL
+func redirectOrigin(origin core.Origin, location string) core.Origin {
+	r := origin
+	r.Host = location
+	return r
 }
