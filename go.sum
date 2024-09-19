@@ -36,6 +36,8 @@ github.com/advanced-go/postgresql v0.0.0-20240914153537-d55ad0af58ff h1:3sX2OtE7
 github.com/advanced-go/postgresql v0.0.0-20240914153537-d55ad0af58ff/go.mod h1:dn2skh7IPl4RTnrCFzugsLmLaWkb5U0ub1elMcTCbn8=
 github.com/advanced-go/stdlib v0.0.0-20240917153945-4eae429aec37 h1:+S/m7jDkkGBfTa7DVzDHfxIB+Zqvt4YFIIAKxfNKElQ=
 github.com/advanced-go/stdlib v0.0.0-20240917153945-4eae429aec37/go.mod h1:bvuWc7Tx57LArgrEvbPxKW4hvIYGS3pw7iG4P6xofoQ=
+github.com/advanced-go/stdlib v0.0.0-20240919193716-b4a54812bde6 h1:dwoSlV+yRHxFeRdkzCn6MyrzTBh+k0eDlcp+wHjVNjM=
+github.com/advanced-go/stdlib v0.0.0-20240919193716-b4a54812bde6/go.mod h1:bvuWc7Tx57LArgrEvbPxKW4hvIYGS3pw7iG4P6xofoQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
