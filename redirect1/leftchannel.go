@@ -2,17 +2,16 @@ package redirect1
 
 import (
 	"github.com/advanced-go/events/threshold1"
-	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/intelagents/common2"
-	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
 // run - ingress resiliency for the LHC
+// r.handler.AddActivity(r.agentId, "onTick")
 func runRedirectLHC(r *redirect, observe *common2.Events) {
-	redirectOrigin := redirectOrigin()core.Origin{}
+	origin := redirectOrigin(r.origin, r.state.Location)
 	ticker := messaging.NewTicker(redirectDuration)
-	// Set the threshold to the current hosts, and use that to compare to the redirect hosts threshold
+	// Set the threshold to the current host's, and use that to compare to the redirect host's actual threshold
 	limit := threshold1.Entry{}
 	common2.SetPercentileThreshold(r.handler, r.origin, &limit, observe)
 
@@ -21,8 +20,7 @@ func runRedirectLHC(r *redirect, observe *common2.Events) {
 		// observation processing
 		select {
 		case <-ticker.C():
-			r.handler.AddActivity(r.agentId, "onTick")
-			actual, status := observe.IngressThreshold(r.handler, r.origin)
+			actual, status := observe.GetThreshold(r.handler, origin)
 			if status.OK() {
 				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, common2.NewObservation(actual[0], limit))
 				r.Message(m)
@@ -37,12 +35,9 @@ func runRedirectLHC(r *redirect, observe *common2.Events) {
 				ticker.Stop()
 				r.lhc.Close()
 				return
-			case messaging.DataChangeEvent:
-				if p := common2.GetProfile(r.handler, r.agentId, msg); p != nil {
-					ticker.Start(p.ResiliencyDuration(-1))
-				}
+			//case messaging.DataChangeEvent:
 			default:
-				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
+				r.handler.Handle(common2.MessageEventErrorStatus(r.agentId, msg))
 			}
 		default:
 		}

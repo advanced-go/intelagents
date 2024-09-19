@@ -1,8 +1,7 @@
 package redirect1
 
 import (
-	"github.com/advanced-go/guidance/resiliency1"
-	"github.com/advanced-go/intelagents/common"
+	"github.com/advanced-go/guidance/redirect1"
 	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
@@ -22,6 +21,7 @@ type redirect struct {
 	running bool
 	agentId string
 	origin  core.Origin
+	state   redirect1.Entry
 
 	// Channels
 	lhc *messaging.Channel
@@ -35,20 +35,15 @@ func redirectAgentUri(origin core.Origin) string {
 	return origin.Uri(Class)
 }
 
-// newRedirectAgent - create a new redirect agent
-func newRedirectAgent(origin core.Origin, state resiliency1.IngressRedirectState, handler messaging.OpsAgent) messaging.Agent {
-	return newRedirect(origin, state, handler)
+// NewRedirectAgent - create a new redirect agent
+func NewRedirectAgent(origin core.Origin, handler messaging.OpsAgent) messaging.Agent {
+	return newRedirect(origin, handler)
 }
 
-func newRedirect(origin core.Origin, state resiliency1.IngressRedirectState, handler messaging.OpsAgent) *redirect {
+func newRedirect(origin core.Origin, handler messaging.OpsAgent) *redirect {
 	r := new(redirect)
 	r.agentId = redirectAgentUri(origin)
 	r.origin = origin
-
-	//r.state = state
-	//r.ticker = messaging.NewTicker(tickerDur)
-	//r.ctrlC = make(chan *messaging.Message, messaging.ChannelSize)
-
 	r.rhc = messaging.NewEnabledChannel()
 	r.lhc = messaging.NewEnabledChannel()
 	r.handler = handler
@@ -56,7 +51,7 @@ func newRedirect(origin core.Origin, state resiliency1.IngressRedirectState, han
 }
 
 // String - identity
-func (r *redirect) String() string { return r.agentId }
+func (r *redirect) String() string { return r.Uri() }
 
 // Uri - agent identifier
 func (r *redirect) Uri() string { return r.agentId }
@@ -92,10 +87,21 @@ func (r *redirect) Shutdown() {
 }
 
 // Run - run the agent
+// TODO: notification/error message if no redirect is found?
 func (r *redirect) Run() {
 	if r.running {
 		return
 	}
-	go runRedirectRHC(r, redirection, common.Observe, common.Exp, common.Guide)
-	go runRedirectLHC(r, common2.Event)
+	var status *core.Status
+	r.state, status = common2.IngressGuidance.GetRedirect(r.handler, r.origin)
+	if !status.OK() {
+		// Remove agent from exchange if registered
+		if r.shutdownFunc != nil {
+			r.shutdownFunc()
+		}
+		return
+	}
+	//go runRedirectRHC(r, redirection, common.Observe, common.Exp, common.Guide)
+	go runRedirectLHC(r, common2.IngressEvents)
+	r.running = true
 }

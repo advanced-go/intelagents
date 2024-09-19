@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	getDuration    = time.Second * 2
-	addDuration    = time.Second * 2
-	deleteDuration = time.Second * 2
+	getDuration   = time.Second * 2
+	addDuration   = time.Second * 2
+	queryDuration = time.Second * 3
 )
 
 // Guidance - guidance interface, with a nod to Linus Torvalds and plain C
@@ -42,39 +42,39 @@ type Guidance struct {
 var IngressGuidance = func() *Guidance {
 	return &Guidance{
 		QueryNewRedirect: func(h core.ErrorHandler, origin core.Origin, lastCIDId int) ([]core.Origin, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
 			defer cancel()
-			e, status1 := redirect1.GetIngressRedirect(ctx, origin)
+			e, status1 := redirect1.QueryIngressNew(ctx, origin, lastCIDId)
 			if !status1.OK() {
 				h.Handle(status1)
 			}
 			return e, status1
 		},
 		QueryInactiveRedirect: func(h core.ErrorHandler, origin core.Origin, lastCIDId int) ([]core.Origin, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
 			defer cancel()
-			e, status1 := redirect1.GetUpdatedIngressRedirect(ctx, origin, lastId)
+			e, status1 := redirect1.QueryIngressInactive(ctx, origin, lastCIDId)
 			if !status1.OK() {
 				h.Handle(status1)
 			}
 			return e, status1
 		},
 		GetRedirect: func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), addDuration)
+			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
-			status1 := redirect1.AddIngressRedirectStatus(ctx, origin, status)
-			if !status1.OK() {
-				h.Handle(status1)
+			e, status := redirect1.GetIngress(ctx, origin)
+			if !status.OK() {
+				h.Handle(status)
 			}
-			return redirect1.Entry{}, status1
+			return e, status
 		},
 		GetHostRedirect: func(_ core.ErrorHandler, _ core.Origin) ([]redirect1.Entry, *core.Status) {
 			return nil, core.NewStatusError(core.StatusInvalidArgument, errors.New("error: Ingress - GetHostRedirect() is not implemented"))
 		},
 		AddStatus: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			ctx, cancel := context.WithTimeout(context.Background(), addDuration)
 			defer cancel()
-			e, status1 := redirect1.GetUpdatedEgressRedirect(ctx, origin, lastId)
+			status1 := redirect1.AddIngressStatus(ctx, origin, status)
 			if !status1.OK() {
 				h.Handle(status1)
 			}
@@ -83,19 +83,69 @@ var IngressGuidance = func() *Guidance {
 	}
 }()
 
-// hostGuidance - guidance functions struct, a nod to Linus Torvalds and plain C
+var EgressGuidance = func() *Guidance {
+	return &Guidance{
+		QueryNewRedirect: func(h core.ErrorHandler, origin core.Origin, lastCIDId int) ([]core.Origin, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
+			defer cancel()
+			e, status1 := redirect1.QueryEgressNew(ctx, origin, lastCIDId)
+			if !status1.OK() {
+				h.Handle(status1)
+			}
+			return e, status1
+		},
+		QueryInactiveRedirect: func(h core.ErrorHandler, origin core.Origin, lastCIDId int) ([]core.Origin, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
+			defer cancel()
+			e, status1 := redirect1.QueryEgressInactive(ctx, origin, lastCIDId)
+			if !status1.OK() {
+				h.Handle(status1)
+			}
+			return e, status1
+		},
+		GetRedirect: func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			defer cancel()
+			e, status := redirect1.GetEgress(ctx, origin)
+			if !status.OK() {
+				h.Handle(status)
+			}
+			return e, status
+		},
+		GetHostRedirect: func(h core.ErrorHandler, origin core.Origin) ([]redirect1.Entry, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			defer cancel()
+			e, status := redirect1.GetHostEgress(ctx, origin)
+			if !status.OK() {
+				h.Handle(status)
+			}
+			return e, status
+		},
+		AddStatus: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
+			ctx, cancel := context.WithTimeout(context.Background(), addDuration)
+			defer cancel()
+			status1 := redirect1.AddEgressStatus(ctx, origin, status)
+			if !status1.OK() {
+				h.Handle(status1)
+			}
+			return status1
+		},
+	}
+}()
+
+// hostGuidance - host guidance interface
 type hostGuidance struct {
 	QueryIngressHosts    func(h core.ErrorHandler, origin core.Origin) ([]host1.EntryQuery, host1.LastCDCId, *core.Status)
-	QueryNewIngressHosts func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, *core.Status)
+	QueryNewIngressHosts func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, host1.LastCDCId, *core.Status)
 
-	QueryEgressHosts    func(h core.ErrorHandler, origin core.Origin) ([]host1.Entry, host1.LastCDCId, *core.Status)
-	QueryNewEgressHosts func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, *core.Status)
+	QueryEgressHosts    func(h core.ErrorHandler, origin core.Origin) ([]host1.EntryQuery, host1.LastCDCId, *core.Status)
+	QueryNewEgressHosts func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, host1.LastCDCId, *core.Status)
 }
 
 var HostGuidance = func() *hostGuidance {
 	return &hostGuidance{
 		QueryIngressHosts: func(h core.ErrorHandler, origin core.Origin) ([]host1.EntryQuery, host1.LastCDCId, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
 			defer cancel()
 			e, id, status := host1.QueryIngressHosts(ctx, origin)
 			if !status.OK() {
@@ -103,17 +153,17 @@ var HostGuidance = func() *hostGuidance {
 			}
 			return e, id, status
 		},
-		QueryNewIngressHosts: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+		QueryNewIngressHosts: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, host1.LastCDCId, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
 			defer cancel()
-			e, status := host1.QueryNewIngressHosts(ctx, origin, lastId)
+			e, id, status := host1.QueryNewIngressHosts(ctx, origin, lastId)
 			if !status.OK() {
 				h.Handle(status)
 			}
-			return e, status
+			return e, id, status
 		},
-		QueryEgressHosts: func(h core.ErrorHandler, origin core.Origin) ([]host1.Entry, host1.LastCDCId, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+		QueryEgressHosts: func(h core.ErrorHandler, origin core.Origin) ([]host1.EntryQuery, host1.LastCDCId, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
 			defer cancel()
 			e, id, status := host1.QueryEgressHosts(ctx, origin)
 			if !status.OK() {
@@ -121,14 +171,14 @@ var HostGuidance = func() *hostGuidance {
 			}
 			return e, id, status
 		},
-		QueryNewEgressHosts: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+		QueryNewEgressHosts: func(h core.ErrorHandler, origin core.Origin, lastId int) ([]host1.Entry, host1.LastCDCId, *core.Status) {
+			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
 			defer cancel()
-			e, status := host1.QueryNewHostEntries(ctx, origin, lastId)
+			e, id, status := host1.QueryNewEgressHosts(ctx, origin, lastId)
 			if !status.OK() {
 				h.Handle(status)
 			}
-			return e, status
+			return e, id, status
 		},
 	}
 }()

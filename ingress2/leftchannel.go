@@ -2,7 +2,6 @@ package ingress2
 
 import (
 	"github.com/advanced-go/events/threshold1"
-	"github.com/advanced-go/intelagents/common"
 	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/messaging"
 )
@@ -18,7 +17,6 @@ func runResiliencyLHC(r *resiliency, observe *common2.Events) {
 		// observation processing
 		select {
 		case <-ticker.C():
-			r.handler.AddActivity(r.agentId, "onTick")
 			actual, status := observe.GetThreshold(r.handler, r.origin)
 			if status.OK() {
 				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, common2.NewObservation(actual[0], limit))
@@ -39,7 +37,7 @@ func runResiliencyLHC(r *resiliency, observe *common2.Events) {
 					ticker.Start(p.ResiliencyDuration(-1))
 				}
 			default:
-				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
+				r.handler.Handle(common2.MessageEventErrorStatus(r.agentId, msg))
 			}
 		default:
 		}
