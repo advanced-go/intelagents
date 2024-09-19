@@ -4,8 +4,8 @@ go 1.21.4
 
 require (
 	github.com/advanced-go/access v0.0.0-20240917105736-bf2d8fe2cbcf
-	github.com/advanced-go/events v0.0.0-20240918150315-ad7def7f309f
-	github.com/advanced-go/experience v0.0.0-20240918151109-115d61d5dc35
+	github.com/advanced-go/events v0.0.0-20240919111052-11bb95a3fa26
+	github.com/advanced-go/experience v0.0.0-20240919111115-24f451266b56
 	github.com/advanced-go/guidance v0.0.0-20240917144740-333c061fdc06
 	github.com/advanced-go/observation v0.0.0-20240914160125-b5563f58d24d
 	github.com/advanced-go/stdlib v0.0.0-20240917153945-4eae429aec37

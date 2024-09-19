@@ -19,7 +19,7 @@ func runResiliencyLHC(r *resiliency, observe *common2.Events) {
 		select {
 		case <-ticker.C():
 			r.handler.AddActivity(r.agentId, "onTick")
-			actual, status := observe.IngressThreshold(r.handler, r.origin)
+			actual, status := observe.GetThreshold(r.handler, r.origin)
 			if status.OK() {
 				m := messaging.NewRightChannelMessage("", r.agentId, messaging.ObservationEvent, common2.NewObservation(actual[0], limit))
 				r.Message(m)

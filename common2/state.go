@@ -24,40 +24,72 @@ func NewObservation(actual, limit threshold1.Entry) *Observation {
 	return o
 }
 
-func SetThreshold(h core.ErrorHandler, origin core.Origin, t *threshold1.Entry, observe *Events) {
+func SetPercentileThreshold(h core.ErrorHandler, origin core.Origin, t *threshold1.Entry, observe *Events) {
 	if t == nil {
 		return
 	}
-	e, status := observe.IngressThreshold(h, origin)
+	e, status := observe.GetThreshold(h, origin)
 	if status.OK() {
 		t.Percent = e[0].Percent
 		t.Value = e[0].Value
 		t.Minimum = e[0].Minimum
 	} else {
-		t.Percent = 95  // percentile
-		t.Value = 30000 // milliseconds
-		t.Minimum = 0   // no minimum
+		threshold1.InitPercentileThreshold(t)
 	}
 }
 
-func SetRateLimitingAction(h core.ErrorHandler, origin core.Origin, rl *action1.RateLimiting, exp *Experience) {
-	if rl == nil {
+func SetStatusCodesThreshold(h core.ErrorHandler, origin core.Origin, t *threshold1.Entry, observe *Events) {
+	if t == nil {
+		return
+	}
+	e, status := observe.GetThreshold(h, origin)
+	if status.OK() {
+		t.Percent = e[0].Percent
+		t.Value = e[0].Value
+		t.Minimum = e[0].Minimum
+	} else {
+		threshold1.InitStatusCodeThreshold(t)
+	}
+}
+
+func SetRateLimitingAction(h core.ErrorHandler, origin core.Origin, a *action1.RateLimiting, exp *Experience) {
+	if a == nil {
 		return
 	}
 	act, status := exp.GetRateLimitingAction(h, origin)
 	if status.OK() {
-		*rl = act
+		*a = act
 	} else {
-		rl.Limit = defaultLimit
-		rl.Burst = defaultBurst
+		action1.InitRateLimiting(a)
 	}
 }
 
-func AddExperience(h core.ErrorHandler, origin core.Origin, inf *inference1.Entry, action *action1.RateLimiting, exp *Experience) *core.Status {
-	id, status := exp.AddIngressInference(h, origin, *inf)
+func SetRoutingAction(h core.ErrorHandler, origin core.Origin, a *action1.Routing, exp *Experience) {
+	if a == nil {
+		return
+	}
+	act, status := exp.GetRoutingAction(h, origin)
 	if status.OK() {
-		action.InferenceId = id
-		status = exp.AddRateLimitingAction(h, origin, *action)
+		*a = act
+	} else {
+		action1.InitRouting(a)
+	}
+}
+
+func AddRateLimitingExperience(h core.ErrorHandler, origin core.Origin, inf *inference1.Entry, a *action1.RateLimiting, exp *Experience) *core.Status {
+	id, status := exp.AddInference(h, origin, *inf)
+	if status.OK() {
+		a.InferenceId = id
+		status = exp.AddRateLimitingAction(h, origin, *a)
+	}
+	return status
+}
+
+func AddRoutingExperience(h core.ErrorHandler, origin core.Origin, inf *inference1.Entry, a *action1.Routing, exp *Experience) *core.Status {
+	id, status := exp.AddInference(h, origin, *inf)
+	if status.OK() {
+		a.InferenceId = id
+		status = exp.AddRoutingAction(h, origin, *a)
 	}
 	return status
 }

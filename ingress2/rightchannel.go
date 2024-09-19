@@ -7,11 +7,6 @@ import (
 	"github.com/advanced-go/stdlib/messaging"
 )
 
-const (
-	defaultLimit = -1
-	defaultBurst = -1
-)
-
 // run - ingress resiliency for the RHC
 func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 	rateLimiting := action1.RateLimiting{}
@@ -39,7 +34,7 @@ func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 				action := newAction(inf)
 				rateLimiting.Limit = action.Limit
 				rateLimiting.Burst = action.Burst
-				common2.AddExperience(r.handler, r.origin, inf, action, exp)
+				common2.AddRateLimitingExperience(r.handler, r.origin, inf, action, exp)
 			default:
 				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
 			}

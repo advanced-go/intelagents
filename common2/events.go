@@ -1,22 +1,14 @@
 package common2
 
 import (
-	"context"
 	"github.com/advanced-go/events/log1"
 	"github.com/advanced-go/events/threshold1"
 	"github.com/advanced-go/events/timeseries1"
 	"github.com/advanced-go/stdlib/core"
-	"time"
 )
 
-const (
-	timeseriesDuration = time.Second * 2
-	logDuration        = time.Second * 2
-	thresholdDuration  = time.Second * 2
-)
-
-// Events - access functions struct, a nod to Linus Torvalds and plain C
-type Events struct {
+// Events1 - access functions struct, a nod to Linus Torvalds and plain C
+type Events1 struct {
 	IngressTimeseries func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
 	EgressTimeseries  func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status)
 
@@ -29,6 +21,7 @@ type Events struct {
 	GetProfile func(h core.ErrorHandler) (*threshold1.Profile, *core.Status)
 }
 
+/*
 var Event = func() *Events {
 	return &Events{
 		IngressTimeseries: func(h core.ErrorHandler, origin core.Origin) ([]timeseries1.Entry, *core.Status) {
@@ -96,3 +89,6 @@ var Event = func() *Events {
 		},
 	}
 }()
+
+
+*/

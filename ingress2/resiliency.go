@@ -88,8 +88,8 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go runResiliencyRHC(r, common2.Exp)
-	go runResiliencyLHC(r, common2.Event)
+	go runResiliencyRHC(r, common2.IngressExperience)
+	go runResiliencyLHC(r, common2.IngressEvents)
 }
 
 // Shutdown - shutdown the agent

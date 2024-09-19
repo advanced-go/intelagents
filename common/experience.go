@@ -39,7 +39,7 @@ var Exp = func() *Experience {
 		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
-			status := action1.AddRateLimiting(ctx, origin, action)
+			status := action1.AddIngressRateLimiting(ctx, origin, action)
 			if !status.OK() {
 				h.Handle(status)
 			}
@@ -48,7 +48,7 @@ var Exp = func() *Experience {
 		AddRoutingAction: func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
-			status := action1.AddRouting(ctx, origin, action)
+			status := action1.AddIngressRouting(ctx, origin, action)
 			if !status.OK() {
 				h.Handle(status)
 			}
@@ -57,20 +57,23 @@ var Exp = func() *Experience {
 		AddRedirectAction: func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
-			status := action1.AddRedirect(ctx, origin, action)
+			status := action1.AddIngressRedirect(ctx, origin, action)
 			if !status.OK() {
 				h.Handle(status)
 			}
 			return status
 		},
-		ResetRoutingAction: func(h core.ErrorHandler, origin core.Origin, agentId string) *core.Status {
-			ctx, cancel := context.WithTimeout(context.Background(), resetDuration)
-			defer cancel()
-			status := action1.ResetRouting(ctx, origin, agentId)
-			if !status.OK() {
-				h.Handle(status)
-			}
-			return status
-		},
+		/*
+			ResetRoutingAction: func(h core.ErrorHandler, origin core.Origin, agentId string) *core.Status {
+				ctx, cancel := context.WithTimeout(context.Background(), resetDuration)
+				defer cancel()
+				status := action1.ResetRouting(ctx, origin, agentId)
+				if !status.OK() {
+					h.Handle(status)
+				}
+				return status
+			},
+
+		*/
 	}
 }()
