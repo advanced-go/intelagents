@@ -1,7 +1,7 @@
 package common2
 
 import (
-	"github.com/advanced-go/events/threshold1"
+	"github.com/advanced-go/events/common"
 	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/experience/inference1"
 	"github.com/advanced-go/stdlib/core"
@@ -13,36 +13,37 @@ const (
 )
 
 type Observation struct {
-	Actual threshold1.Entry
-	Limit  threshold1.Entry
+	Actual common.Threshold
+	Limit  common.Threshold
 }
 
-func NewObservation(actual, limit threshold1.Entry) *Observation {
+func NewObservation(actual, limit common.Threshold) *Observation {
 	o := new(Observation)
 	o.Actual = actual
 	o.Limit = limit
 	return o
 }
 
-func SetPercentileThreshold(h core.ErrorHandler, origin core.Origin, t *threshold1.Entry, observe *Events) {
+func SetPercentileThreshold(h core.ErrorHandler, origin core.Origin, t *common.Threshold, observe *Events) {
 	if t == nil {
 		return
 	}
-	e, status := observe.GetThreshold(h, origin)
+	e, status := observe.GetPercentThreshold(h, origin)
 	if status.OK() {
-		t.Percent = e[0].Percent
-		t.Value = e[0].Value
-		t.Minimum = e[0].Minimum
+		t.Percent = e.Percent
+		t.Value = e.Value
+		t.Minimum = e.Minimum
 	} else {
-		threshold1.InitPercentileThreshold(t)
+		common.InitPercentileThreshold(t)
 	}
 }
 
-func SetStatusCodesThreshold(h core.ErrorHandler, origin core.Origin, t *threshold1.Entry, observe *Events) {
+/*
+func SetStatusCodesThreshold(h core.ErrorHandler, origin core.Origin, t *common.Threshold, observe *Events) {
 	if t == nil {
 		return
 	}
-	e, status := observe.GetThreshold(h, origin)
+	e, status := observe.GetStatusThreshold(h, origin)
 	if status.OK() {
 		t.Percent = e[0].Percent
 		t.Value = e[0].Value
@@ -52,11 +53,13 @@ func SetStatusCodesThreshold(h core.ErrorHandler, origin core.Origin, t *thresho
 	}
 }
 
+
+*/
 func SetRateLimitingAction(h core.ErrorHandler, origin core.Origin, a *action1.RateLimiting, exp *Experience) {
 	if a == nil {
 		return
 	}
-	act, status := exp.GetLastRateLimitingAction(h, origin)
+	act, status := exp.GetActiveRateLimitingAction(h, origin)
 	if status.OK() {
 		*a = act
 	} else {
@@ -68,7 +71,7 @@ func SetRoutingAction(h core.ErrorHandler, origin core.Origin, a *action1.Routin
 	if a == nil {
 		return
 	}
-	act, status := exp.GetLastRoutingAction(h, origin)
+	act, status := exp.GetActiveRoutingAction(h, origin)
 	if status.OK() {
 		*a = act
 	} else {
@@ -77,19 +80,19 @@ func SetRoutingAction(h core.ErrorHandler, origin core.Origin, a *action1.Routin
 }
 
 func AddRateLimitingExperience(h core.ErrorHandler, origin core.Origin, inf *inference1.Entry, a *action1.RateLimiting, exp *Experience) *core.Status {
-	id, status := exp.AddInference(h, origin, *inf)
+	id, status := exp.AddInference(h, origin, inf)
 	if status.OK() {
 		a.InferenceId = id
-		status = exp.AddRateLimitingAction(h, origin, *a)
+		status = exp.AddRateLimitingAction(h, origin, a)
 	}
 	return status
 }
 
 func AddRoutingExperience(h core.ErrorHandler, origin core.Origin, inf *inference1.Entry, a *action1.Routing, exp *Experience) *core.Status {
-	id, status := exp.AddInference(h, origin, *inf)
+	id, status := exp.AddInference(h, origin, inf)
 	if status.OK() {
 		a.InferenceId = id
-		status = exp.AddRoutingAction(h, origin, *a)
+		status = exp.AddRoutingAction(h, origin, a)
 	}
 	return status
 }

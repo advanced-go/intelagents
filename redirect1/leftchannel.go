@@ -11,7 +11,7 @@ import (
 func runRedirectLHC(r *redirect, observe *common2.Events) {
 	origin := redirectOrigin(r.origin, r.state.Location)
 	ticker := messaging.NewTicker(redirectDuration)
-	stepTicker := messaging.NewTicker(r.state.Policy.StepDuration)
+	stepTicker := messaging.NewTicker(r.state.StepDuration)
 
 	// Set the threshold to the current host's, and use that to compare to the redirect host's actual threshold
 	limit := threshold1.Entry{}

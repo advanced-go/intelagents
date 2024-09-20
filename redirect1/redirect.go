@@ -21,7 +21,7 @@ type redirect struct {
 	running bool
 	agentId string
 	origin  core.Origin
-	state   redirect1.Entry
+	state   redirect1.IngressEntry
 
 	// Channels
 	lhc *messaging.Channel
