@@ -101,6 +101,7 @@ func (r *redirect) Run() {
 		}
 		return
 	}
+	// TODO : If the redirect has a start time configured, then process that with a timer and go routing
 	go runRedirectRHC(r, common2.IngressExperience, common2.IngressGuidance)
 	go runRedirectLHC(r, common2.IngressEvents)
 	r.running = true
