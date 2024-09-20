@@ -2,13 +2,12 @@ package redirect1
 
 import (
 	"github.com/advanced-go/experience/action1"
-	"github.com/advanced-go/intelagents/common2"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
-func runRedirectRHC(r *redirect, exp *common2.Experience, guide *common2.Guidance) {
+func runRedirectRHC(r *redirect, exp *common1.Experience, guide *common1.Guidance) {
 	routing := action1.NewRouting()
-	common2.SetRoutingAction(r.handler, r.origin, routing, exp)
+	common1.SetRoutingAction(r.handler, r.origin, routing, exp)
 
 	// Startup: if the current routing is active, then initialize the state percentage
 	//          if the current routing is not active, then send a new action to start redirecting
@@ -22,7 +21,7 @@ func runRedirectRHC(r *redirect, exp *common2.Experience, guide *common2.Guidanc
 				return
 			case messaging.ObservationEvent:
 				r.handler.AddActivity(r.agentId, messaging.ObservationEvent)
-				_, ok := msg.Body.(*common2.Observation)
+				_, ok := msg.Body.(*common1.Observation)
 				if !ok {
 					continue
 				}
@@ -35,7 +34,7 @@ func runRedirectRHC(r *redirect, exp *common2.Experience, guide *common2.Guidanc
 					action := newAction(inf)
 					rateLimiting.Limit = action.Limit
 					rateLimiting.Burst = action.Burst
-					common2.AddRateLimitingExperience(r.handler, r.origin, inf, action, exp)
+					common1.AddRateLimitingExperience(r.handler, r.origin, inf, action, exp)
 
 				*/
 			default:

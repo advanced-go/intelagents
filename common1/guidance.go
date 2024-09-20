@@ -1,8 +1,7 @@
-package common2
+package common1
 
 import (
 	"context"
-	"errors"
 	"github.com/advanced-go/guidance/host1"
 	"github.com/advanced-go/guidance/redirect1"
 	"github.com/advanced-go/stdlib/core"
@@ -19,9 +18,9 @@ const (
 type Guidance struct {
 	QueryNewRedirect      func(h core.ErrorHandler, origin core.Origin, lastCDCId int) ([]core.Origin, *core.Status)
 	QueryInactiveRedirect func(h core.ErrorHandler, origin core.Origin, lastCDCId int) ([]core.Origin, *core.Status)
-	GetRedirect           func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status)
-	GetHostRedirect       func(h core.ErrorHandler, origin core.Origin) ([]redirect1.Entry, *core.Status)
-	AddStatus             func(h core.ErrorHandler, origin core.Origin, status string) *core.Status
+	//GetRedirect           func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status)
+	//GetHostRedirect       func(h core.ErrorHandler, origin core.Origin) ([]redirect1.Entry, *core.Status)
+	AddStatus func(h core.ErrorHandler, origin core.Origin, status string) *core.Status
 
 	/*
 		IngressRedirect          func(h core.ErrorHandler, origin core.Origin) ([]redirect1.RedirectConfig, *core.Status)
@@ -59,27 +58,30 @@ var IngressGuidance = func() *Guidance {
 			}
 			return e, status1
 		},
-		GetRedirect: func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
-			defer cancel()
-			e, status := redirect1.GetIngress(ctx, origin)
-			if !status.OK() {
-				h.Handle(status)
-			}
-			return e, status
-		},
-		GetHostRedirect: func(_ core.ErrorHandler, _ core.Origin) ([]redirect1.Entry, *core.Status) {
-			return nil, core.NewStatusError(core.StatusInvalidArgument, errors.New("error: Ingress - GetHostRedirect() is not implemented"))
-		},
-		AddStatus: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
-			ctx, cancel := context.WithTimeout(context.Background(), addDuration)
-			defer cancel()
-			status1 := redirect1.AddIngressStatus(ctx, origin, status)
-			if !status1.OK() {
-				h.Handle(status1)
-			}
-			return status1
-		},
+		/*
+			GetRedirect: func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status) {
+				ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+				defer cancel()
+				e, status := redirect1.GetIngress(ctx, origin)
+				if !status.OK() {
+					h.Handle(status)
+				}
+				return e, status
+			},
+			GetHostRedirect: func(_ core.ErrorHandler, _ core.Origin) ([]redirect1.Entry, *core.Status) {
+				return nil, core.NewStatusError(core.StatusInvalidArgument, errors.New("error: Ingress - GetHostRedirect() is not implemented"))
+			},
+			AddStatus: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
+				ctx, cancel := context.WithTimeout(context.Background(), addDuration)
+				defer cancel()
+				status1 := redirect1.AddIngressStatus(ctx, origin, status)
+				if !status1.OK() {
+					h.Handle(status1)
+				}
+				return status1
+			},
+
+		*/
 	}
 }()
 
@@ -103,24 +105,28 @@ var EgressGuidance = func() *Guidance {
 			}
 			return e, status1
 		},
-		GetRedirect: func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
-			defer cancel()
-			e, status := redirect1.GetEgress(ctx, origin)
-			if !status.OK() {
-				h.Handle(status)
-			}
-			return e, status
-		},
-		GetHostRedirect: func(h core.ErrorHandler, origin core.Origin) ([]redirect1.Entry, *core.Status) {
-			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
-			defer cancel()
-			e, status := redirect1.GetHostEgress(ctx, origin)
-			if !status.OK() {
-				h.Handle(status)
-			}
-			return e, status
-		},
+		/*
+			GetRedirect: func(h core.ErrorHandler, origin core.Origin) (redirect1.Entry, *core.Status) {
+				ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+				defer cancel()
+				e, status := redirect1.GetEgress(ctx, origin)
+				if !status.OK() {
+					h.Handle(status)
+				}
+				return e, status
+			},
+
+			GetHostRedirect: func(h core.ErrorHandler, origin core.Origin) ([]redirect1.Entry, *core.Status) {
+				ctx, cancel := context.WithTimeout(context.Background(), getDuration)
+				defer cancel()
+				e, status := redirect1.GetHostEgress(ctx, origin)
+				if !status.OK() {
+					h.Handle(status)
+				}
+				return e, status
+			},
+
+		*/
 		AddStatus: func(h core.ErrorHandler, origin core.Origin, status string) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addDuration)
 			defer cancel()

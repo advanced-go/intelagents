@@ -12,6 +12,8 @@ github.com/advanced-go/events v0.0.0-20240919111052-11bb95a3fa26 h1:MCPx+VD4kWiD
 github.com/advanced-go/events v0.0.0-20240919111052-11bb95a3fa26/go.mod h1:Zm78pJ1o/gX8n0L2GrkhWBlt8OPwHwkGzGiINWr2rgc=
 github.com/advanced-go/events v0.0.0-20240920095057-854449ca8be0 h1:VFktlmdgcF4DVRlcUS9XLNk8zlTNKM1fkT3+1sUSEOc=
 github.com/advanced-go/events v0.0.0-20240920095057-854449ca8be0/go.mod h1:Zm78pJ1o/gX8n0L2GrkhWBlt8OPwHwkGzGiINWr2rgc=
+github.com/advanced-go/events v0.0.0-20240920162440-8a2b92489d96 h1:fbcLe1BeYCPWGb029hgQgn231M2hKRoej+jTYRPnLQs=
+github.com/advanced-go/events v0.0.0-20240920162440-8a2b92489d96/go.mod h1:Zm78pJ1o/gX8n0L2GrkhWBlt8OPwHwkGzGiINWr2rgc=
 github.com/advanced-go/experience v0.0.0-20240918101845-760e5553f9cf h1:oZtrU1JWlwL28e4kWBXKIRShBxy0srnnxA35lm/xOKs=
 github.com/advanced-go/experience v0.0.0-20240918101845-760e5553f9cf/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
 github.com/advanced-go/experience v0.0.0-20240918151109-115d61d5dc35 h1:gn2TgqrSo6cPy8b8F/x5KI1NlO0xEjz7kbyYiEWaD30=

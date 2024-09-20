@@ -2,15 +2,14 @@ package ingress2
 
 import (
 	"github.com/advanced-go/experience/action1"
-	"github.com/advanced-go/intelagents/common"
-	"github.com/advanced-go/intelagents/common2"
+	"github.com/advanced-go/intelagents/common1"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
 // run - ingress resiliency for the RHC
-func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
+func runResiliencyRHC(r *resiliency, exp *common1.Experience) {
 	rateLimiting := action1.NewRateLimiting()
-	common2.SetRateLimitingAction(r.handler, r.origin, rateLimiting, exp)
+	common1.SetRateLimitingAction(r.handler, r.origin, rateLimiting, exp)
 
 	for {
 		// message processing
@@ -23,7 +22,7 @@ func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 				return
 			case messaging.ObservationEvent:
 				r.handler.AddActivity(r.agentId, messaging.ObservationEvent)
-				observe, ok := msg.Body.(*common2.Observation)
+				observe, ok := msg.Body.(*common1.Observation)
 				if !ok {
 					continue
 				}
@@ -34,9 +33,9 @@ func runResiliencyRHC(r *resiliency, exp *common2.Experience) {
 				action := newAction(inf)
 				rateLimiting.Limit = action.Limit
 				rateLimiting.Burst = action.Burst
-				common2.AddRateLimitingExperience(r.handler, r.origin, inf, action, exp)
+				common1.AddRateLimitingExperience(r.handler, r.origin, inf, action, exp)
 			default:
-				r.handler.Handle(common.MessageEventErrorStatus(r.agentId, msg))
+				r.handler.Handle(common1.MessageEventErrorStatus(r.agentId, msg))
 			}
 		default:
 		}

@@ -2,7 +2,7 @@ package redirect1
 
 import (
 	"github.com/advanced-go/guidance/redirect1"
-	"github.com/advanced-go/intelagents/common2"
+	"github.com/advanced-go/intelagents/common1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -93,7 +93,7 @@ func (r *redirect) Run() {
 		return
 	}
 	var status *core.Status
-	r.state, status = common2.IngressGuidance.GetRedirect(r.handler, r.origin)
+	r.state, status = common1.IngressGuidance.GetRedirect(r.handler, r.origin)
 	if !status.OK() {
 		// Remove agent from exchange if registered
 		if r.shutdownFunc != nil {
@@ -102,7 +102,7 @@ func (r *redirect) Run() {
 		return
 	}
 	// TODO : If the redirect has a start time configured, then process that with a timer and go routing
-	go runRedirectRHC(r, common2.IngressExperience, common2.IngressGuidance)
-	go runRedirectLHC(r, common2.IngressEvents)
+	go runRedirectRHC(r, common1.IngressExperience, common1.IngressGuidance)
+	go runRedirectLHC(r, common1.TimeseriesEvents)
 	r.running = true
 }

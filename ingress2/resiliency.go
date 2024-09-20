@@ -2,7 +2,7 @@ package ingress2
 
 import (
 	"github.com/advanced-go/intelagents/common"
-	"github.com/advanced-go/intelagents/common2"
+	"github.com/advanced-go/intelagents/common1"
 	"github.com/advanced-go/stdlib/core"
 	"github.com/advanced-go/stdlib/messaging"
 	"time"
@@ -84,8 +84,8 @@ func (r *resiliency) Run() {
 	if r.running {
 		return
 	}
-	go runResiliencyRHC(r, common2.IngressExperience)
-	go runResiliencyLHC(r, common2.IngressEvents)
+	go runResiliencyRHC(r, common1.IngressExperience)
+	go runResiliencyLHC(r, common1.TimeseriesEvents)
 	r.running = true
 }
 

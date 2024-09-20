@@ -1,4 +1,4 @@
-package common2
+package common1
 
 import (
 	"github.com/advanced-go/events/threshold1"
