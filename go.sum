@@ -26,6 +26,10 @@ github.com/advanced-go/experience v0.0.0-20240919111115-24f451266b56 h1:58TjMkUy
 github.com/advanced-go/experience v0.0.0-20240919111115-24f451266b56/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
 github.com/advanced-go/experience v0.0.0-20240919112316-fc0ee2aa74e2 h1:fZ+OqVDwUL/N6WBDJAAZU15r4KbJkbvREFfGWsDAslI=
 github.com/advanced-go/experience v0.0.0-20240919112316-fc0ee2aa74e2/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
+github.com/advanced-go/experience v0.0.0-20240921194818-057a3c8df524 h1:eWutAUrCKVBYAFO+TpHPHKICRVHU5aylOLVOTTbXmOI=
+github.com/advanced-go/experience v0.0.0-20240921194818-057a3c8df524/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
+github.com/advanced-go/experience v0.0.0-20240921230058-1b673729d076 h1:oTyyWs+/xDbGvf5aYrGCyrzCTyqdTrI0GQZRY55pQRA=
+github.com/advanced-go/experience v0.0.0-20240921230058-1b673729d076/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
 github.com/advanced-go/guidance v0.0.0-20240917115724-e392226f64aa h1:KpeuZue56I/eu55Ow1sBWHM9QkhORZR6zUD+fFpLui0=
 github.com/advanced-go/guidance v0.0.0-20240917115724-e392226f64aa/go.mod h1:EBTCMRRG384Zy+UKadYkJWxafldv8ZmBqZEaxbY9WCI=
 github.com/advanced-go/guidance v0.0.0-20240917144740-333c061fdc06 h1:JiEyWVBmmCfYQs4V0bNgQ2Am9xTvdAV/JydFLXn3KrE=
