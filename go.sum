@@ -14,6 +14,8 @@ github.com/advanced-go/events v0.0.0-20240920095057-854449ca8be0 h1:VFktlmdgcF4D
 github.com/advanced-go/events v0.0.0-20240920095057-854449ca8be0/go.mod h1:Zm78pJ1o/gX8n0L2GrkhWBlt8OPwHwkGzGiINWr2rgc=
 github.com/advanced-go/events v0.0.0-20240920162440-8a2b92489d96 h1:fbcLe1BeYCPWGb029hgQgn231M2hKRoej+jTYRPnLQs=
 github.com/advanced-go/events v0.0.0-20240920162440-8a2b92489d96/go.mod h1:Zm78pJ1o/gX8n0L2GrkhWBlt8OPwHwkGzGiINWr2rgc=
+github.com/advanced-go/events v0.0.0-20240920162644-2b216c309a11 h1:DRKmc3cn+bg6ijxIhdUz6GDQOuCAN3gHWuiQA1AyG6g=
+github.com/advanced-go/events v0.0.0-20240920162644-2b216c309a11/go.mod h1:Zm78pJ1o/gX8n0L2GrkhWBlt8OPwHwkGzGiINWr2rgc=
 github.com/advanced-go/experience v0.0.0-20240918101845-760e5553f9cf h1:oZtrU1JWlwL28e4kWBXKIRShBxy0srnnxA35lm/xOKs=
 github.com/advanced-go/experience v0.0.0-20240918101845-760e5553f9cf/go.mod h1:pufw1sYeuZmrJnJZM0SxlaRqYXHjm+2x+GPKHkzIku0=
 github.com/advanced-go/experience v0.0.0-20240918151109-115d61d5dc35 h1:gn2TgqrSo6cPy8b8F/x5KI1NlO0xEjz7kbyYiEWaD30=
@@ -36,6 +38,8 @@ github.com/advanced-go/guidance v0.0.0-20240919160055-425ecb09f29d h1:s+p2oWcL0a
 github.com/advanced-go/guidance v0.0.0-20240919160055-425ecb09f29d/go.mod h1:EBTCMRRG384Zy+UKadYkJWxafldv8ZmBqZEaxbY9WCI=
 github.com/advanced-go/guidance v0.0.0-20240920095140-ad0021493d20 h1:/cFDkIzp9zUwcGcWZXmSs6HrX4x8fbZ1Qvpl2U/A3UQ=
 github.com/advanced-go/guidance v0.0.0-20240920095140-ad0021493d20/go.mod h1:EBTCMRRG384Zy+UKadYkJWxafldv8ZmBqZEaxbY9WCI=
+github.com/advanced-go/guidance v0.0.0-20240921130911-5a54b2e1444e h1:oeVtrIuKOt7hSzSopqIWu/GJnkDHvH7NM0W81XJ+aZM=
+github.com/advanced-go/guidance v0.0.0-20240921130911-5a54b2e1444e/go.mod h1:EBTCMRRG384Zy+UKadYkJWxafldv8ZmBqZEaxbY9WCI=
 github.com/advanced-go/observation v0.0.0-20240914160125-b5563f58d24d h1:y/+FeDv9kGHX1smsPwvh9hOuwlpxe86RCpZso+ia6bw=
 github.com/advanced-go/observation v0.0.0-20240914160125-b5563f58d24d/go.mod h1:txoGaQfJAe8XS0WAAAlVcRgsYhn9kXheTaAzOIZXP2k=
 github.com/advanced-go/postgresql v0.0.0-20240914153537-d55ad0af58ff h1:3sX2OtE7vIMaSZtfICAwnCtWlEIy6dNrLHj11jPyBus=
