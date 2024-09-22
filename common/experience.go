@@ -30,7 +30,7 @@ var Exp = func() *Experience {
 		AddIngressInference: func(h core.ErrorHandler, origin core.Origin, e inference1.Entry) (int, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), addInferenceDuration)
 			defer cancel()
-			id, status := inference1.AddIngress(ctx, nil, &e)
+			id, status := inference1.Add(ctx, origin, &e, true)
 			if !status.OK() && !status.NotFound() {
 				h.Handle(status)
 			}
@@ -39,7 +39,7 @@ var Exp = func() *Experience {
 		AddRateLimitingAction: func(h core.ErrorHandler, origin core.Origin, action action1.RateLimiting) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
-			status := action1.AddIngressRateLimiting(ctx, origin, &action)
+			status := action1.AddRateLimiting(ctx, origin, &action, true)
 			if !status.OK() {
 				h.Handle(status)
 			}
@@ -48,7 +48,7 @@ var Exp = func() *Experience {
 		AddRoutingAction: func(h core.ErrorHandler, origin core.Origin, action action1.Routing) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
-			status := action1.AddIngressRouting(ctx, origin, &action)
+			status := action1.AddRouting(ctx, origin, &action, true)
 			if !status.OK() {
 				h.Handle(status)
 			}
@@ -57,7 +57,7 @@ var Exp = func() *Experience {
 		AddRedirectAction: func(h core.ErrorHandler, origin core.Origin, action action1.Redirect) *core.Status {
 			ctx, cancel := context.WithTimeout(context.Background(), addActionDuration)
 			defer cancel()
-			status := action1.AddIngressRedirect(ctx, origin, &action)
+			status := action1.AddRedirect(ctx, origin, &action, true)
 			if !status.OK() {
 				h.Handle(status)
 			}
