@@ -1,9 +1,10 @@
 package redirect1
 
 import (
-	"github.com/advanced-go/events/threshold1"
+	"github.com/advanced-go/events/timeseries1"
 	"github.com/advanced-go/intelagents/common1"
 	"github.com/advanced-go/stdlib/messaging"
+	"time"
 )
 
 // run - ingress resiliency for the LHC
@@ -13,9 +14,12 @@ func runRedirectLHC(r *redirect, observe *common1.Events) {
 	ticker := messaging.NewTicker(redirectDuration)
 	stepTicker := messaging.NewTicker(r.state.StepDuration)
 
-	// Set the threshold to the current host's, and use that to compare to the redirect host's actual threshold
-	limit := threshold1.Entry{}
-	common1.SetPercentileThreshold(r.handler, r.origin, &limit, observe)
+	// Set the thresholds to the current host's, and use that to compare to the redirect host's actual thresholds
+	limitPercent := timeseries1.Threshold{}
+	common1.SetPercentileThreshold(r.handler, r.origin, &limitPercent, observe)
+	limitStatusCode := timeseries1.Threshold{}
+	to := time.Now().UTC()
+	common1.SetStatusCodesThreshold(r.handler, r.origin, &limitStatusCode, to.Add(-time.Minute*30), to, common1.DefaultStatusCodes, observe)
 
 	// Need to do observations on timeseries percentile and status codes thresholds.
 	// Need to also create the limits for these thresholds.
@@ -31,9 +35,10 @@ func runRedirectLHC(r *redirect, observe *common1.Events) {
 		select {
 		case <-ticker.C():
 			// Need percentage and status code thresholds
-			actual, status := observe.GetThreshold(r.handler, origin)
-			if status.OK() {
-				m := messaging.NewRightChannelMessage(r.agentId, r.agentId, messaging.ObservationEvent, common1.NewObservation(actual[0], limit))
+			percentile, status := percentileObservation(r.handler, origin, limitPercent, r.state.StepDuration, observe)
+			statusCode, status1 := statusCodeObservation(r.handler, origin, limitStatusCode, r.state.StepDuration, common1.DefaultStatusCodes, observe)
+			if status.OK() && status1.OK() {
+				m := messaging.NewRightChannelMessage(r.agentId, r.agentId, messaging.ObservationEvent, newObservation(percentile, statusCode))
 				r.Message(m)
 			}
 		case <-stepTicker.C():

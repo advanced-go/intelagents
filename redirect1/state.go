@@ -1,6 +1,8 @@
 package redirect1
 
-import "github.com/advanced-go/stdlib/core"
+import (
+	"github.com/advanced-go/stdlib/core"
+)
 
 func updatePercentage(curr int) int {
 	next := 0

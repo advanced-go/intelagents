@@ -2,10 +2,12 @@ package redirect1
 
 import (
 	"github.com/advanced-go/experience/action1"
+	"github.com/advanced-go/intelagents/common1"
 	"github.com/advanced-go/stdlib/messaging"
 )
 
-func runRedirectRHC(r *redirect, exp *common1.Experience, guide *common1.Guidance) {
+func runRedirectRHC(r *redirect, exp *common1.Experience, guide *common1.RedirectGuidance) {
+	// Set existing routing action state
 	routing := action1.NewRouting()
 	common1.SetRoutingAction(r.handler, r.origin, routing, exp)
 

@@ -11,14 +11,14 @@ const (
 	queryDuration = time.Second * 3
 )
 
-// hostGuidance - host guidance interface, with a nod to Linus Torvalds and plain C
-type hostGuidance struct {
+// HostGuidance - host guidance interface, with a nod to Linus Torvalds and plain C
+type HostGuidance struct {
 	HostQuery            func(h core.ErrorHandler, origin core.Origin, state *host1.CDCState) ([]host1.EntryStatus, []host1.CDCState, *core.Status)
 	RedirectStateChanges func(h core.ErrorHandler, origin core.Origin, state *host1.CDCState, ingress bool) ([]core.Origin, *core.Status)
 }
 
-var HostGuidance = func() *hostGuidance {
-	return &hostGuidance{
+var HostGuide = func() *HostGuidance {
+	return &HostGuidance{
 		HostQuery: func(h core.ErrorHandler, origin core.Origin, state *host1.CDCState) ([]host1.EntryStatus, []host1.CDCState, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), queryDuration)
 			defer cancel()

@@ -5,6 +5,11 @@ import (
 	"github.com/advanced-go/experience/action1"
 	"github.com/advanced-go/experience/inference1"
 	"github.com/advanced-go/stdlib/core"
+	"time"
+)
+
+const (
+	DefaultStatusCodes = "5xx"
 )
 
 type Observation struct {
@@ -33,21 +38,22 @@ func SetPercentileThreshold(h core.ErrorHandler, origin core.Origin, t *timeseri
 	}
 }
 
-/*
-	func SetStatusCodesThreshold(h core.ErrorHandler, origin core.Origin, t *common.Threshold, observe *Events) {
-		if t == nil {
-			return
-		}
-		e, status := observe.GetStatusThreshold(h, origin)
-		if status.OK() {
-			t.Percent = e[0].Percent
-			t.Value = e[0].Value
-			t.Minimum = e[0].Minimum
-		} else {
-			threshold1.InitStatusCodeThreshold(t)
-		}
+func SetStatusCodesThreshold(h core.ErrorHandler, origin core.Origin, t *timeseries1.Threshold, from, to time.Time, statusCodes string, observe *Events) {
+	if t == nil {
+		return
 	}
-*/
+	if statusCodes == "" {
+		statusCodes = DefaultStatusCodes
+	}
+	e, status := observe.StatusCodeThresholdQuery(h, origin, from, to, statusCodes)
+	if status.OK() {
+		t.Percent = e.Percent
+		t.Value = e.Value
+		t.Minimum = e.Minimum
+	} else {
+		timeseries1.InitStatusCodeThreshold(t)
+	}
+}
 
 func SetRateLimitingAction(h core.ErrorHandler, origin core.Origin, a *action1.RateLimiting, exp *Experience) {
 	if a == nil {

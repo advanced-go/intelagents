@@ -12,8 +12,8 @@ const (
 	addDuration = time.Second * 2
 )
 
-// redirectGuidance - redirect guidance interface, with a nod to Linus Torvalds and plain C
-type redirectGuidance struct {
+// RedirectGuidance - redirect guidance interface, with a nod to Linus Torvalds and plain C
+type RedirectGuidance struct {
 	Ingress   func(h core.ErrorHandler, origin core.Origin) (redirect1.IngressEntry, *core.Status)
 	Egress    func(h core.ErrorHandler, origin core.Origin) (redirect1.EgressEntry, *core.Status)
 	AllEgress func(h core.ErrorHandler, origin core.Origin) ([]redirect1.EgressEntry, *core.Status)
@@ -22,8 +22,8 @@ type redirectGuidance struct {
 	AddEgressStatus  func(h core.ErrorHandler, origin core.Origin, status, comment string) *core.Status
 }
 
-var RedirectGuidance = func() *redirectGuidance {
-	return &redirectGuidance{
+var RedirectGuide = func() *RedirectGuidance {
+	return &RedirectGuidance{
 		Ingress: func(h core.ErrorHandler, origin core.Origin) (redirect1.IngressEntry, *core.Status) {
 			ctx, cancel := context.WithTimeout(context.Background(), getDuration)
 			defer cancel()
